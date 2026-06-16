@@ -38,7 +38,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -62,6 +61,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isProductOpen, setIsProductOpen] = useState(true);
+
+  useEffect(() => {
+    if (pathname.startsWith("/admin/products")) {
+      setIsProductOpen(true);
+    }
+  }, [pathname]);
 
   // Sync with client-side only parameters to avoid hydration warnings
   useEffect(() => {
@@ -70,7 +76,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems: MenuItem[] = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-    { name: "Products", href: "/admin/products", icon: Package },
     { name: "Categories", href: "/admin/categories", icon: Layers },
     { name: "Orders", href: "/admin/orders", icon: ClipboardList },
     { name: "Customers", href: "/admin/customers", icon: Users },
@@ -100,8 +105,99 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Sidebar Nav Items */}
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => {
+        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+          {/* Dashboard (First item) */}
+          {(() => {
+            const dashboardItem = menuItems.find(m => m.name === "Dashboard");
+            if (!dashboardItem) return null;
+            const Icon = dashboardItem.icon;
+            const isActive = pathname === dashboardItem.href;
+            return (
+              <Link
+                href={dashboardItem.href}
+                onClick={() => setIsMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-primary text-white shadow-md shadow-primary/15"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary",
+                  isCollapsed && "justify-center px-2"
+                )}
+                title={dashboardItem.name}
+              >
+                <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-gray-500 dark:text-gray-400")} />
+                {!isCollapsed && <span>{dashboardItem.name}</span>}
+              </Link>
+            );
+          })()}
+
+          {/* Collapsible Product Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsProductOpen(true);
+                } else {
+                  setIsProductOpen(!isProductOpen);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
+                pathname.startsWith("/admin/products") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                isCollapsed && "justify-center px-2"
+              )}
+              title="Product"
+            >
+              <div className="flex items-center gap-3">
+                <Package className="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-405" />
+                {!isCollapsed && <span>Product</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-300",
+                    isProductOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+
+            {/* Submenus (Only visible if not collapsed and isProductOpen is true) */}
+            {!isCollapsed && isProductOpen && (
+              <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
+                <Link
+                  href="/admin/products"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/products"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  All Products
+                </Link>
+                <Link
+                  href="/admin/products/details"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/products/details"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Product Details
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Other Menu Items */}
+          {menuItems.filter(m => m.name !== "Dashboard").map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -118,7 +214,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 )}
                 title={item.name}
               >
-                <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-primary")} />
+                <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-gray-500 dark:text-gray-400")} />
                 {!isCollapsed && <span>{item.name}</span>}
               </Link>
             );
@@ -246,7 +342,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
               />
               <DropdownMenuContent align="end" className="w-80 p-0 border-gray-250 dark:border-gray-800">
-                <DropdownMenuLabel className="p-4 border-b border-gray-200 dark:border-gray-800">Notifications</DropdownMenuLabel>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 text-sm font-semibold text-gray-900 dark:text-white">Notifications</div>
                 <div className="max-h-64 overflow-y-auto">
                   <div className="p-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
                     <p className="text-xs font-semibold text-gray-900 dark:text-white">New order #ord-1004 received</p>
@@ -280,10 +376,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }
               />
               <DropdownMenuContent align="end" className="w-56 border-gray-200 dark:border-gray-800">
-                <DropdownMenuLabel className="font-normal p-4 flex flex-col space-y-1">
+                <div className="font-normal p-4 flex flex-col space-y-1 border-b border-gray-150 dark:border-gray-850">
                   <p className="text-sm font-semibold leading-none text-gray-900 dark:text-white">{currentUser?.name}</p>
                   <p className="text-xs leading-none text-gray-500 mt-0.5">{currentUser?.email}</p>
-                </DropdownMenuLabel>
+                </div>
                 <DropdownMenuSeparator className="border-gray-200 dark:border-gray-850" />
                 <DropdownMenuItem onClick={() => router.push("/admin/settings")} className="flex items-center gap-2 cursor-pointer">
                   <User className="h-4 w-4" /> Profile

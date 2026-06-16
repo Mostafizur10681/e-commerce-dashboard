@@ -27,7 +27,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -156,7 +155,7 @@ export default function OrdersPage() {
                           }
                         />
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Select Status</DropdownMenuLabel>
+                          <div className="px-3 py-1.5 text-xs font-bold text-gray-500 dark:text-gray-400">Select Status</div>
                           <DropdownMenuSeparator />
                           {statusOptions.map((status) => (
                             <DropdownMenuItem
