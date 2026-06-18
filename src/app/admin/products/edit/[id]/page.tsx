@@ -13,13 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
-import ImageUploader from "@/components/admin/products/ImageUploader";
+import ImageUploader, { ImageEntry } from "@/components/admin/products/ImageUploader";
 import ProductPreviewCard from "@/components/admin/products/ProductPreviewCard";
-
-interface ImageEntry {
-  file: File | null;
-  preview: string;
-}
 
 export default function EditProductPage() {
   const params = useParams();

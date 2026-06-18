@@ -11,14 +11,9 @@ import StatusFields from "@/components/admin/products/StatusFields";
 import BadgeCheckboxes from "@/components/admin/products/BadgeCheckboxes";
 import SEOFields from "@/components/admin/products/SEOFields";
 import ProductPreviewCard from "@/components/admin/products/ProductPreviewCard";
-import ImageUploader from "@/components/admin/products/ImageUploader";
+import ImageUploader, { ImageEntry } from "@/components/admin/products/ImageUploader";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-
-interface ImageEntry {
-  file: File;
-  preview: string;
-}
 
 export default function AddProductForm() {
   const router = useRouter();

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "cat-1",
+    "name": "Electronics",
+    "description": "Smartphones, laptops, and gadgets",
+    "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+    "status": "Active",
+    "createdDate": "2026-06-18",
+    "seoTitle": "Electronics",
+    "seoDescription": "Smartphones, laptops, and gadgets"
+  },
+  {
+    "id": "cat-2",
+    "name": "Fashion",
+    "description": "Clothing, shoes, and accessories",
+    "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+    "status": "Active",
+    "createdDate": "2026-06-17",
+    "seoTitle": "Fashion",
+    "seoDescription": "Clothing, shoes, and accessories"
+  },
+  {
+    "id": "cat-3",
+    "name": "Home & Living",
+    "description": "Furniture, decor, and kitchenware",
+    "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+    "status": "Active",
+    "createdDate": "2026-06-16",
+    "seoTitle": "Home & Living",
+    "seoDescription": "Furniture, decor, and kitchenware"
+  },
+  {
+    "id": "cat-4",
+    "name": "Beauty & Health",
+    "description": "Skincare, cosmetics, and wellness",
+    "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+    "status": "Active",
+    "createdDate": "2026-06-15",
+    "seoTitle": "Beauty & Health",
+    "seoDescription": "Skincare, cosmetics, and wellness"
+  },
+  {
+    "id": "cat-5",
+    "name": "Sports & Outdoors",
+    "description": "Fitness gear and outdoor equipment",
+    "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+    "status": "Active",
+    "createdDate": "2026-06-14",
+    "seoTitle": "Sports & Outdoors",
+    "seoDescription": "Fitness gear and outdoor equipment"
+  }
+]

@@ -3,8 +3,8 @@
 import React, { useCallback, useRef, useState } from "react";
 import { UploadCloud, Star, Trash2, ImagePlus } from "lucide-react";
 
-interface ImageEntry {
-  file: File;
+export interface ImageEntry {
+  file: File | null;
   preview: string;
 }
 

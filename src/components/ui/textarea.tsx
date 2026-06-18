@@ -16,6 +16,4 @@ export const Textarea = React.forwardRef<
     {...props}
   />
 ))
-Textarea.displayName = "Textarea"
-
-export { Textarea };
+Textarea.displayName = "Textarea";

@@ -1,10 +1,24 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Edit2, Trash2, Loader2, Sparkles, FolderPlus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  Layers,
+  Search,
+  Eye,
+  Pencil,
+  Trash2,
+  Plus,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  FileText,
+  AlertTriangle,
+  FolderOpen,
+  Image as ImageIcon
+} from "lucide-react";
 
 import { useStore } from "@/store";
 import { Category } from "@/types";
@@ -19,20 +33,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,223 +49,513 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-const categorySchema = z.object({
-  name: z.string().min(2, "Category name must be at least 2 characters"),
-  description: z.string().min(5, "Description must be at least 5 characters"),
-});
-
-type CategoryFormValues = z.infer<typeof categorySchema>;
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 
 export default function CategoriesPage() {
-  const { categories, addCategory, updateCategory, deleteCategory } = useStore();
-  const [mounted, setMounted] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { deleteCategory: storeDeleteCategory } = useStore();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Action Dialog/Modal States
+  const [viewingCategory, setViewingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
-    defaultValues: {
-      name: "",
-      description: "",
-    },
-  });
-
-  useEffect(() => {
-    if (editingCategory) {
-      form.reset({
-        name: editingCategory.name,
-        description: editingCategory.description,
-      });
-    } else {
-      form.reset({
-        name: "",
-        description: "",
-      });
+  // Debounced data loading
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const url = `/api/categories?q=${encodeURIComponent(searchTerm)}&status=${statusFilter}&page=${currentPage}&limit=${pageSize}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to load categories");
+      const data = await res.json();
+      setCategories(data.categories);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "An error occurred while loading categories");
+    } finally {
+      setLoading(false);
     }
-  }, [editingCategory, form]);
-
-  if (!mounted) {
-    return (
-      <div className="h-64 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-      </div>
-    );
-  }
-
-  const onSubmit = (values: CategoryFormValues) => {
-    if (editingCategory) {
-      updateCategory(editingCategory.id, {
-        name: values.name,
-        description: values.description,
-      });
-      setEditingCategory(null);
-    } else {
-      addCategory({
-        name: values.name,
-        description: values.description,
-      });
-    }
-    form.reset({ name: "", description: "" });
   };
 
-  const handleCancel = () => {
-    setEditingCategory(null);
-    form.reset({ name: "", description: "" });
-  };
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchCategories();
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm, statusFilter, currentPage]);
 
-  const handleDeleteConfirm = () => {
-    if (deletingCategory) {
-      deleteCategory(deletingCategory.id);
+  const handleDeleteConfirm = async () => {
+    if (!deletingCategory) return;
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/categories/${deletingCategory.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete category");
+      }
+
+      // Sync Zustand store
+      storeDeleteCategory(deletingCategory.id);
+
+      toast("Category deleted successfully", "success");
+
       setDeletingCategory(null);
+      // If we are on a page that is now empty, go back a page
+      const isLastItemOnPage = categories.length === 1;
+      if (isLastItemOnPage && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      } else {
+        fetchCategories();
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast(err.message || "Failed to delete category", "error");
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Categories Management</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Create, edit, and organize product categories.
-        </p>
+      {/* Header Panel */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
+            <Layers className="h-6 w-6 text-[#16A34A]" />
+            Category List
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            View, search, and manage your product categories.
+          </p>
+        </div>
+        <Button
+          onClick={() => router.push("/admin/categories/add")}
+          className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-4 flex items-center gap-1.5 font-medium shadow-sm shadow-[#16A34A]/10 transition-colors cursor-pointer self-start sm:self-auto"
+        >
+          <Plus className="h-4.5 w-4.5" />
+          Add Category
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* Left Side: Create/Edit Form Card */}
-        <Card className="md:col-span-1 border-slate-200/80 dark:border-slate-800 shadow-sm h-fit">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <FolderPlus className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              {editingCategory ? "Edit Category" : "Create Category"}
-            </CardTitle>
-            <CardDescription>
-              {editingCategory ? "Update details for selected category." : "Add a new classification group to your catalog."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Footwear" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      {/* Filter and Control Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs">
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute top-2.5 left-3.5 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search categories by name, ID or description..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-10 h-10 border-gray-200 dark:border-gray-800 dark:bg-gray-950/50 rounded-xl focus-visible:ring-[#16A34A]"
+          />
+        </div>
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <textarea
-                          className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border-slate-200 dark:border-slate-800"
-                          placeholder="Summarize category contents..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-2 justify-end pt-2">
-                  {editingCategory && (
-                    <Button variant="outline" type="button" onClick={handleCancel} className="flex-1">
-                      Cancel
-                    </Button>
-                  )}
-                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white flex-1">
-                    {editingCategory ? "Save Changes" : "Add Category"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        {/* Right Side: Categories List Table */}
-        <div className="md:col-span-2 rounded-lg border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden h-fit">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Category Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="w-[120px] text-right pr-6">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="h-32 text-center text-slate-400">
-                    No categories created yet.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                categories.map((category) => (
-                  <TableRow key={category.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <TableCell className="font-semibold text-slate-900 dark:text-slate-100 pl-6">
-                      {category.name}
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate font-medium text-slate-600 dark:text-slate-400">
-                      {category.description}
-                    </TableCell>
-                    <TableCell className="text-right pr-6">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
-                          onClick={() => setEditingCategory(category)}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-red-650 dark:hover:text-red-455 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md"
-                          onClick={() => setDeletingCategory(category)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+        {/* Filters */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300"
+          >
+            <option value="All">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
         </div>
       </div>
 
-      {/* Delete Confirmation Alert */}
+      {/* Main Table Content */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs overflow-hidden">
+        {error ? (
+          <div className="p-12 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/20 text-red-500 mb-4">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <h3 className="text-base font-semibold mb-1">Could not load categories</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{error}</p>
+            <Button onClick={fetchCategories} variant="outline" className="rounded-xl border-gray-200">
+              Try Again
+            </Button>
+          </div>
+        ) : loading && categories.length === 0 ? (
+          /* Skeletal Table Load */
+          <div className="p-6 space-y-4">
+            <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse w-full" />
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-4 items-center">
+                <div className="h-12 w-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse shrink-0" />
+                <div className="h-6 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex-1" />
+                <div className="h-6 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse w-24 shrink-0" />
+                <div className="h-6 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse w-32 shrink-0" />
+              </div>
+            ))}
+          </div>
+        ) : categories.length === 0 ? (
+          /* Empty State */
+          <div className="p-16 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 dark:bg-gray-800/40 text-gray-400 mb-4">
+              <FolderOpen className="h-8 w-8" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">No categories found</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+              {searchTerm || statusFilter !== "All"
+                ? "No categories matches your active search queries or filters."
+                : "Create classification groups for your catalog to start organizing products."}
+            </p>
+            {(searchTerm || statusFilter !== "All") && (
+              <Button
+                variant="outline"
+                className="rounded-xl border-gray-200"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("All");
+                  setCurrentPage(1);
+                }}
+              >
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-gray-200 dark:border-gray-800 hover:bg-transparent">
+                  <TableHead className="w-[120px] font-semibold text-gray-650 dark:text-gray-400 pl-6 py-4">ID</TableHead>
+                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Category Name</TableHead>
+                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Description</TableHead>
+                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Status</TableHead>
+                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Created Date</TableHead>
+                  <TableHead className="w-[140px] text-right font-semibold text-gray-650 dark:text-gray-400 pr-6 py-4">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categories.map((category) => {
+                  const isActive = category.status !== "Inactive";
+                  return (
+                    <TableRow
+                      key={category.id}
+                      className="border-b border-gray-250 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors"
+                    >
+                      {/* ID */}
+                      <TableCell className="font-medium text-gray-500 dark:text-gray-450 text-xs pl-6 py-3.5">
+                        {category.id}
+                      </TableCell>
+
+                      {/* Image + Name */}
+                      <TableCell className="py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-11 w-11 shrink-0 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200/60 dark:border-gray-850 flex items-center justify-center">
+                            {category.imageUrl ? (
+                              <img
+                                src={category.imageUrl}
+                                alt={category.name}
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  // fallback image
+                                  (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e2e8f0'/><text x='50' y='55' font-family='sans-serif' font-size='30' fill='%2364748b' text-anchor='middle'>📂</text></svg>";
+                                }}
+                              />
+                            ) : (
+                              <ImageIcon className="h-5 w-5 text-gray-400" />
+                            )}
+                          </div>
+                          <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                            {category.name}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Description */}
+                      <TableCell className="max-w-[240px] truncate text-gray-550 dark:text-gray-400 text-sm py-3.5">
+                        {category.description || <span className="text-gray-400 italic">No description</span>}
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell className="py-3.5">
+                        <Badge
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold select-none border border-transparent ${
+                            isActive
+                              ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400"
+                              : "bg-gray-100 text-gray-650 dark:bg-gray-800 dark:text-gray-400"
+                          }`}
+                        >
+                          {category.status || "Active"}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Created Date */}
+                      <TableCell className="text-gray-550 dark:text-gray-400 text-sm py-3.5">
+                        {category.createdDate ? (
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                            <span>{category.createdDate}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="text-right pr-6 py-3.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* View details */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[#16A34A] dark:hover:text-[#16A34A] hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                            onClick={() => setViewingCategory(category)}
+                            title="View Details"
+                          >
+                            <Eye className="h-4.5 w-4.5" />
+                          </Button>
+
+                          {/* Edit */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                            onClick={() => router.push(`/admin/categories/edit/${category.id}`)}
+                            title="Edit Category"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+
+                          {/* Delete */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-red-650 dark:hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                            onClick={() => setDeletingCategory(category)}
+                            title="Delete Category"
+                          >
+                            <Trash2 className="h-4.5 w-4.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+
+            {/* Pagination Panel */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-900/40">
+                <span className="text-xs font-semibold text-gray-550 dark:text-gray-450 uppercase tracking-wider">
+                  Page {currentPage} of {totalPages} ({total} total items)
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 rounded-xl border-gray-200 dark:border-gray-800 cursor-pointer text-gray-700 dark:text-gray-300"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-0.5" />
+                    Previous
+                  </Button>
+                  {[...Array(totalPages)].map((_, idx) => {
+                    const pageNo = idx + 1;
+                    return (
+                      <Button
+                        key={pageNo}
+                        variant={currentPage === pageNo ? "default" : "outline"}
+                        size="sm"
+                        className={`h-9 w-9 rounded-xl cursor-pointer ${
+                          currentPage === pageNo
+                            ? "bg-[#16A34A] hover:bg-green-700 text-white border-transparent"
+                            : "border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300"
+                        }`}
+                        onClick={() => handlePageChange(pageNo)}
+                      >
+                        {pageNo}
+                      </Button>
+                    );
+                  })}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 rounded-xl border-gray-200 dark:border-gray-800 cursor-pointer text-gray-700 dark:text-gray-300"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-0.5" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Category Details Modal */}
+      <Dialog open={!!viewingCategory} onOpenChange={(open) => !open && setViewingCategory(null)}>
+        <DialogContent className="max-w-md rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Layers className="h-5 w-5 text-[#16A34A]" />
+              Category Details
+            </DialogTitle>
+            <DialogDescription className="text-xs text-gray-500">
+              Detailed metadata and catalog properties.
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewingCategory && (
+            <div className="space-y-4">
+              {/* Image Preview Block */}
+              <div className="relative aspect-video rounded-xl bg-gray-50 dark:bg-gray-950 overflow-hidden border border-gray-100 dark:border-gray-850 flex items-center justify-center">
+                {viewingCategory.imageUrl ? (
+                  <img
+                    src={viewingCategory.imageUrl}
+                    alt={viewingCategory.name}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e2e8f0'/><text x='50' y='55' font-family='sans-serif' font-size='30' fill='%2364748b' text-anchor='middle'>📂</text></svg>";
+                    }}
+                  />
+                ) : (
+                  <ImageIcon className="h-10 w-10 text-gray-400" />
+                )}
+              </div>
+
+              {/* Data Rows */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-xs font-semibold text-gray-500 uppercase">Category Name</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">{viewingCategory.name}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-xs font-semibold text-gray-500 uppercase">Category ID</span>
+                  <span className="text-sm font-mono text-gray-600 dark:text-gray-300">{viewingCategory.id}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-xs font-semibold text-gray-500 uppercase">Status</span>
+                  <Badge
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      viewingCategory.status !== "Inactive"
+                        ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400"
+                        : "bg-gray-100 text-gray-650 dark:bg-gray-800 dark:text-gray-400"
+                    }`}
+                  >
+                    {viewingCategory.status || "Active"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span className="text-xs font-semibold text-gray-500 uppercase">Created Date</span>
+                  <span className="text-sm text-gray-750 dark:text-gray-350">{viewingCategory.createdDate || "-"}</span>
+                </div>
+
+                {/* Description Text block */}
+                <div className="py-2">
+                  <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Description</span>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-950/40 p-3 rounded-xl border border-gray-100 dark:border-gray-850">
+                    {viewingCategory.description || <span className="italic text-gray-450">No description provided.</span>}
+                  </p>
+                </div>
+
+                {/* SEO Block */}
+                {(viewingCategory.seoTitle || viewingCategory.seoDescription) && (
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <span className="text-xs font-bold text-gray-400 flex items-center gap-1 mb-2">
+                      <FileText className="h-3.5 w-3.5" />
+                      SEO Options
+                    </span>
+                    <div className="space-y-1.5 text-xs">
+                      {viewingCategory.seoTitle && (
+                        <div>
+                          <strong className="text-gray-500">SEO Title:</strong>{" "}
+                          <span className="text-gray-750 dark:text-gray-300">{viewingCategory.seoTitle}</span>
+                        </div>
+                      )}
+                      {viewingCategory.seoDescription && (
+                        <div>
+                          <strong className="text-gray-500">SEO Desc:</strong>{" "}
+                          <span className="text-gray-750 dark:text-gray-300">{viewingCategory.seoDescription}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 flex justify-end">
+            <Button
+              className="rounded-xl border-gray-200 h-9.5 px-4 cursor-pointer"
+              variant="outline"
+              onClick={() => setViewingCategory(null)}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={!!deletingCategory} onOpenChange={(open) => !open && setDeletingCategory(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. Removing the category{" "}
-              <strong className="text-slate-900 dark:text-slate-100">&quot;{deletingCategory?.name}&quot;</strong> may affect
+            <AlertDialogTitle className="text-lg font-bold">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400">
+              This action cannot be undone. Removing category{" "}
+              <strong className="text-gray-900 dark:text-white">&quot;{deletingCategory?.name}&quot;</strong> may affect
               products categorized under it.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-650 hover:bg-red-750 text-white">
-              Delete Category
+          <AlertDialogFooter className="mt-4 flex gap-2">
+            <AlertDialogCancel className="rounded-xl border-gray-200 h-10 px-4 cursor-pointer" variant="outline">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteConfirm();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-10 px-4 flex items-center justify-center cursor-pointer border-transparent shadow-sm hover:shadow-md"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Category"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

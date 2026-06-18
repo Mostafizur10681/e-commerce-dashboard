@@ -63,10 +63,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(true);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(true);
 
   useEffect(() => {
     if (pathname.startsWith("/admin/products")) {
       setIsProductOpen(true);
+    }
+    if (pathname.startsWith("/admin/categories")) {
+      setIsCategoryOpen(true);
     }
   }, [pathname]);
 
@@ -210,8 +214,73 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
           </div>
 
+          {/* Collapsible Category Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsCategoryOpen(true);
+                } else {
+                  setIsCategoryOpen(!isCategoryOpen);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
+                pathname.startsWith("/admin/categories") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                isCollapsed && "justify-center px-2"
+              )}
+              title="Category"
+            >
+              <div className="flex items-center gap-3">
+                <Layers className="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-400" />
+                {!isCollapsed && <span>Category</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-300",
+                    isCategoryOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+
+            {/* Submenus (Only visible if not collapsed and isCategoryOpen is true) */}
+            {!isCollapsed && isCategoryOpen && (
+              <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
+                <Link
+                  href="/admin/categories"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/categories"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Category List
+                </Link>
+                <Link
+                  href="/admin/categories/add"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/categories/add"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Add Category
+                </Link>
+              </div>
+            )}
+          </div>
+
           {/* Other Menu Items */}
-          {menuItems.filter(m => m.name !== "Dashboard").map((item) => {
+          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories").map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (

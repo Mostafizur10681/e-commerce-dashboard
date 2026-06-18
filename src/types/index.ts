@@ -12,6 +12,11 @@ export interface Category {
   id: string;
   name: string;
   description: string;
+  imageUrl?: string;
+  status?: "Active" | "Inactive";
+  createdDate?: string;
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 export type OrderStatus = "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";

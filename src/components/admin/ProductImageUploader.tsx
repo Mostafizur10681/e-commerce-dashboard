@@ -3,7 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { XIcon } from "lucide-react";
 
 interface ProductImageUploaderProps {
-  setImages: (imgs: string[]) => void;
+  setImages: React.Dispatch<React.SetStateAction<string[]>>;
   setFeatured: (idx: number) => void;
 }
 
