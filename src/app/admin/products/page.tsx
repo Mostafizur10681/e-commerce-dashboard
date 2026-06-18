@@ -47,6 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 
 // Form validation schema
 const productSchema = z.object({
@@ -64,6 +65,7 @@ export default function ProductsPage() {
   const router = useRouter();
   const { products, categories, addProduct, updateProduct, deleteProduct } = useStore();
   const [mounted, setMounted] = useState(false);
+  const { toast } = useToast();
 
   // Filter & Search States
   const [searchTerm, setSearchTerm] = useState("");
@@ -202,6 +204,7 @@ export default function ProductsPage() {
   const handleDeleteConfirm = () => {
     if (deletingProduct) {
       deleteProduct(deletingProduct.id);
+      toast("Product deleted successfully");
       setDeletingProduct(null);
       // Reset page if needed
       if (paginatedProducts.length === 1 && currentPage > 1) {
@@ -335,10 +338,7 @@ export default function ProductsPage() {
 
             {/* Add New Product Button */}
             <Button
-              onClick={() => {
-                setEditingProduct(null);
-                setIsFormOpen(true);
-              }}
+              onClick={() => router.push("/admin/products/add")}
               className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-4 flex items-center gap-1.5 font-medium transition-all hover:scale-[1.01] cursor-pointer"
             >
               <Plus className="h-4.5 w-4.5" /> Add Product
@@ -457,14 +457,14 @@ export default function ProductsPage() {
                       <TableCell className="text-right pr-6">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => router.push(`/admin/products/details?id=${product.id}`)}
+                            onClick={() => router.push(`/admin/products/view/${product.id}`)}
                             title="View Details"
                             className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-[#16A34A] bg-gray-50 hover:bg-[#16A34A]/10 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-[#16A34A] dark:hover:bg-[#16A34A]/10 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-[#16A34A]/20"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => handleEditClick(product)}
+                            onClick={() => router.push(`/admin/products/edit/${product.id}`)}
                             title="Edit Product"
                             className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/20 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-blue-500/20"
                           >

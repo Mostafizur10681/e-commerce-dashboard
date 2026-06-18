@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { ToastProvider } from "@/components/ui/toast";
 
 interface MenuItem {
   name: string;
@@ -53,7 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  
+
   const currentUser = useStore((state) => state.currentUser);
   const logout = useStore((state) => state.logout);
   const settings = useStore((state) => state.settings);
@@ -180,6 +181,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   All Products
                 </Link>
                 <Link
+                  href="/admin/products/add"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/products/add"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Add Product
+                </Link>
+                <Link
                   href="/admin/products/details"
                   onClick={() => setIsMobileOpen(false)}
                   className={cn(
@@ -270,7 +284,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         {/* Topbar */}
         <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-4 md:px-6 shadow-sm">
-          
+
           {/* Left Area: Mobile Menu Trigger + Search */}
           <div className="flex items-center gap-4 flex-1 max-w-lg">
             {/* Mobile Sheet Drawer Menu */}
@@ -398,7 +412,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Main Content Area */}
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </main>
       </div>
     </div>
