@@ -79,3 +79,11 @@ export interface Settings {
   address: string;
   theme: "light" | "dark" | "system";
 }
+
+export interface Attribute {
+  id: string;
+  name: string;
+  values: string[];
+  status?: "Active" | "Inactive";
+  createdDate?: string;
+}

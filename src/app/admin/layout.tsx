@@ -26,6 +26,7 @@ import {
   Monitor,
   User,
   Sparkles,
+  Sliders,
   ChevronDown
 } from "lucide-react";
 
@@ -64,6 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [mounted, setMounted] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(true);
   const [isCategoryOpen, setIsCategoryOpen] = useState(true);
+  const [isAttributesOpen, setIsAttributesOpen] = useState(true);
 
   useEffect(() => {
     if (pathname.startsWith("/admin/products")) {
@@ -71,6 +73,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     if (pathname.startsWith("/admin/categories")) {
       setIsCategoryOpen(true);
+    }
+    if (pathname.startsWith("/admin/attributes")) {
+      setIsAttributesOpen(true);
     }
   }, [pathname]);
 
@@ -274,6 +279,71 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   <span className="mr-1.5 font-bold">○</span>
                   Add Category
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Collapsible Attributes Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsAttributesOpen(true);
+                } else {
+                  setIsAttributesOpen(!isAttributesOpen);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
+                pathname.startsWith("/admin/attributes") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                isCollapsed && "justify-center px-2"
+              )}
+              title="Attributes"
+            >
+              <div className="flex items-center gap-3">
+                <Sliders className="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-405" />
+                {!isCollapsed && <span>Attributes</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-300",
+                    isAttributesOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+
+            {/* Submenus (Only visible if not collapsed and isAttributesOpen is true) */}
+            {!isCollapsed && isAttributesOpen && (
+              <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
+                <Link
+                  href="/admin/attributes"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/attributes"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Attributes
+                </Link>
+                <Link
+                  href="/admin/attributes/add"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/attributes/add"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Add Attributes
                 </Link>
               </div>
             )}

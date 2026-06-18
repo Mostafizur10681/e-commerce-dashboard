@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings, OrderStatus } from "../types";
+import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings, OrderStatus, Attribute } from "../types";
 import {
   initialProducts,
   initialCategories,
@@ -10,6 +10,7 @@ import {
   initialBanners,
   initialUsers,
   initialSettings,
+  initialAttributes,
 } from "../data/mockData";
 
 interface StoreState {
@@ -17,6 +18,7 @@ interface StoreState {
   currentUser: User | null;
   products: Product[];
   categories: Category[];
+  attributes: Attribute[];
   orders: Order[];
   customers: Customer[];
   reviews: Review[];
@@ -41,6 +43,11 @@ interface StoreState {
   addCategory: (category: Omit<Category, "id">) => void;
   updateCategory: (id: string, category: Partial<Category>) => void;
   deleteCategory: (id: string) => void;
+
+  // Attributes CRUD
+  addAttribute: (attribute: Omit<Attribute, "id">) => void;
+  updateAttribute: (id: string, attribute: Partial<Attribute>) => void;
+  deleteAttribute: (id: string) => void;
 
   // Orders Actions
   updateOrderStatus: (id: string, status: OrderStatus) => void;
@@ -91,6 +98,7 @@ export const useStore = create<StoreState>((set, get) => ({
   currentUser: null,
   products: initialProducts,
   categories: initialCategories,
+  attributes: initialAttributes,
   orders: initialOrders,
   customers: initialCustomers,
   reviews: initialReviews,
@@ -106,6 +114,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const currentUser = getFromLocalStorage("df_currentUser", null);
     const products = getFromLocalStorage("df_products", initialProducts);
     const categories = getFromLocalStorage("df_categories", initialCategories);
+    const attributes = getFromLocalStorage("df_attributes", initialAttributes);
     const orders = getFromLocalStorage("df_orders", initialOrders);
     const customers = getFromLocalStorage("df_customers", initialCustomers);
     const reviews = getFromLocalStorage("df_reviews", initialReviews);
@@ -118,6 +127,7 @@ export const useStore = create<StoreState>((set, get) => ({
       currentUser,
       products,
       categories,
+      attributes,
       orders,
       customers,
       reviews,
@@ -232,6 +242,29 @@ export const useStore = create<StoreState>((set, get) => ({
     const updated = get().categories.filter((c) => c.id !== id);
     set({ categories: updated });
     saveToLocalStorage("df_categories", updated);
+  },
+
+  // Attributes CRUD
+  addAttribute: (attribute) => {
+    const newAttribute: Attribute = {
+      ...attribute,
+      id: `attr-${Date.now()}`,
+    };
+    const updated = [...get().attributes, newAttribute];
+    set({ attributes: updated });
+    saveToLocalStorage("df_attributes", updated);
+  },
+
+  updateAttribute: (id, data) => {
+    const updated = get().attributes.map((a) => (a.id === id ? { ...a, ...data } : a));
+    set({ attributes: updated });
+    saveToLocalStorage("df_attributes", updated);
+  },
+
+  deleteAttribute: (id) => {
+    const updated = get().attributes.filter((a) => a.id !== id);
+    set({ attributes: updated });
+    saveToLocalStorage("df_attributes", updated);
   },
 
   // Orders Actions

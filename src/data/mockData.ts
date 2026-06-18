@@ -1,4 +1,4 @@
-import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings } from "../types";
+import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings, Attribute } from "../types";
 
 export const initialCategories: Category[] = [
   { id: "cat-1", name: "Electronics", description: "Smartphones, laptops, and gadgets" },
@@ -179,3 +179,10 @@ export const initialSettings: Settings = {
   address: "123 Innovation Way, San Francisco, CA",
   theme: "system",
 };
+
+export const initialAttributes: Attribute[] = [
+  { id: "attr-1", name: "Color", values: ["Red", "Green", "Blue", "Yellow", "Black"], status: "Active", createdDate: "2026-06-10" },
+  { id: "attr-2", name: "Size", values: ["S", "M", "L", "XL", "XXL"], status: "Active", createdDate: "2026-06-11" },
+  { id: "attr-3", name: "Material", values: ["Cotton", "Polyester", "Wool", "Leather", "Silk"], status: "Active", createdDate: "2026-06-12" },
+  { id: "attr-4", name: "Brand", values: ["Nike", "Adidas", "Puma", "Apple", "Samsung"], status: "Active", createdDate: "2026-06-13" },
+];
