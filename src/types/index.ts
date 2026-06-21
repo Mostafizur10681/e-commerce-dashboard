@@ -61,6 +61,7 @@ export interface Customer {
   phone: string;
   ordersCount: number;
   joinedDate: string;
+  status?: "Active" | "Inactive";
 }
 
 export interface Review {
@@ -71,6 +72,8 @@ export interface Review {
   comment: string;
   date: string;
   approved: boolean;
+  status?: "Approved" | "Pending" | "Rejected";
+  imageUrl?: string;
 }
 
 export interface Partner {

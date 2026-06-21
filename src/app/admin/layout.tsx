@@ -67,6 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isCategoryOpen, setIsCategoryOpen] = useState(true);
   const [isAttributesOpen, setIsAttributesOpen] = useState(true);
   const [isPartnersOpen, setIsPartnersOpen] = useState(true);
+  const [isReviewsOpen, setIsReviewsOpen] = useState(true);
 
   useEffect(() => {
     if (pathname.startsWith("/admin/products")) {
@@ -80,6 +81,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     if (pathname.startsWith("/admin/partners")) {
       setIsPartnersOpen(true);
+    }
+    if (pathname.startsWith("/admin/reviews")) {
+      setIsReviewsOpen(true);
     }
   }, [pathname]);
 
@@ -418,8 +422,73 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
           </div>
 
+          {/* Collapsible Reviews Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsReviewsOpen(true);
+                } else {
+                  setIsReviewsOpen(!isReviewsOpen);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
+                pathname.startsWith("/admin/reviews") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                isCollapsed && "justify-center px-2"
+              )}
+              title="Reviews"
+            >
+              <div className="flex items-center gap-3">
+                <Star className="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-400" />
+                {!isCollapsed && <span>Reviews</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-300",
+                    isReviewsOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+
+            {/* Submenus (Only visible if not collapsed and isReviewsOpen is true) */}
+            {!isCollapsed && isReviewsOpen && (
+              <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
+                <Link
+                  href="/admin/reviews"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/reviews"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Reviews List
+                </Link>
+                <Link
+                  href="/admin/reviews/add"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/reviews/add"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Add Review
+                </Link>
+              </div>
+            )}
+          </div>
+
           {/* Other Menu Items */}
-          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Partners").map((item) => {
+          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Partners" && m.name !== "Reviews").map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -463,7 +532,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
+    <div className="flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200">
       {/* Desktop Sidebar (Persistent) */}
       <aside
         className={cn(
@@ -619,7 +688,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto overflow-x-hidden">
           <ToastProvider>
             {children}
           </ToastProvider>

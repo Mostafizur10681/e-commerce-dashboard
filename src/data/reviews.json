@@ -1,0 +1,42 @@
+[
+  {
+    "id": "rev-1",
+    "productName": "iPhone 15 Pro Max",
+    "customerName": "Sarah Connor",
+    "rating": 5,
+    "comment": "Absolutely incredible battery life and camera is stellar. Highly recommend it!",
+    "date": "2026-06-13",
+    "approved": true,
+    "status": "Approved"
+  },
+  {
+    "id": "rev-2",
+    "productName": "Wireless ANC Headphones",
+    "customerName": "John Doe",
+    "rating": 4,
+    "comment": "Great sound quality and noise cancelling, but can get a bit warm after 2 hours.",
+    "date": "2026-06-14",
+    "approved": true,
+    "status": "Approved"
+  },
+  {
+    "id": "rev-3",
+    "productName": "Ergonomic Office Chair",
+    "customerName": "Alice Smith",
+    "rating": 4,
+    "comment": "Saved my back! Super adjustable and high quality materials.",
+    "date": "2026-06-15",
+    "approved": true,
+    "status": "Approved"
+  },
+  {
+    "id": "rev-4",
+    "productName": "Minimalist Leather Backpack",
+    "customerName": "Robert Downey",
+    "rating": 2,
+    "comment": "Too small for my needs and zipper broke on the second day. Disappointed.",
+    "date": "2026-06-08",
+    "approved": true,
+    "status": "Approved"
+  }
+]

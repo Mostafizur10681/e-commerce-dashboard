@@ -1,0 +1,47 @@
+[
+  {
+    "id": "cust-1",
+    "name": "Sarah Connor",
+    "email": "sarah.connor@cyberdyne.com",
+    "phone": "+1 (555) 123-4567",
+    "ordersCount": 12,
+    "joinedDate": "2025-01-15",
+    "status": "Inactive"
+  },
+  {
+    "id": "cust-2",
+    "name": "John Doe",
+    "email": "john.doe@gmail.com",
+    "phone": "+1 (555) 987-6543",
+    "ordersCount": 5,
+    "joinedDate": "2025-02-10",
+    "status": "Active"
+  },
+  {
+    "id": "cust-3",
+    "name": "Alice Smith",
+    "email": "alice.smith@yahoo.com",
+    "phone": "+1 (555) 456-7890",
+    "ordersCount": 8,
+    "joinedDate": "2025-03-05",
+    "status": "Active"
+  },
+  {
+    "id": "cust-4",
+    "name": "Bruce Wayne",
+    "email": "bruce@waynecorp.com",
+    "phone": "+1 (555) 777-8888",
+    "ordersCount": 22,
+    "joinedDate": "2024-11-20",
+    "status": "Inactive"
+  },
+  {
+    "id": "cust-5",
+    "name": "Peter Parker",
+    "email": "peter@dailybugle.com",
+    "phone": "+1 (555) 111-2222",
+    "ordersCount": 3,
+    "joinedDate": "2025-04-01",
+    "status": "Active"
+  }
+]

@@ -63,7 +63,7 @@ export default function OrderInvoicePage() {
   }
 
   return (
-    <div className="space-y-6 min-h-screen p-6 bg-gray-50 dark:bg-gray-955 transition-colors duration-300 print:bg-white print:p-0 print:min-h-0">
+    <div className="space-y-6 min-h-screen p-6 bg-gray-50 dark:bg-black transition-colors duration-300 print:bg-white print:p-0 print:min-h-0">
       {/* Breadcrumb - Hidden on print */}
       <div className="space-y-1 print:hidden">
         <Breadcrumbs
@@ -76,7 +76,7 @@ export default function OrderInvoicePage() {
         />
         <div className="pt-2">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Order Invoice</h1>
-          <p className="text-sm text-gray-505 dark:text-gray-400">
+          <p className="text-sm text-gray-505 dark:text-gray-505">
             Generate and export custom customer invoice billing
           </p>
         </div>
