@@ -66,6 +66,7 @@ interface StoreState {
   addPartner: (partner: Omit<Partner, "id">) => void;
   updatePartner: (id: string, partner: Partial<Partner>) => void;
   deletePartner: (id: string) => void;
+  getPartnerById: (id: string) => Partner | undefined;
 
   // Banners CRUD
   addBanner: (banner: Omit<Banner, "id">) => void;
@@ -343,6 +344,10 @@ export const useStore = create<StoreState>((set, get) => ({
     const updated = get().partners.filter((p) => p.id !== id);
     set({ partners: updated });
     saveToLocalStorage("df_partners", updated);
+  },
+
+  getPartnerById: (id) => {
+    return get().partners.find((p) => p.id === id);
   },
 
   // Banners CRUD

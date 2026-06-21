@@ -25,7 +25,10 @@ export default function RootLayout({
       className={`${geistMono.variable} font-sans google-sans-flex h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans google-sans-flex">
+      <body
+        className="min-h-full flex flex-col bg-background text-foreground font-sans google-sans-flex"
+        suppressHydrationWarning
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

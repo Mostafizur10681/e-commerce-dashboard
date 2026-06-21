@@ -68,48 +68,159 @@ export const initialOrders: Order[] = [
   {
     id: "ord-1001",
     customerName: "Sarah Connor",
+    customerEmail: "sarah.connor@cyberdyne.com",
     amount: 1548,
+    subtotal: 1528,
+    shippingCost: 20,
     status: "Delivered",
+    paymentStatus: "Paid",
+    paymentMethod: "Credit Card",
+    transactionId: "txn_8273948512",
+    paymentDate: "2026-06-12",
     date: "2026-06-12",
+    shippingAddress: {
+      street: "123 Cyberdyne Blvd",
+      city: "Los Angeles",
+      state: "CA",
+      zip: "90210",
+      country: "USA"
+    },
+    billingAddress: {
+      street: "123 Cyberdyne Blvd",
+      city: "Los Angeles",
+      state: "CA",
+      zip: "90210",
+      country: "USA"
+    },
     items: [
-      { productName: "iPhone 15 Pro Max", quantity: 1, price: 1199 },
-      { productName: "Wireless ANC Headphones", quantity: 1, price: 349 },
+      { productName: "iPhone 15 Pro Max", quantity: 1, price: 1199, thumbnail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><rect width='100' height='100' fill='%236366f1'/></svg>" },
+      { productName: "Wireless ANC Headphones", quantity: 1, price: 349, thumbnail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6'/></svg>" },
     ],
   },
   {
     id: "ord-1002",
     customerName: "John Doe",
+    customerEmail: "john.doe@gmail.com",
     amount: 349,
+    subtotal: 349,
+    shippingCost: 0,
     status: "Shipped",
+    paymentStatus: "Paid",
+    paymentMethod: "PayPal",
+    transactionId: "txn_1029384756",
+    paymentDate: "2026-06-14",
     date: "2026-06-14",
-    items: [{ productName: "Wireless ANC Headphones", quantity: 1, price: 349 }],
+    shippingAddress: {
+      street: "456 Main Street, Apt 2B",
+      city: "New York",
+      state: "NY",
+      zip: "10001",
+      country: "USA"
+    },
+    billingAddress: {
+      street: "456 Main Street, Apt 2B",
+      city: "New York",
+      state: "NY",
+      zip: "10001",
+      country: "USA"
+    },
+    items: [
+      { productName: "Wireless ANC Headphones", quantity: 1, price: 349, thumbnail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6'/></svg>" }
+    ],
   },
   {
     id: "ord-1003",
     customerName: "Alice Smith",
+    customerEmail: "alice.smith@yahoo.com",
     amount: 688,
+    subtotal: 673,
+    shippingCost: 15,
     status: "Processing",
+    paymentStatus: "Paid",
+    paymentMethod: "Bank Transfer",
+    transactionId: "txn_5647382910",
+    paymentDate: "2026-06-15",
     date: "2026-06-15",
+    shippingAddress: {
+      street: "789 Pine Ave",
+      city: "San Francisco",
+      state: "CA",
+      zip: "94103",
+      country: "USA"
+    },
+    billingAddress: {
+      street: "789 Pine Ave",
+      city: "San Francisco",
+      state: "CA",
+      zip: "94103",
+      country: "USA"
+    },
     items: [
-      { productName: "Ergonomic Office Chair", quantity: 1, price: 499 },
-      { productName: "Minimalist Leather Backpack", quantity: 1, price: 189 },
+      { productName: "Ergonomic Office Chair", quantity: 1, price: 499, thumbnail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2310b981'/></svg>" },
+      { productName: "Minimalist Leather Backpack", quantity: 1, price: 189, thumbnail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23f59e0b'/></svg>" },
     ],
   },
   {
     id: "ord-1004",
     customerName: "Bruce Wayne",
+    customerEmail: "bruce@waynecorp.com",
     amount: 2398,
+    subtotal: 2398,
+    shippingCost: 0,
     status: "Pending",
+    paymentStatus: "Pending",
+    paymentMethod: "Credit Card",
+    transactionId: "txn_9081726354",
+    paymentDate: "2026-06-16",
     date: "2026-06-16",
-    items: [{ productName: "iPhone 15 Pro Max", quantity: 2, price: 1199 }],
+    shippingAddress: {
+      street: "1007 Mountain Drive",
+      city: "Gotham City",
+      state: "NJ",
+      zip: "07001",
+      country: "USA"
+    },
+    billingAddress: {
+      street: "1007 Mountain Drive",
+      city: "Gotham City",
+      state: "NJ",
+      zip: "07001",
+      country: "USA"
+    },
+    items: [
+      { productName: "iPhone 15 Pro Max", quantity: 2, price: 1199, thumbnail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><rect width='100' height='100' fill='%236366f1'/></svg>" }
+    ],
   },
   {
     id: "ord-1005",
     customerName: "Peter Parker",
+    customerEmail: "peter@dailybugle.com",
     amount: 150,
+    subtotal: 130,
+    shippingCost: 20,
     status: "Cancelled",
+    paymentStatus: "Failed",
+    paymentMethod: "PayPal",
+    transactionId: "txn_7766554433",
+    paymentDate: "2026-06-10",
     date: "2026-06-10",
-    items: [{ productName: "Ultra Running Shoes", quantity: 1, price: 150 }],
+    shippingAddress: {
+      street: "20 Ingram Street",
+      city: "Forest Hills, Queens",
+      state: "NY",
+      zip: "11375",
+      country: "USA"
+    },
+    billingAddress: {
+      street: "20 Ingram Street",
+      city: "Forest Hills, Queens",
+      state: "NY",
+      zip: "11375",
+      country: "USA"
+    },
+    items: [
+      { productName: "Ultra Running Shoes", quantity: 1, price: 150, thumbnail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ec4899'/></svg>" }
+    ],
   },
 ];
 
@@ -153,9 +264,9 @@ export const initialReviews: Review[] = [
 ];
 
 export const initialPartners: Partner[] = [
-  { id: "part-1", logo: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><rect width='100' height='40' fill='%23e2e8f0' rx='5'/><text x='50' y='25' font-family='sans-serif' font-weight='bold' font-size='12' fill='%23475569' text-anchor='middle'>Stripe</text></svg>", name: "Stripe", website: "https://stripe.com" },
-  { id: "part-2", logo: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><rect width='100' height='40' fill='%23e2e8f0' rx='5'/><text x='50' y='25' font-family='sans-serif' font-weight='bold' font-size='12' fill='%23475569' text-anchor='middle'>FedEx</text></svg>", name: "FedEx", website: "https://fedex.com" },
-  { id: "part-3", logo: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><rect width='100' height='40' fill='%23e2e8f0' rx='5'/><text x='50' y='25' font-family='sans-serif' font-weight='bold' font-size='12' fill='%23475569' text-anchor='middle'>Shopify</text></svg>", name: "Shopify", website: "https://shopify.com" },
+  { id: "part-1", logo: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><rect width='100' height='40' fill='%23e2e8f0' rx='5'/><text x='50' y='25' font-family='sans-serif' font-weight='bold' font-size='12' fill='%23475569' text-anchor='middle'>Stripe</text></svg>", name: "Stripe", website: "https://stripe.com", status: "Active", createdAt: "2026-06-10" },
+  { id: "part-2", logo: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><rect width='100' height='40' fill='%23e2e8f0' rx='5'/><text x='50' y='25' font-family='sans-serif' font-weight='bold' font-size='12' fill='%23475569' text-anchor='middle'>FedEx</text></svg>", name: "FedEx", website: "https://fedex.com", status: "Active", createdAt: "2026-06-11" },
+  { id: "part-3", logo: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='40' viewBox='0 0 100 40'><rect width='100' height='40' fill='%23e2e8f0' rx='5'/><text x='50' y='25' font-family='sans-serif' font-weight='bold' font-size='12' fill='%23475569' text-anchor='middle'>Shopify</text></svg>", name: "Shopify", website: "https://shopify.com", status: "Active", createdAt: "2026-06-12" },
 ];
 
 export const initialBanners: Banner[] = [

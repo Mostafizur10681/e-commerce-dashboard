@@ -66,6 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isProductOpen, setIsProductOpen] = useState(true);
   const [isCategoryOpen, setIsCategoryOpen] = useState(true);
   const [isAttributesOpen, setIsAttributesOpen] = useState(true);
+  const [isPartnersOpen, setIsPartnersOpen] = useState(true);
 
   useEffect(() => {
     if (pathname.startsWith("/admin/products")) {
@@ -76,6 +77,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     if (pathname.startsWith("/admin/attributes")) {
       setIsAttributesOpen(true);
+    }
+    if (pathname.startsWith("/admin/partners")) {
+      setIsPartnersOpen(true);
     }
   }, [pathname]);
 
@@ -349,8 +353,73 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
           </div>
 
+          {/* Collapsible Partners Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsPartnersOpen(true);
+                } else {
+                  setIsPartnersOpen(!isPartnersOpen);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
+                pathname.startsWith("/admin/partners") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                isCollapsed && "justify-center px-2"
+              )}
+              title="Partners"
+            >
+              <div className="flex items-center gap-3">
+                <Handshake className="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-400" />
+                {!isCollapsed && <span>Partners</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-300",
+                    isPartnersOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+
+            {/* Submenus (Only visible if not collapsed and isPartnersOpen is true) */}
+            {!isCollapsed && isPartnersOpen && (
+              <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
+                <Link
+                  href="/admin/partners"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/partners"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Partner List
+                </Link>
+                <Link
+                  href="/admin/partners/add"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/partners/add"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Add Partner
+                </Link>
+              </div>
+            )}
+          </div>
+
           {/* Other Menu Items */}
-          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories").map((item) => {
+          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Partners").map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (

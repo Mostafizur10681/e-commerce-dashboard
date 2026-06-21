@@ -157,7 +157,7 @@ export default function CustomersPage() {
             setEditingCustomer(null);
             setIsFormOpen(true);
           }}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
+          className="bg-primary hover:bg-primary-700 text-white flex items-center gap-2"
         >
           <Plus className="h-4 w-4" /> Add Customer
         </Button>

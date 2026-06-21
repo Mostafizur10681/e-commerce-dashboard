@@ -21,13 +21,37 @@ export interface Category {
 
 export type OrderStatus = "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
 
+export type PaymentStatus = "Paid" | "Pending" | "Failed" | "Refunded";
+
 export interface Order {
   id: string;
   customerName: string;
-  amount: number;
-  status: OrderStatus;
-  date: string;
-  items: { productName: string; quantity: number; price: number }[];
+  customerEmail?: string;
+  customerAvatar?: string;
+  amount: number; // total
+  subtotal?: number;
+  shippingCost?: number;
+  status: OrderStatus | "Returned";
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: string;
+  transactionId?: string;
+  paymentDate?: string;
+  date: string; // Order Date
+  shippingAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+  billingAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+  };
+  items: { productName: string; quantity: number; price: number; thumbnail?: string }[];
 }
 
 export interface Customer {
@@ -51,9 +75,14 @@ export interface Review {
 
 export interface Partner {
   id: string;
-  logo: string;
   name: string;
   website: string;
+  logo: string;
+  image?: string;
+  description?: string;
+  status?: "Active" | "Inactive" | "active" | "inactive";
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Banner {
