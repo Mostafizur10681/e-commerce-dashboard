@@ -119,3 +119,15 @@ export interface Attribute {
   status?: "Active" | "Inactive";
   createdDate?: string;
 }
+
+export interface Subscription {
+  id: string;
+  name: string;
+  email: string;
+  plan: string;
+  status: "Active" | "Expired" | "Cancelled";
+  startDate: string;
+  endDate: string;
+  autoRenew: boolean;
+}
+

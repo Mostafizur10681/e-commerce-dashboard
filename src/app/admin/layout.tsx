@@ -99,6 +99,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Customers", href: "/admin/customers", icon: Users },
     { name: "Reviews", href: "/admin/reviews", icon: Star },
     { name: "Partners", href: "/admin/partners", icon: Handshake },
+    { name: "Subscriptions", href: "/admin/subscriptions", icon: Package },
     { name: "Banners", href: "/admin/banners", icon: ImageIcon },
     { name: "Users", href: "/admin/users", icon: UserCog },
     { name: "Settings", href: "/admin/settings", icon: SettingsIcon },

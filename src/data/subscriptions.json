@@ -1,0 +1,26 @@
+[
+  {
+    "id": "sub-1001",
+    "userId": "u-001",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "plan": "Basic",
+    "status": "Active",
+    "startDate": "2023-01-01",
+    "endDate": "2024-01-01",
+    "paymentStatus": "Paid",
+    "autoRenew": true
+  },
+  {
+    "id": "sub-1002",
+    "userId": "u-002",
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "plan": "Pro",
+    "status": "Expired",
+    "startDate": "2022-05-15",
+    "endDate": "2023-05-15",
+    "paymentStatus": "Failed",
+    "autoRenew": false
+  }
+]
