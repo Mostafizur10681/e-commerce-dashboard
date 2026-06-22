@@ -124,10 +124,15 @@ export interface Subscription {
   id: string;
   name: string;
   email: string;
-  plan: string;
-  status: "Active" | "Expired" | "Cancelled";
-  startDate: string;
-  endDate: string;
-  autoRenew: boolean;
+  status: "Active" | "Subscribed" | "Unsubscribed" | "Pending" | "Expired" | "Cancelled";
+  source: "Website" | "Checkout" | "Newsletter Popup" | "Manual";
+  subscriptionDate: string;
+  lastActivity: string;
+  notes?: string;
+  activityHistory?: { date: string; action: string }[];
+  plan?: string;
+  startDate?: string;
+  endDate?: string;
+  autoRenew?: boolean;
 }
 

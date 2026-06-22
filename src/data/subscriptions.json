@@ -1,26 +1,274 @@
 [
   {
     "id": "sub-1001",
-    "userId": "u-001",
-    "name": "John Doe",
-    "email": "john@example.com",
+    "name": "Sarah Connor",
+    "email": "sarah.connor@cyberdyne.com",
+    "status": "Subscribed",
+    "source": "Website",
+    "subscriptionDate": "2026-01-12",
+    "lastActivity": "2026-06-20",
+    "notes": "Interested in AI security guidelines and automated warnings.",
+    "activityHistory": [
+      {
+        "date": "2026-01-12",
+        "action": "Subscribed via Website newsletter form"
+      },
+      {
+        "date": "2026-03-15",
+        "action": "Opened newsletter 'AI Safety Protocols'"
+      },
+      {
+        "date": "2026-06-20",
+        "action": "Clicked link in 'Latest Tech Updates'"
+      }
+    ],
     "plan": "Basic",
-    "status": "Active",
-    "startDate": "2023-01-01",
-    "endDate": "2024-01-01",
-    "paymentStatus": "Paid",
+    "startDate": "2026-01-12",
+    "endDate": "2027-01-12",
     "autoRenew": true
   },
   {
     "id": "sub-1002",
-    "userId": "u-002",
-    "name": "Jane Smith",
-    "email": "jane@example.com",
+    "name": "John Connor",
+    "email": "john.connor@resistance.net",
+    "status": "Active",
+    "source": "Checkout",
+    "subscriptionDate": "2025-11-05",
+    "lastActivity": "2026-06-22",
+    "notes": "VIP customer. Subscribed during purchase of tactical equipment.",
+    "activityHistory": [
+      {
+        "date": "2025-11-05",
+        "action": "Created account during checkout"
+      },
+      {
+        "date": "2025-11-05",
+        "action": "Opted in to marketing emails"
+      },
+      {
+        "date": "2026-06-22",
+        "action": "Purchased item and updated preferences"
+      }
+    ],
     "plan": "Pro",
-    "status": "Expired",
-    "startDate": "2022-05-15",
-    "endDate": "2023-05-15",
-    "paymentStatus": "Failed",
+    "startDate": "2025-11-05",
+    "endDate": "2026-11-05",
+    "autoRenew": true
+  },
+  {
+    "id": "sub-1003",
+    "name": "Ellen Ripley",
+    "email": "ripley@nostromo.org",
+    "status": "Unsubscribed",
+    "source": "Newsletter Popup",
+    "subscriptionDate": "2026-03-22",
+    "lastActivity": "2026-05-15",
+    "notes": "Opted out. Stated: 'Too many marketing communications, focus on survival.'",
+    "activityHistory": [
+      {
+        "date": "2026-03-22",
+        "action": "Subscribed via exit-intent popup"
+      },
+      {
+        "date": "2026-05-15",
+        "action": "Clicked Unsubscribe in newsletter footer"
+      }
+    ],
+    "plan": "Basic",
+    "startDate": "2026-03-22",
+    "endDate": "2027-03-22",
     "autoRenew": false
+  },
+  {
+    "id": "sub-1004",
+    "name": "Arthur Dent",
+    "email": "dent.arthur@guide.galaxy",
+    "status": "Pending",
+    "source": "Manual",
+    "subscriptionDate": "2026-06-19",
+    "lastActivity": "2026-06-19",
+    "notes": "Added manually by admin staff. Awaiting double opt-in validation.",
+    "activityHistory": [
+      {
+        "date": "2026-06-19",
+        "action": "Manually added by Administrator"
+      },
+      {
+        "date": "2026-06-19",
+        "action": "Verification email sent to subscriber"
+      }
+    ],
+    "plan": "Basic",
+    "startDate": "2026-06-19",
+    "endDate": "2027-06-19",
+    "autoRenew": false
+  },
+  {
+    "id": "sub-1005",
+    "name": "Luke Skywalker",
+    "email": "luke@tatooine-moons.com",
+    "status": "Active",
+    "source": "Website",
+    "subscriptionDate": "2025-08-10",
+    "lastActivity": "2026-06-21",
+    "notes": "Active forum member, follows mechanical restoration threads.",
+    "activityHistory": [
+      {
+        "date": "2025-08-10",
+        "action": "Subscribed via footer widget"
+      },
+      {
+        "date": "2026-06-21",
+        "action": "Downloaded PDF 'T-16 Skyhopper Maintenance Guide'"
+      }
+    ],
+    "plan": "Premium",
+    "startDate": "2025-08-10",
+    "endDate": "2026-08-10",
+    "autoRenew": true
+  },
+  {
+    "id": "sub-1006",
+    "name": "Leia Organa",
+    "email": "leia.organa@senate.gov",
+    "status": "Subscribed",
+    "source": "Checkout",
+    "subscriptionDate": "2025-09-12",
+    "lastActivity": "2026-06-20",
+    "notes": "Subscribes for political science and galactic logistics publications.",
+    "activityHistory": [
+      {
+        "date": "2025-09-12",
+        "action": "Subscribed during custom checkout process"
+      },
+      {
+        "date": "2026-06-20",
+        "action": "Viewed marketing campaign 'Rebuild the Galaxy'"
+      }
+    ],
+    "plan": "Pro",
+    "startDate": "2025-09-12",
+    "endDate": "2026-09-12",
+    "autoRenew": true
+  },
+  {
+    "id": "sub-1007",
+    "name": "Bruce Wayne",
+    "email": "bruce@wayne-enterprises.com",
+    "status": "Active",
+    "source": "Manual",
+    "subscriptionDate": "2026-02-14",
+    "lastActivity": "2026-06-18",
+    "notes": "Anonymous high net-worth individual. Keep communications minimal.",
+    "activityHistory": [
+      {
+        "date": "2026-02-14",
+        "action": "Created manually by executive team request"
+      },
+      {
+        "date": "2026-06-18",
+        "action": "Logged into profile dashboard from Gotham City"
+      }
+    ],
+    "plan": "Premium",
+    "startDate": "2026-02-14",
+    "endDate": "2027-02-14",
+    "autoRenew": true
+  },
+  {
+    "id": "sub-1008",
+    "name": "Clark Kent",
+    "email": "ckent@dailyplanet.com",
+    "status": "Unsubscribed",
+    "source": "Website",
+    "subscriptionDate": "2026-04-01",
+    "lastActivity": "2026-04-10",
+    "notes": "Journalist. Opted out due to excessive newsletters.",
+    "activityHistory": [
+      {
+        "date": "2026-04-01",
+        "action": "Subscribed via Daily Planet affiliate link"
+      },
+      {
+        "date": "2026-04-10",
+        "action": "Unsubscribed via preferences panel"
+      }
+    ],
+    "plan": "Basic",
+    "startDate": "2026-04-01",
+    "endDate": "2027-04-01",
+    "autoRenew": false
+  },
+  {
+    "id": "sub-1009",
+    "name": "Diana Prince",
+    "email": "diana@louvre.museum",
+    "status": "Active",
+    "source": "Newsletter Popup",
+    "subscriptionDate": "2026-05-30",
+    "lastActivity": "2026-06-19",
+    "notes": "Follows antiquities and historical preservation announcements.",
+    "activityHistory": [
+      {
+        "date": "2026-05-30",
+        "action": "Subscribed via archaeological collection landing page"
+      },
+      {
+        "date": "2026-06-19",
+        "action": "Opened email 'Ancient Arts Spotlight'"
+      }
+    ],
+    "plan": "Pro",
+    "startDate": "2026-05-30",
+    "endDate": "2027-05-30",
+    "autoRenew": true
+  },
+  {
+    "id": "sub-1010",
+    "name": "Peter Parker",
+    "email": "spidey@dailybugle.com",
+    "status": "Subscribed",
+    "source": "Website",
+    "subscriptionDate": "2026-06-02",
+    "lastActivity": "2026-06-21",
+    "notes": "Freelance photographer subscriber. Subscribed to photography contest lists.",
+    "activityHistory": [
+      {
+        "date": "2026-06-02",
+        "action": "Joined standard marketing list"
+      },
+      {
+        "date": "2026-06-21",
+        "action": "Submitted photo link to subscriber newsletter thread"
+      }
+    ],
+    "plan": "Basic",
+    "startDate": "2026-06-02",
+    "endDate": "2027-06-02",
+    "autoRenew": false
+  },
+  {
+    "id": "sub-1011",
+    "name": "Tony Stark",
+    "email": "tony@starkindustries.com",
+    "status": "Active",
+    "source": "Checkout",
+    "subscriptionDate": "2026-06-15",
+    "lastActivity": "2026-06-22",
+    "notes": "Interested in energy grid innovations. Do not spam.",
+    "activityHistory": [
+      {
+        "date": "2026-06-15",
+        "action": "Subscribed during ARC reactor accessory checkout"
+      },
+      {
+        "date": "2026-06-22",
+        "action": "Upgraded profile settings and verified email"
+      }
+    ],
+    "plan": "Premium",
+    "startDate": "2026-06-15",
+    "endDate": "2027-06-15",
+    "autoRenew": true
   }
 ]
