@@ -1,0 +1,79 @@
+[
+  {
+    "id": "msg-1002",
+    "name": "Peter Parker",
+    "email": "spidey@bugle.com",
+    "phone": "+1 555-6666",
+    "subject": "Freelance Photography",
+    "message": "Are you looking for high-quality food photography for your catalog? Let me know!",
+    "status": "Unread",
+    "adminNote": "",
+    "createdAt": "2026-06-22T11:40:00.000Z"
+  },
+  {
+    "id": "msg-1003",
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "phone": "+1 555-0120",
+    "subject": "Shipping Status",
+    "message": "Hi! My order #ord-1002 is still processing. Can you please let me know when it will ship?",
+    "status": "Unread",
+    "adminNote": "",
+    "createdAt": "2026-06-22T11:35:00.000Z"
+  },
+  {
+    "id": "msg-1004",
+    "name": "Arthur Dent",
+    "email": "arthur@hitchhiker.guide",
+    "phone": "+44 1928-3333",
+    "subject": "Towel Stock",
+    "message": "Do you sell high quality towels that are useful when travelling across the galaxy? Please respond quickly, my planet was just demolished.",
+    "status": "Unread",
+    "adminNote": "",
+    "createdAt": "2026-06-22T09:50:00.000Z"
+  },
+  {
+    "id": "msg-1005",
+    "name": "Sarah Connor",
+    "email": "sarah.connor@cyberdyne.com",
+    "phone": "+1 555-0100",
+    "subject": "AI safety precautions",
+    "message": "I noticed you are using automated tracking systems. Please make sure they are not connected to Skynet.",
+    "status": "Read",
+    "adminNote": "Verified customer. Discussed firewall safety configurations.",
+    "createdAt": "2026-06-21T15:20:00.000Z"
+  },
+  {
+    "id": "msg-1006",
+    "name": "Bruce Wayne",
+    "email": "bruce@wayne.com",
+    "phone": "+1 555-9999",
+    "subject": "Corporate Sponsorship",
+    "message": "I would like to discuss a charity partnership between FreshMart and the Wayne Foundation.",
+    "status": "Replied",
+    "adminNote": "Replied via email with custom sponsorship proposal package.",
+    "createdAt": "2026-06-20T10:00:00.000Z"
+  },
+  {
+    "id": "msg-1007",
+    "name": "Leia Organa",
+    "email": "leia@senate.gov",
+    "phone": "+1 555-8888",
+    "subject": "Logistics Partnership",
+    "message": "Our logistics hubs in the outer rim need organic grocery distribution partners. Can we setup a holo-call?",
+    "status": "Replied",
+    "adminNote": "Replied to Leia. Connected her with the vendor relations director.",
+    "createdAt": "2026-06-19T14:30:00.000Z"
+  },
+  {
+    "id": "msg-1008",
+    "name": "Ellen Ripley",
+    "email": "ripley@nostromo.org",
+    "phone": "+1 555-7777",
+    "subject": "Refund Request",
+    "message": "The package I ordered got damaged by some acidic substance during transit. Requesting a full refund.",
+    "status": "Read",
+    "adminNote": "Marked as read. Preparing refund approval.",
+    "createdAt": "2026-06-18T08:15:00.000Z"
+  }
+]

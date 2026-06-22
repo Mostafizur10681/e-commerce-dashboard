@@ -10,6 +10,8 @@ import {
   Layers,
   ClipboardList,
   Users,
+  MessageSquare,
+  Mail,
   Star,
   Handshake,
   Image as ImageIcon,
@@ -35,6 +37,7 @@ import { useStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import useSWR from "swr";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +53,8 @@ interface MenuItem {
   href: string;
   icon: React.ComponentType<any>;
 }
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -92,11 +97,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setMounted(true);
   }, []);
 
+  // Fetch messages via SWR for notification dropdown
+  const { data: messagesData } = useSWR(
+    mounted ? "/api/messages?limit=5" : null,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
+  const unreadMessagesCount = messagesData?.stats?.unread || 0;
+  const latestMessages = messagesData?.data || [];
+
   const menuItems: MenuItem[] = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Categories", href: "/admin/categories", icon: Layers },
     { name: "Orders", href: "/admin/orders", icon: ClipboardList },
     { name: "Customers", href: "/admin/customers", icon: Users },
+    { name: "Messages", href: "/admin/messages", icon: MessageSquare },
     { name: "Reviews", href: "/admin/reviews", icon: Star },
     { name: "Partners", href: "/admin/partners", icon: Handshake },
     { name: "Subscriptions", href: "/admin/subscriptions", icon: Package },
@@ -620,6 +635,85 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+
+            {/* Messages Alert Pop */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="relative h-9 w-9 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <MessageSquare className="h-5 w-5" />
+                    {unreadMessagesCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 hover:bg-red-650 text-[10px] text-white border-2 border-white dark:border-gray-900 rounded-full font-bold">
+                        {unreadMessagesCount}
+                      </Badge>
+                    )}
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-80 p-0 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+                <div className="p-4 border-b border-gray-100 dark:border-gray-800 text-sm font-semibold text-gray-900 dark:text-white">
+                  New Messages
+                </div>
+                <div className="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                  {latestMessages.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-gray-400 dark:text-slate-500">
+                      No new messages
+                    </div>
+                  ) : (
+                    latestMessages.map((msg: any) => {
+                      const isUnread = msg.status === "Unread";
+                      
+                      const getRelativeTime = (isoString: string) => {
+                        try {
+                          const diff = Date.now() - new Date(isoString).getTime();
+                          const mins = Math.floor(diff / 60000);
+                          if (mins < 1) return "Just now";
+                          if (mins < 60) return `${mins} min ago`;
+                          const hours = Math.floor(mins / 60);
+                          if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
+                          return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+                        } catch (e) {
+                          return "Recently";
+                        }
+                      };
+
+                      return (
+                        <div
+                          key={msg.id}
+                          onClick={() => router.push("/admin/messages")}
+                          className="p-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/40 cursor-pointer flex gap-3 items-start transition-colors"
+                        >
+                          <div className="mt-0.5 flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className={cn("text-xs truncate text-gray-900 dark:text-white", isUnread ? "font-bold" : "font-medium")}>
+                                {msg.name}
+                              </p>
+                              <span className="text-[9px] text-gray-400 shrink-0 font-mono">
+                                {getRelativeTime(msg.createdAt)}
+                              </span>
+                            </div>
+                            <p className={cn("text-[11px] truncate text-gray-500 dark:text-slate-400 mt-0.5", isUnread && "font-semibold text-gray-900 dark:text-white")}>
+                              {msg.subject}
+                            </p>
+                          </div>
+                          {isUnread && (
+                            <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1.5 animate-pulse" />
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <div className="p-2.5 border-t border-gray-100 dark:border-gray-800 text-center bg-gray-50/50 dark:bg-gray-900/50 rounded-b-xl">
+                  <Link
+                    href="/admin/messages"
+                    className="text-xs font-semibold text-primary hover:text-primary-700 dark:text-primary-400 flex items-center justify-center gap-1"
+                  >
+                    View All Messages
+                  </Link>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Notifications Alert Pop */}
             <DropdownMenu>
