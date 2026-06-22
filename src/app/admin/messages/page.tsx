@@ -179,6 +179,35 @@ export default function MessagesPage() {
     }
   };
 
+  useEffect(() => {
+    const checkQueryParam = async () => {
+      if (!mounted) return;
+      const params = new URLSearchParams(window.location.search);
+      const msgId = params.get("id");
+      if (msgId) {
+        const found = messages.find((m) => m.id === msgId);
+        if (found) {
+          handleOpenQuickView(found);
+          const newUrl = window.location.pathname;
+          window.history.replaceState({ path: newUrl }, "", newUrl);
+        } else if (messages.length > 0) {
+          try {
+            const res = await fetch(`/api/messages/${msgId}`);
+            if (res.ok) {
+              const msg = await res.json();
+              handleOpenQuickView(msg);
+              const newUrl = window.location.pathname;
+              window.history.replaceState({ path: newUrl }, "", newUrl);
+            }
+          } catch (e) {
+            console.error("Error fetching message from query param:", e);
+          }
+        }
+      }
+    };
+    checkQueryParam();
+  }, [mounted, messages]);
+
   const onSubmit = async (values: EditMessageFormValues) => {
     if (!editingMessage) return;
     try {

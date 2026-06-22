@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { mutate } from "swr";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -46,6 +47,7 @@ export default function ContactPage() {
         throw new Error(data.error || "Failed to send message.");
       }
 
+      mutate("/api/messages?limit=5");
       setSuccess(true);
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
     } catch (err: any) {

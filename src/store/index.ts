@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings, OrderStatus, Attribute } from "../types";
+import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings, OrderStatus, Attribute, ContactMessage } from "../types";
 import {
   initialProducts,
   initialCategories,
@@ -26,6 +26,7 @@ interface StoreState {
   banners: Banner[];
   users: User[];
   settings: Settings;
+  messages: ContactMessage[];
   isHydrated: boolean;
 
   // Hydration & Auth Actions
@@ -79,6 +80,13 @@ interface StoreState {
 
   // Settings Actions
   updateSettings: (settings: Partial<Settings>) => void;
+
+  // Messages Actions
+  addMessage: (message: Omit<ContactMessage, "id" | "createdAt">) => void;
+  updateMessageStatus: (id: string, status: "Unread" | "Read" | "Replied") => void;
+  deleteMessage: (id: string) => void;
+  markAllMessagesAsRead: () => void;
+  setMessages: (messages: ContactMessage[]) => void;
 }
 
 const saveToLocalStorage = (key: string, data: any) => {
@@ -107,6 +115,7 @@ export const useStore = create<StoreState>((set, get) => ({
   banners: initialBanners,
   users: initialUsers,
   settings: initialSettings,
+  messages: [],
   isHydrated: false,
 
   hydrate: () => {
@@ -123,6 +132,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const banners = getFromLocalStorage("df_banners", initialBanners);
     const users = getFromLocalStorage("df_users", initialUsers);
     const settings = getFromLocalStorage("df_settings", initialSettings);
+    const messages = getFromLocalStorage("df_messages", []);
 
     set({
       currentUser,
@@ -136,6 +146,7 @@ export const useStore = create<StoreState>((set, get) => ({
       banners,
       users,
       settings,
+      messages,
       isHydrated: true,
     });
   },
@@ -391,5 +402,40 @@ export const useStore = create<StoreState>((set, get) => ({
     const updated = { ...get().settings, ...data };
     set({ settings: updated });
     saveToLocalStorage("df_settings", updated);
+  },
+
+  // Messages Actions
+  addMessage: (message) => {
+    const newMsg: ContactMessage = {
+      ...message,
+      id: `msg-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [newMsg, ...get().messages];
+    set({ messages: updated });
+    saveToLocalStorage("df_messages", updated);
+  },
+
+  updateMessageStatus: (id, status) => {
+    const updated = get().messages.map((m) => (m.id === id ? { ...m, status } : m));
+    set({ messages: updated });
+    saveToLocalStorage("df_messages", updated);
+  },
+
+  deleteMessage: (id) => {
+    const updated = get().messages.filter((m) => m.id !== id);
+    set({ messages: updated });
+    saveToLocalStorage("df_messages", updated);
+  },
+
+  markAllMessagesAsRead: () => {
+    const updated = get().messages.map((m) => m.status === "Unread" ? { ...m, status: "Read" as const } : m);
+    set({ messages: updated });
+    saveToLocalStorage("df_messages", updated);
+  },
+
+  setMessages: (messages) => {
+    set({ messages });
+    saveToLocalStorage("df_messages", messages);
   },
 }));

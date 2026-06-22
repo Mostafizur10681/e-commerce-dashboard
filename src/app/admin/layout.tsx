@@ -37,7 +37,7 @@ import { useStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -124,6 +124,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     logout();
     router.push("/login");
   };
+
+  const handleMessageClick = async (msg: any) => {
+    if (msg.status === "Unread") {
+      try {
+        await fetch(`/api/messages/${msg.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Read" }),
+        });
+        useStore.getState().updateMessageStatus(msg.id, "Read");
+        mutate("/api/messages?limit=5");
+      } catch (err) {
+        console.error("Failed to mark message as read:", err);
+      }
+    }
+    router.push(`/admin/messages?id=${msg.id}`);
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const res = await fetch("/api/messages", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "markAllAsRead" }),
+      });
+      if (res.ok) {
+        useStore.getState().markAllMessagesAsRead();
+        mutate("/api/messages?limit=5");
+      }
+    } catch (err) {
+      console.error("Failed to mark all messages as read:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (messagesData?.data) {
+      useStore.getState().setMessages(messagesData.data);
+    }
+  }, [messagesData]);
 
   const SidebarContent = ({ className, isCollapsed }: { className?: string; isCollapsed?: boolean }) => {
     return (
@@ -650,14 +689,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end" className="w-80 p-0 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
-                <div className="p-4 border-b border-gray-100 dark:border-gray-800 text-sm font-semibold text-gray-900 dark:text-white">
-                  New Messages
+              <DropdownMenuContent align="end" className="w-[390px] max-w-[calc(100vw-32px)] p-0 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+                <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Messages</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    You have {unreadMessagesCount} unread messages
+                  </p>
                 </div>
-                <div className="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
                   {latestMessages.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-gray-400 dark:text-slate-500">
-                      No new messages
+                    <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
+                      <div className="h-12 w-12 rounded-2xl bg-gray-50 dark:bg-gray-800/80 text-gray-400 dark:text-gray-500 flex items-center justify-center border border-transparent dark:border-gray-700/50">
+                        <Mail className="h-6 w-6" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-400 dark:text-slate-500">
+                        No new messages
+                      </p>
                     </div>
                   ) : (
                     latestMessages.map((msg: any) => {
@@ -680,34 +727,63 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       return (
                         <div
                           key={msg.id}
-                          onClick={() => router.push("/admin/messages")}
-                          className="p-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/40 cursor-pointer flex gap-3 items-start transition-colors"
-                        >
-                          <div className="mt-0.5 flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className={cn("text-xs truncate text-gray-900 dark:text-white", isUnread ? "font-bold" : "font-medium")}>
-                                {msg.name}
-                              </p>
-                              <span className="text-[9px] text-gray-400 shrink-0 font-mono">
-                                {getRelativeTime(msg.createdAt)}
-                              </span>
-                            </div>
-                            <p className={cn("text-[11px] truncate text-gray-500 dark:text-slate-400 mt-0.5", isUnread && "font-semibold text-gray-900 dark:text-white")}>
-                              {msg.subject}
-                            </p>
-                          </div>
-                          {isUnread && (
-                            <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-1.5 animate-pulse" />
+                          onClick={() => handleMessageClick(msg)}
+                          className={cn(
+                            "p-3.5 cursor-pointer flex flex-col transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0",
+                            isUnread 
+                              ? "bg-blue-50/20 dark:bg-blue-950/10 border-l-[4px] border-l-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/15 pl-2.5" 
+                              : "hover:bg-gray-55 dark:hover:bg-gray-800/40 border-l-[4px] border-l-transparent pl-2.5"
                           )}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={cn("text-xs truncate text-gray-900 dark:text-white", isUnread ? "font-bold" : "font-medium")}>
+                              {msg.name}
+                            </p>
+                            <span className="text-[10px] text-gray-400 shrink-0 font-medium">
+                              {getRelativeTime(msg.createdAt)}
+                            </span>
+                          </div>
+                          
+                          <p className={cn("text-xs truncate mt-1 text-gray-905 dark:text-white", isUnread ? "font-bold text-gray-900 dark:text-white" : "font-medium text-gray-700 dark:text-gray-300")}>
+                            {msg.subject}
+                          </p>
+
+                          <p className={cn("text-[11px] mt-0.5 text-gray-500 dark:text-slate-400 line-clamp-2 leading-snug", isUnread && "font-semibold")}>
+                            {msg.message.length > 80 ? `${msg.message.substring(0, 80)}...` : msg.message}
+                          </p>
+
+                          <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-gray-100/50 dark:border-gray-800/30">
+                            <span className={cn("text-[9px] px-2 py-0.5 rounded-full font-bold", 
+                              isUnread 
+                                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400" 
+                                : "bg-gray-150 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                            )}>
+                              {isUnread ? "Unread" : "Read"}
+                            </span>
+
+                            {isUnread && (
+                              <div className="flex items-center gap-1">
+                                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                                <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400">New</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })
                   )}
                 </div>
-                <div className="p-2.5 border-t border-gray-100 dark:border-gray-800 text-center bg-gray-50/50 dark:bg-gray-900/50 rounded-b-xl">
+                <div className="p-2 border-t border-gray-100 dark:border-gray-800 grid grid-cols-2 gap-2 bg-gray-50/50 dark:bg-gray-900/50 rounded-b-xl">
+                  <Button
+                    variant="ghost"
+                    onClick={handleMarkAllAsRead}
+                    className="text-xs font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 h-8 rounded-lg cursor-pointer"
+                  >
+                    Mark All As Read
+                  </Button>
                   <Link
                     href="/admin/messages"
-                    className="text-xs font-semibold text-primary hover:text-primary-700 dark:text-primary-400 flex items-center justify-center gap-1"
+                    className="inline-flex items-center justify-center text-xs font-semibold text-primary hover:bg-primary/10 dark:text-primary-400 h-8 rounded-lg transition-colors"
                   >
                     View All Messages
                   </Link>

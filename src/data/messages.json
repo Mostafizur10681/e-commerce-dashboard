@@ -6,7 +6,7 @@
     "phone": "+1 555-6666",
     "subject": "Freelance Photography",
     "message": "Are you looking for high-quality food photography for your catalog? Let me know!",
-    "status": "Unread",
+    "status": "Read",
     "adminNote": "",
     "createdAt": "2026-06-22T11:40:00.000Z"
   },
@@ -17,7 +17,7 @@
     "phone": "+1 555-0120",
     "subject": "Shipping Status",
     "message": "Hi! My order #ord-1002 is still processing. Can you please let me know when it will ship?",
-    "status": "Unread",
+    "status": "Read",
     "adminNote": "",
     "createdAt": "2026-06-22T11:35:00.000Z"
   },
@@ -28,7 +28,7 @@
     "phone": "+44 1928-3333",
     "subject": "Towel Stock",
     "message": "Do you sell high quality towels that are useful when travelling across the galaxy? Please respond quickly, my planet was just demolished.",
-    "status": "Unread",
+    "status": "Read",
     "adminNote": "",
     "createdAt": "2026-06-22T09:50:00.000Z"
   },

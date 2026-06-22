@@ -184,3 +184,33 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Failed to delete message" }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { action } = body;
+
+    if (action === "markAllAsRead") {
+      const messages = await readMessages();
+      let updatedCount = 0;
+      const updatedMessages = messages.map((m) => {
+        if (m.status === "Unread") {
+          updatedCount++;
+          return { ...m, status: "Read" as const };
+        }
+        return m;
+      });
+
+      if (updatedCount > 0) {
+        await writeMessages(updatedMessages);
+      }
+
+      return NextResponse.json({ success: true, updatedCount });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (err) {
+    console.error("PUT bulk messages error:", err);
+    return NextResponse.json({ error: "Failed to update messages" }, { status: 500 });
+  }
+}
