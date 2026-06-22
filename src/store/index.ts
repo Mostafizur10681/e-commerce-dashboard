@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings, OrderStatus, Attribute, ContactMessage } from "../types";
+import { Product, Category, Order, Customer, Review, Partner, Banner, User, Settings, OrderStatus, Attribute, ContactMessage, FAQ } from "../types";
 import {
   initialProducts,
   initialCategories,
@@ -27,6 +27,7 @@ interface StoreState {
   users: User[];
   settings: Settings;
   messages: ContactMessage[];
+  faqs: FAQ[];
   isHydrated: boolean;
 
   // Hydration & Auth Actions
@@ -87,6 +88,14 @@ interface StoreState {
   deleteMessage: (id: string) => void;
   markAllMessagesAsRead: () => void;
   setMessages: (messages: ContactMessage[]) => void;
+
+  // FAQs Actions
+  addFaq: (faq: Omit<FAQ, "id" | "createdAt" | "updatedAt">) => void;
+  updateFaq: (id: string, faq: Partial<FAQ>) => void;
+  deleteFaq: (id: string) => void;
+  getFaqById: (id: string) => FAQ | undefined;
+  getActiveFaqs: () => FAQ[];
+  setFaqs: (faqs: FAQ[]) => void;
 }
 
 const saveToLocalStorage = (key: string, data: any) => {
@@ -116,6 +125,7 @@ export const useStore = create<StoreState>((set, get) => ({
   users: initialUsers,
   settings: initialSettings,
   messages: [],
+  faqs: [],
   isHydrated: false,
 
   hydrate: () => {
@@ -133,6 +143,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const users = getFromLocalStorage("df_users", initialUsers);
     const settings = getFromLocalStorage("df_settings", initialSettings);
     const messages = getFromLocalStorage("df_messages", []);
+    const faqs = getFromLocalStorage("df_faqs", []);
 
     set({
       currentUser,
@@ -147,6 +158,7 @@ export const useStore = create<StoreState>((set, get) => ({
       users,
       settings,
       messages,
+      faqs,
       isHydrated: true,
     });
   },
@@ -437,5 +449,48 @@ export const useStore = create<StoreState>((set, get) => ({
   setMessages: (messages) => {
     set({ messages });
     saveToLocalStorage("df_messages", messages);
+  },
+
+  // FAQs Actions
+  addFaq: (faq) => {
+    const newFaq: FAQ = {
+      ...faq,
+      id: `faq-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const updated = [...get().faqs, newFaq].sort((a, b) => a.displayOrder - b.displayOrder);
+    set({ faqs: updated });
+    saveToLocalStorage("df_faqs", updated);
+  },
+
+  updateFaq: (id, data) => {
+    const updated = get().faqs.map((f) =>
+      f.id === id
+        ? { ...f, ...data, updatedAt: new Date().toISOString() }
+        : f
+    ).sort((a, b) => a.displayOrder - b.displayOrder);
+    set({ faqs: updated });
+    saveToLocalStorage("df_faqs", updated);
+  },
+
+  deleteFaq: (id) => {
+    const updated = get().faqs.filter((f) => f.id !== id);
+    set({ faqs: updated });
+    saveToLocalStorage("df_faqs", updated);
+  },
+
+  getFaqById: (id) => {
+    return get().faqs.find((f) => f.id === id);
+  },
+
+  getActiveFaqs: () => {
+    return get().faqs.filter((f) => f.status === "active");
+  },
+
+  setFaqs: (faqs) => {
+    const sorted = [...faqs].sort((a, b) => a.displayOrder - b.displayOrder);
+    set({ faqs: sorted });
+    saveToLocalStorage("df_faqs", sorted);
   },
 }));

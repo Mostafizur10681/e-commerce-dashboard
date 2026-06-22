@@ -1,0 +1,52 @@
+[
+  {
+    "id": "faq-1",
+    "category": "General Questions",
+    "question": "What is FreshMart?",
+    "answer": "FreshMart is an online grocery store offering a wide range of fresh produce, household items, and more.",
+    "displayOrder": 1,
+    "status": "active",
+    "createdAt": "2026-06-22T08:00:00.000Z",
+    "updatedAt": "2026-06-22T08:00:00.000Z"
+  },
+  {
+    "id": "faq-2",
+    "category": "Orders",
+    "question": "How can I place an order?",
+    "answer": "Browse products, add them to your cart, and proceed to checkout. Fill in your billing details and click ‘Place Order’.",
+    "displayOrder": 2,
+    "status": "active",
+    "createdAt": "2026-06-22T08:01:00.000Z",
+    "updatedAt": "2026-06-22T08:01:00.000Z"
+  },
+  {
+    "id": "faq-3",
+    "category": "Payments",
+    "question": "What payment methods are accepted?",
+    "answer": "We accept credit/debit cards, mobile money, and online banking.",
+    "displayOrder": 3,
+    "status": "active",
+    "createdAt": "2026-06-22T08:02:00.000Z",
+    "updatedAt": "2026-06-22T08:02:00.000Z"
+  },
+  {
+    "id": "faq-4",
+    "category": "Shipping",
+    "question": "Do you offer delivery?",
+    "answer": "Yes, we provide home delivery across Bangladesh with free delivery on orders over ৳500.",
+    "displayOrder": 4,
+    "status": "active",
+    "createdAt": "2026-06-22T08:03:00.000Z",
+    "updatedAt": "2026-06-22T08:03:00.000Z"
+  },
+  {
+    "id": "faq-5",
+    "category": "Accounts",
+    "question": "Can I track my order?",
+    "answer": "After placing an order, you can track its status in the ‘Orders’ section of your account.",
+    "displayOrder": 5,
+    "status": "active",
+    "createdAt": "2026-06-22T08:04:00.000Z",
+    "updatedAt": "2026-06-22T08:04:00.000Z"
+  }
+]

@@ -148,3 +148,14 @@ export interface ContactMessage {
   createdAt: string;
 }
 
+export interface FAQ {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+  displayOrder: number;
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+
