@@ -1,0 +1,26 @@
+[
+  {
+    "id": "usr-1",
+    "name": "Admin Manager",
+    "email": "admin@dataflow.com",
+    "role": "Admin"
+  },
+  {
+    "id": "usr-2",
+    "name": "Sarah Connor",
+    "email": "sarah.connor@cyberdyne.com",
+    "role": "Admin"
+  },
+  {
+    "id": "usr-3",
+    "name": "John Doe",
+    "email": "john.doe@gmail.com",
+    "role": "Customer"
+  },
+  {
+    "id": "usr-4",
+    "name": "Demo User",
+    "email": "demo@dataflow.com",
+    "role": "Admin"
+  }
+]

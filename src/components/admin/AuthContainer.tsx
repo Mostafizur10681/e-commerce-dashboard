@@ -92,11 +92,11 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
     setLoginError(null);
     await new Promise((resolve) => setTimeout(resolve, 800));
     try {
-      const success = login(values.email);
+      const success = await login(values.email, values.password);
       if (success) {
         router.push("/admin/dashboard");
       } else {
-        setLoginError("Invalid email address. Please try another one.");
+        setLoginError("Invalid email address or password. Please try again.");
       }
     } catch {
       setLoginError("An unexpected error occurred. Please try again.");
@@ -110,11 +110,17 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
     setRegisterError(null);
     await new Promise((resolve) => setTimeout(resolve, 800));
     try {
-      const success = register(values.name, values.email);
+      const success = await register(
+        values.name,
+        values.email,
+        values.password,
+        values.confirmPassword,
+        values.phone
+      );
       if (success) {
         router.push("/admin/dashboard");
       } else {
-        setRegisterError("Email already registered. Try signing in.");
+        setRegisterError("Registration failed. Please make sure the details are correct.");
       }
     } catch {
       setRegisterError("An unexpected error occurred. Please try again.");

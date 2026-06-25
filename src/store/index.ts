@@ -32,8 +32,8 @@ interface StoreState {
 
   // Hydration & Auth Actions
   hydrate: () => void;
-  login: (email: string) => boolean;
-  register: (name: string, email: string) => boolean;
+  login: (email: string, password?: string) => Promise<boolean>;
+  register: (name: string, email: string, password?: string, password_confirmation?: string, phone?: string) => Promise<boolean>;
   logout: () => void;
 
   // Products CRUD
@@ -163,62 +163,89 @@ export const useStore = create<StoreState>((set, get) => ({
     });
   },
 
-  login: (email: string) => {
-    const users = get().users;
-    const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (user && user.role === "Admin") {
-      set({ currentUser: user });
-      saveToLocalStorage("df_currentUser", user);
-      return true;
-    }
-    // For testing/mock convenience, if user doesn't exist, create an admin account for them
-    if (email.includes("@")) {
-      const name = email.split("@")[0];
-      const newUser: User = {
-        id: `usr-${Date.now()}`,
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        email: email,
-        role: "Admin",
-      };
-      const updatedUsers = [...users, newUser];
-      set({ currentUser: newUser, users: updatedUsers });
-      saveToLocalStorage("df_currentUser", newUser);
-      saveToLocalStorage("df_users", updatedUsers);
-      return true;
-    }
-    return false;
-  },
-
-  register: (name: string, email: string) => {
-    const users = get().users;
-    const existing = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (existing) {
-      if (existing.role === "Admin") {
-        set({ currentUser: existing });
-        saveToLocalStorage("df_currentUser", existing);
+  login: async (email: string, password?: string) => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        return false;
+      }
+      const data = await res.json();
+      if (data.success && data.data && data.data.user) {
+        const backendUser = data.data.user;
+        const mappedUser: User = {
+          id: String(backendUser.id),
+          name: backendUser.name,
+          email: backendUser.email,
+          role: backendUser.role === 'admin' ? 'Admin' : 'Customer',
+        };
+        if (typeof window !== "undefined") {
+          localStorage.setItem("df_access_token", data.data.access_token);
+        }
+        set({ currentUser: mappedUser });
+        saveToLocalStorage("df_currentUser", mappedUser);
         return true;
       }
       return false;
+    } catch (error) {
+      console.error("Login API Error:", error);
+      return false;
     }
+  },
 
-    const newUser: User = {
-      id: `usr-${Date.now()}`,
-      name,
-      email,
-      role: "Admin", // Automatically assign Admin role for this demo
-    };
-
-    const updatedUsers = [...users, newUser];
-    set({ currentUser: newUser, users: updatedUsers });
-    saveToLocalStorage("df_currentUser", newUser);
-    saveToLocalStorage("df_users", updatedUsers);
-    return true;
+  register: async (name: string, email: string, password?: string, password_confirmation?: string, phone?: string) => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/admin/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          password_confirmation,
+          phone,
+        }),
+      });
+      if (!res.ok) {
+        return false;
+      }
+      const data = await res.json();
+      if (data.success && data.data && data.data.user) {
+        const backendUser = data.data.user;
+        const mappedUser: User = {
+          id: String(backendUser.id),
+          name: backendUser.name,
+          email: backendUser.email,
+          role: backendUser.role === 'admin' ? 'Admin' : 'Customer',
+        };
+        if (typeof window !== "undefined") {
+          localStorage.setItem("df_access_token", data.data.access_token);
+        }
+        set({ currentUser: mappedUser });
+        saveToLocalStorage("df_currentUser", mappedUser);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Register API Error:", error);
+      return false;
+    }
   },
 
   logout: () => {
     set({ currentUser: null });
     if (typeof window !== "undefined") {
       localStorage.removeItem("df_currentUser");
+      localStorage.removeItem("df_access_token");
     }
   },
 
