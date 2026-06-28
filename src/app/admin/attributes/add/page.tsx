@@ -86,9 +86,13 @@ export default function AddAttributePage() {
 
     try {
       setIsSubmitting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch("/api/attributes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           name: values.name,
           status: values.status,

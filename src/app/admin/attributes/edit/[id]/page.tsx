@@ -61,7 +61,10 @@ export default function EditAttributePage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/attributes/${id}`);
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch(`/api/attributes/${id}`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
         if (!res.ok) {
           if (res.status === 404) {
             throw new Error("Attribute not found");
@@ -125,9 +128,13 @@ export default function EditAttributePage() {
 
     try {
       setIsSubmitting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/attributes/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           name: values.name,
           status: values.status,

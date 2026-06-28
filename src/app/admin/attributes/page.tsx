@@ -77,13 +77,16 @@ export default function AttributesPage() {
     try {
       setLoading(true);
       setError(null);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const url = `/api/attributes?q=${encodeURIComponent(searchTerm)}&status=${statusFilter}&page=${currentPage}&limit=${pageSize}`;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Failed to load attributes");
       const data = await res.json();
-      setAttributes(data.attributes);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
+      setAttributes(data.attributes || []);
+      setTotal(data.total || 0);
+      setTotalPages(data.totalPages || 1);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An error occurred while loading attributes");
@@ -103,8 +106,10 @@ export default function AttributesPage() {
     if (!deletingAttribute) return;
     try {
       setIsDeleting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/attributes/${deletingAttribute.id}`, {
         method: "DELETE",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
 
       if (!res.ok) {

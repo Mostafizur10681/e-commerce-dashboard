@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { readAttributes, writeAttributes } from "../route";
 import { Attribute } from "@/types";
 
 export async function GET(
@@ -9,17 +8,35 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
-    const attributes = await readAttributes();
-    const attribute = attributes.find((a) => a.id === id);
+    const token = request.headers.get("Authorization");
 
-    if (!attribute) {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/attributes/${id}`, {
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!res.ok) {
       return NextResponse.json({ error: "Attribute not found" }, { status: 404 });
     }
 
-    return NextResponse.json(attribute);
-  } catch (error) {
+    const data = await res.json();
+    const item = data.data;
+
+    if (!item) {
+      return NextResponse.json({ error: "Attribute not found" }, { status: 404 });
+    }
+
+    const responseData: Attribute = {
+      id: String(item.id),
+      name: item.name,
+      values: item.values || [],
+      status: "Active",
+      createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
+    };
+
+    return NextResponse.json(responseData);
+  } catch (error: any) {
     console.error("GET Attribute by ID Error:", error);
-    return NextResponse.json({ error: "Failed to fetch attribute" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch attribute" }, { status: 500 });
   }
 }
 
@@ -30,15 +47,10 @@ export async function PUT(
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
-    const attributes = await readAttributes();
-    const index = attributes.findIndex((a) => a.id === id);
-
-    if (index === -1) {
-      return NextResponse.json({ error: "Attribute not found" }, { status: 404 });
-    }
+    const token = request.headers.get("Authorization");
 
     const body = await request.json();
-    const { name, values, status } = body;
+    const { name, values } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Attribute name is required" }, { status: 400 });
@@ -48,21 +60,42 @@ export async function PUT(
       return NextResponse.json({ error: "At least one attribute value is required" }, { status: 400 });
     }
 
-    const currentAttribute = attributes[index];
-    const updatedAttribute: Attribute = {
-      ...currentAttribute,
+    const code = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const payload = {
       name,
+      code,
+      type: "select",
       values: values.map((v: string) => v.trim()).filter(Boolean),
-      status: status || currentAttribute.status || "Active",
     };
 
-    attributes[index] = updatedAttribute;
-    await writeAttributes(attributes);
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/attributes/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": token } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
 
-    return NextResponse.json(updatedAttribute);
-  } catch (error) {
+    const data = await res.json();
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Failed to update attribute on backend" }, { status: res.status });
+    }
+
+    const item = data.data;
+    const responseData: Attribute = {
+      id: String(item.id),
+      name: item.name,
+      values: item.values || [],
+      status: "Active",
+      createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
+    };
+
+    return NextResponse.json(responseData);
+  } catch (error: any) {
     console.error("PUT Attribute Error:", error);
-    return NextResponse.json({ error: "Failed to update attribute" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to update attribute" }, { status: 500 });
   }
 }
 
@@ -73,19 +106,21 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
-    const attributes = await readAttributes();
-    const index = attributes.findIndex((a) => a.id === id);
+    const token = request.headers.get("Authorization");
 
-    if (index === -1) {
-      return NextResponse.json({ error: "Attribute not found" }, { status: 404 });
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/attributes/${id}`, {
+      method: "DELETE",
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      return NextResponse.json({ error: data.message || "Failed to delete attribute on backend" }, { status: res.status });
     }
 
-    const filtered = attributes.filter((a) => a.id !== id);
-    await writeAttributes(filtered);
-
     return NextResponse.json({ message: "Attribute deleted successfully" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("DELETE Attribute Error:", error);
-    return NextResponse.json({ error: "Failed to delete attribute" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to delete attribute" }, { status: 500 });
   }
 }

@@ -1,27 +1,5 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
-import { initialAttributes } from "@/data/mockData";
 import { Attribute } from "@/types";
-
-const dataFilePath = path.join(process.cwd(), "src/data/attributes.json");
-
-export async function readAttributes(): Promise<Attribute[]> {
-  try {
-    const fileContent = await fs.readFile(dataFilePath, "utf-8");
-    return JSON.parse(fileContent);
-  } catch (error) {
-    // If file doesn't exist, initialize with mock attributes and custom fields
-    await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-    await fs.writeFile(dataFilePath, JSON.stringify(initialAttributes, null, 2), "utf-8");
-    return initialAttributes;
-  }
-}
-
-export async function writeAttributes(attributes: Attribute[]): Promise<void> {
-  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-  await fs.writeFile(dataFilePath, JSON.stringify(attributes, null, 2), "utf-8");
-}
 
 export async function GET(request: Request) {
   try {
@@ -31,8 +9,31 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
-    let all = await readAttributes();
+    const token = request.headers.get("Authorization");
 
+    // Fetch all attributes from Laravel backend admin group
+    const res = await fetch("http://127.0.0.1:8000/api/admin/attributes?all=1", {
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch attributes from backend");
+    }
+
+    const json = await res.json();
+    let all: Attribute[] = [];
+
+    if (json.success && json.data) {
+      all = (json.data || []).map((item: any) => ({
+        id: String(item.id),
+        name: item.name,
+        values: item.values || [],
+        status: "Active", // Laravel backend does not support status on attributes
+        createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
+      }));
+    }
+
+    // Filter by query search term
     if (q) {
       const lower = q.toLowerCase();
       all = all.filter(
@@ -43,11 +44,12 @@ export async function GET(request: Request) {
       );
     }
 
+    // Filter by status (mocked to Active, if filter is Inactive we get empty list)
     if (status !== "All") {
       all = all.filter((a) => a.status === status);
     }
 
-    // Sort attributes with newest first
+    // Sort attributes by createdDate descending (newest first)
     all = [...all].sort((a, b) => {
       const dateA = a.createdDate || "";
       const dateB = b.createdDate || "";
@@ -66,16 +68,17 @@ export async function GET(request: Request) {
       limit,
       totalPages,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("GET Attributes Error:", error);
-    return NextResponse.json({ error: "Failed to fetch attributes" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch attributes" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const token = request.headers.get("Authorization");
     const body = await request.json();
-    const { name, values, status } = body;
+    const { name, values } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Attribute name is required" }, { status: 400 });
@@ -85,21 +88,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "At least one attribute value is required" }, { status: 400 });
     }
 
-    const attributes = await readAttributes();
-    const newAttribute: Attribute = {
-      id: `attr-${Date.now()}`,
+    // Generate unique code slug
+    const code = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+    const payload = {
       name,
+      code,
+      type: "select", // default type for admin dashboard attributes
       values: values.map((v: string) => v.trim()).filter(Boolean),
-      status: status || "Active",
-      createdDate: new Date().toISOString().split("T")[0],
     };
 
-    attributes.push(newAttribute);
-    await writeAttributes(attributes);
+    const res = await fetch("http://127.0.0.1:8000/api/admin/attributes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": token } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
 
-    return NextResponse.json(newAttribute, { status: 201 });
-  } catch (error) {
+    const data = await res.json();
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Failed to create attribute on backend" }, { status: res.status });
+    }
+
+    const created = data.data;
+    const responseData: Attribute = {
+      id: String(created.id),
+      name: created.name,
+      values: created.values || [],
+      status: "Active",
+      createdDate: created.created_at ? new Date(created.created_at).toISOString().split("T")[0] : "",
+    };
+
+    return NextResponse.json(responseData, { status: 201 });
+  } catch (error: any) {
     console.error("POST Attribute Error:", error);
-    return NextResponse.json({ error: "Failed to create attribute" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to create attribute" }, { status: 500 });
   }
 }
