@@ -119,9 +119,13 @@ export default function AddReviewPage() {
   const onSubmit = async (values: ReviewFormValues) => {
     try {
       setIsSubmitting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch("/api/reviews", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(values),
       });
 

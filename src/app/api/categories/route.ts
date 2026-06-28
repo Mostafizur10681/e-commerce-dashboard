@@ -1,35 +1,7 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { initialCategories } from "@/data/mockData";
 import { Category } from "@/types";
-
-const dataFilePath = path.join(process.cwd(), "src/data/categories.json");
-
-export async function readCategories(): Promise<Category[]> {
-  try {
-    const fileContent = await fs.readFile(dataFilePath, "utf-8");
-    return JSON.parse(fileContent);
-  } catch (error) {
-    // If file doesn't exist, initialize with mock categories and custom fields
-    const initialWithFields: Category[] = initialCategories.map((cat, idx) => ({
-      ...cat,
-      imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
-      status: "Active",
-      createdDate: new Date(Date.now() - idx * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      seoTitle: cat.name,
-      seoDescription: cat.description,
-    }));
-    await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-    await fs.writeFile(dataFilePath, JSON.stringify(initialWithFields, null, 2), "utf-8");
-    return initialWithFields;
-  }
-}
-
-export async function writeCategories(categories: Category[]): Promise<void> {
-  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-  await fs.writeFile(dataFilePath, JSON.stringify(categories, null, 2), "utf-8");
-}
 
 export async function GET(request: Request) {
   try {
@@ -39,7 +11,32 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
-    let all = await readCategories();
+    const token = request.headers.get("Authorization");
+
+    // Fetch all categories from Laravel backend
+    const res = await fetch("http://127.0.0.1:8000/api/admin/categories", {
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch categories from backend");
+    }
+
+    const json = await res.json();
+    let all: Category[] = [];
+
+    if (json.success && json.data) {
+      all = (json.data || []).map((item: any) => ({
+        id: String(item.id),
+        name: item.name,
+        description: item.description || "",
+        imageUrl: item.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+        status: item.status === true || item.status === 1 ? "Active" : "Inactive",
+        createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
+        seoTitle: item.name,
+        seoDescription: item.description || "",
+      }));
+    }
 
     if (q) {
       const lower = q.toLowerCase();
@@ -74,20 +71,19 @@ export async function GET(request: Request) {
       limit,
       totalPages,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("GET Categories Error:", error);
-    return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch categories" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const token = request.headers.get("Authorization");
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const status = (formData.get("status") as "Active" | "Inactive") || "Active";
-    const seoTitle = (formData.get("seoTitle") as string) || "";
-    const seoDescription = (formData.get("seoDescription") as string) || "";
     const imageFile = formData.get("image") as File | null;
 
     if (!name) {
@@ -106,24 +102,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Category Image is required" }, { status: 400 });
     }
 
-    const categories = await readCategories();
-    const newCategory: Category = {
-      id: `cat-${Date.now()}`,
+    const payload = {
       name,
       description: description || "",
-      imageUrl,
-      status,
-      createdDate: new Date().toISOString().split("T")[0],
-      seoTitle,
-      seoDescription,
+      status: status === "Active",
+      image: imageUrl,
     };
 
-    categories.push(newCategory);
-    await writeCategories(categories);
+    const res = await fetch("http://127.0.0.1:8000/api/admin/categories", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": token } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
 
-    return NextResponse.json(newCategory, { status: 201 });
-  } catch (error) {
+    const data = await res.json();
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Failed to create category on backend" }, { status: res.status });
+    }
+
+    const created = data.data;
+    const responseData: Category = {
+      id: String(created.id),
+      name: created.name,
+      description: created.description || "",
+      imageUrl: created.image || imageUrl,
+      status: created.status === true || created.status === 1 ? "Active" : "Inactive",
+      createdDate: created.created_at ? new Date(created.created_at).toISOString().split("T")[0] : "",
+      seoTitle: created.name,
+      seoDescription: created.description || "",
+    };
+
+    return NextResponse.json(responseData, { status: 201 });
+  } catch (error: any) {
     console.error("POST Category Error:", error);
-    return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to create category" }, { status: 500 });
   }
 }

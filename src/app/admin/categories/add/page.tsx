@@ -120,8 +120,10 @@ export default function AddCategoryPage() {
       formData.append("seoDescription", values.seoDescription);
       formData.append("image", imageFile);
 
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch("/api/categories", {
         method: "POST",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
         body: formData,
       });
 

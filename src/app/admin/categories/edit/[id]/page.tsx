@@ -69,7 +69,10 @@ export default function EditCategoryPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`/api/categories/${id}`);
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch(`/api/categories/${id}`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
         if (!res.ok) {
           if (res.status === 404) {
             throw new Error("Category not found");
@@ -127,7 +130,7 @@ export default function EditCategoryPage() {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
-
+ 
     const file = e.dataTransfer.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
@@ -164,8 +167,10 @@ export default function EditCategoryPage() {
         formData.append("image", imageFile);
       }
 
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/categories/${id}`, {
         method: "PUT",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
         body: formData,
       });
 

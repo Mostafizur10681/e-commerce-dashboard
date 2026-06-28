@@ -1,35 +1,49 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
-import { initialReviews } from "@/data/mockData";
 import { Review } from "@/types";
 
-const dataFilePath = path.join(process.cwd(), "src/data/reviews.json");
-
-// Normalise helper to add status to initial reviews if missing
-const normalizeReviews = (list: Review[]): Review[] => {
-  return list.map((r) => ({
-    ...r,
-    status: r.status || (r.approved ? "Approved" : "Pending")
-  }));
-};
-
-export async function readReviews(): Promise<Review[]> {
+// Helper to resolve product ID from name
+async function resolveProductId(productName: string, token: string | null): Promise<number> {
   try {
-    const fileContent = await fs.readFile(dataFilePath, "utf-8");
-    return normalizeReviews(JSON.parse(fileContent));
-  } catch (error) {
-    // If file doesn't exist, initialize with mock reviews
-    const normalizedList = normalizeReviews(initialReviews);
-    await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-    await fs.writeFile(dataFilePath, JSON.stringify(normalizedList, null, 2), "utf-8");
-    return normalizedList;
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/products?q=${encodeURIComponent(productName)}`, {
+      headers: token ? { "Authorization": token } : {},
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const list = json.data?.data || json.data || [];
+      if (list.length > 0) return list[0].id;
+    }
+  } catch (e) {
+    console.error("Resolve product ID failed", e);
   }
+  // Fallback to query first available product
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/products?limit=1`, {
+      headers: token ? { "Authorization": token } : {},
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const list = json.data?.data || json.data || [];
+      if (list.length > 0) return list[0].id;
+    }
+  } catch (e) {}
+  return 1;
 }
 
-export async function writeReviews(reviews: Review[]): Promise<void> {
-  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-  await fs.writeFile(dataFilePath, JSON.stringify(reviews, null, 2), "utf-8");
+// Helper to resolve user ID from customer name
+async function resolveUserId(customerName: string, token: string | null, fallbackId: number): Promise<number> {
+  try {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/users?q=${encodeURIComponent(customerName)}`, {
+      headers: token ? { "Authorization": token } : {},
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const list = json.data?.data || json.data || [];
+      if (list.length > 0) return list[0].id;
+    }
+  } catch (e) {
+    console.error("Resolve user ID failed", e);
+  }
+  return fallbackId;
 }
 
 export async function GET(request: Request) {
@@ -41,9 +55,51 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
-    let all = await readReviews();
+    const token = request.headers.get("Authorization");
 
-    // Filter by query (reviewer, product, comment)
+    let all: Review[] = [];
+
+    if (token) {
+      // Admin dashboard moderation - fetch all reviews
+      const res = await fetch("http://127.0.0.1:8000/api/admin/reviews?per_page=100", {
+        headers: { "Authorization": token },
+      });
+      if (!res.ok) {
+        throw new Error("Failed to fetch reviews from admin backend");
+      }
+      const json = await res.json();
+      const rawList = json.data?.data || json.data || [];
+      all = rawList.map((item: any) => ({
+        id: String(item.id),
+        productName: item.product?.name || "General Product",
+        customerName: item.user?.name || "Anonymous",
+        rating: Number(item.rating),
+        comment: item.comment || "",
+        date: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
+        approved: Boolean(item.status),
+        status: item.status === true || item.status === 1 || item.status === "Approved" ? "Approved" : "Pending",
+      }));
+    } else {
+      // Public review list for product
+      const productId = searchParams.get("product_id") || "1";
+      const res = await fetch(`http://127.0.0.1:8000/api/v1/reviews?product_id=${productId}&per_page=100`);
+      if (res.ok) {
+        const json = await res.json();
+        const rawList = json.data?.data || json.data || [];
+        all = rawList.map((item: any) => ({
+          id: String(item.id),
+          productName: item.product?.name || "General Product",
+          customerName: item.user?.name || "Anonymous",
+          rating: Number(item.rating),
+          comment: item.comment || "",
+          date: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
+          approved: Boolean(item.status),
+          status: item.status === true || item.status === 1 || item.status === "Approved" ? "Approved" : "Pending",
+        }));
+      }
+    }
+
+    // Apply filters
     if (q) {
       const lower = q.toLowerCase();
       all = all.filter(
@@ -54,12 +110,10 @@ export async function GET(request: Request) {
       );
     }
 
-    // Filter by status
     if (status !== "All") {
       all = all.filter((r) => r.status === status);
     }
 
-    // Filter by rating
     if (rating !== "All") {
       const ratingNum = parseInt(rating, 10);
       all = all.filter((r) => r.rating === ratingNum);
@@ -84,40 +138,89 @@ export async function GET(request: Request) {
       limit,
       totalPages,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("GET Reviews Error:", error);
-    return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch reviews" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { customerName, productName, rating, comment, status, imageUrl } = body;
-
-    if (!customerName || !rating || !comment) {
-      return NextResponse.json({ error: "Customer name, rating and comment are required" }, { status: 400 });
+    const token = request.headers.get("Authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const reviews = await readReviews();
-    const newReview: Review = {
-      id: `rev-${Date.now()}`,
-      productName: productName || "General Store Service",
-      customerName,
+    const body = await request.json();
+    const { customerName, productName, rating, comment, status } = body;
+
+    if (!rating || !comment) {
+      return NextResponse.json({ error: "Rating and comment are required" }, { status: 400 });
+    }
+
+    // Resolve current user profile ID and role
+    let fallbackUserId = 1;
+    let userRole = "customer";
+    try {
+      const profileRes = await fetch("http://127.0.0.1:8000/api/user", {
+        headers: { "Authorization": token },
+      });
+      if (profileRes.ok) {
+        const profileJson = await profileRes.json();
+        const profileData = profileJson.data || profileJson;
+        fallbackUserId = profileData.id || 1;
+        userRole = profileData.role || "customer";
+      }
+    } catch (e) {
+      console.error("Failed to fetch user profile fallback", e);
+    }
+
+    // Resolve product_id and user_id relations
+    const resolvedProductId = await resolveProductId(productName || "", token);
+    const resolvedUserId = await resolveUserId(customerName || "", token, fallbackUserId);
+
+    const payload = {
+      product_id: resolvedProductId,
+      user_id: resolvedUserId,
       rating: Number(rating),
-      comment,
-      approved: status === "Approved",
-      status: status || "Pending",
-      imageUrl: imageUrl || "",
-      date: new Date().toISOString().split("T")[0],
+      comment: comment,
+      status: status === "Approved" || status === true,
     };
 
-    reviews.push(newReview);
-    await writeReviews(reviews);
+    const targetUrl = userRole === "admin"
+      ? "http://127.0.0.1:8000/api/admin/reviews"
+      : "http://127.0.0.1:8000/api/customer/reviews";
 
-    return NextResponse.json(newReview, { status: 201 });
-  } catch (error) {
+    const res = await fetch(targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Failed to create review on backend" }, { status: res.status });
+    }
+
+    const created = data.data;
+    const responseData: Review = {
+      id: String(created.id),
+      productName: productName || created.product?.name || "General Product",
+      customerName: customerName || created.user?.name || "Anonymous",
+      rating: Number(created.rating),
+      comment: created.comment || "",
+      approved: Boolean(created.status),
+      status: created.status === true || created.status === 1 ? "Approved" : "Pending",
+      date: created.created_at ? new Date(created.created_at).toISOString().split("T")[0] : "",
+    };
+
+    return NextResponse.json(responseData, { status: 201 });
+  } catch (error: any) {
     console.error("POST Review Error:", error);
-    return NextResponse.json({ error: "Failed to create review" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to submit review" }, { status: 500 });
   }
 }

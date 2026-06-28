@@ -118,8 +118,11 @@ export default function ReviewsPage() {
   const fetchReviews = async () => {
     setLoading(true);
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const url = `/api/reviews?q=${encodeURIComponent(searchTerm)}&status=${statusFilter}&rating=${ratingFilter}&page=${currentPage}&limit=${limit}`;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Failed to fetch reviews");
       const data = await res.json();
       setReviews(data.reviews || []);
@@ -127,7 +130,9 @@ export default function ReviewsPage() {
       setTotalReviews(data.total || 0);
 
       // Fetch summary from all reviews in JSON if possible
-      const fullRes = await fetch(`/api/reviews?limit=1000`);
+      const fullRes = await fetch(`/api/reviews?limit=1000`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
       if (fullRes.ok) {
         const fullData = await fullRes.json();
         const list: Review[] = fullData.reviews || [];
@@ -178,9 +183,13 @@ export default function ReviewsPage() {
   const onSubmit = async (values: ReviewFormValues) => {
     if (!editingReview) return;
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/reviews/${editingReview.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(values),
       });
       if (!res.ok) throw new Error("Failed to update review");
@@ -197,8 +206,10 @@ export default function ReviewsPage() {
   const handleDeleteConfirm = async () => {
     if (!deletingReview) return;
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/reviews/${deletingReview.id}`, {
         method: "DELETE",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("Failed to delete review");
       toast("Review deleted successfully", "success");
@@ -216,9 +227,13 @@ export default function ReviewsPage() {
 
   const handleStatusChange = async (id: string, newStatus: "Approved" | "Rejected") => {
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/reviews/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) throw new Error("Failed to update status");

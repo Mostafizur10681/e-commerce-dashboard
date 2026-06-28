@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { readCategories, writeCategories } from "../route";
 import { Category } from "@/types";
 
 export async function GET(
@@ -11,17 +10,38 @@ export async function GET(
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
-    const categories = await readCategories();
-    const category = categories.find((c) => c.id === id);
+    const token = request.headers.get("Authorization");
 
-    if (!category) {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!res.ok) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    return NextResponse.json(category);
-  } catch (error) {
+    const data = await res.json();
+    const item = data.data;
+
+    if (!item) {
+      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    }
+
+    const responseData: Category = {
+      id: String(item.id),
+      name: item.name,
+      description: item.description || "",
+      imageUrl: item.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+      status: item.status === true || item.status === 1 ? "Active" : "Inactive",
+      createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
+      seoTitle: item.name,
+      seoDescription: item.description || "",
+    };
+
+    return NextResponse.json(responseData);
+  } catch (error: any) {
     console.error("GET Category by ID Error:", error);
-    return NextResponse.json({ error: "Failed to fetch category" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to fetch category" }, { status: 500 });
   }
 }
 
@@ -32,28 +52,31 @@ export async function PUT(
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
-    const categories = await readCategories();
-    const index = categories.findIndex((c) => c.id === id);
+    const token = request.headers.get("Authorization");
 
-    if (index === -1) {
+    // Fetch existing details to preserve image if not uploaded
+    const detailRes = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!detailRes.ok) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
+
+    const detailData = await detailRes.json();
+    const existing = detailData.data;
 
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const status = formData.get("status") as "Active" | "Inactive";
-    const seoTitle = (formData.get("seoTitle") as string) || "";
-    const seoDescription = (formData.get("seoDescription") as string) || "";
     const imageFile = formData.get("image") as File | null;
 
     if (!name) {
       return NextResponse.json({ error: "Category name is required" }, { status: 400 });
     }
 
-    const currentCategory = categories[index];
-    let imageUrl = currentCategory.imageUrl;
-
+    let imageUrl = existing.image || "";
     if (imageFile && imageFile.size > 0) {
       const uploadDir = path.join(process.cwd(), "public/uploads/categories");
       await fs.mkdir(uploadDir, { recursive: true });
@@ -63,23 +86,44 @@ export async function PUT(
       imageUrl = `/uploads/categories/${filename}`;
     }
 
-    const updatedCategory: Category = {
-      ...currentCategory,
+    const payload = {
       name,
       description: description || "",
-      imageUrl,
-      status: status || currentCategory.status || "Active",
-      seoTitle,
-      seoDescription,
+      status: status === "Active",
+      image: imageUrl,
     };
 
-    categories[index] = updatedCategory;
-    await writeCategories(categories);
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": token } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
 
-    return NextResponse.json(updatedCategory);
-  } catch (error) {
+    const data = await res.json();
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Failed to update category on backend" }, { status: res.status });
+    }
+
+    const updated = data.data;
+    const responseData: Category = {
+      id: String(updated.id),
+      name: updated.name,
+      description: updated.description || "",
+      imageUrl: updated.image || imageUrl,
+      status: updated.status === true || updated.status === 1 ? "Active" : "Inactive",
+      createdDate: updated.created_at ? new Date(updated.created_at).toISOString().split("T")[0] : "",
+      seoTitle: updated.name,
+      seoDescription: updated.description || "",
+    };
+
+    return NextResponse.json(responseData);
+  } catch (error: any) {
     console.error("PUT Category Error:", error);
-    return NextResponse.json({ error: "Failed to update category" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to update category" }, { status: 500 });
   }
 }
 
@@ -90,19 +134,21 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
-    const categories = await readCategories();
-    const index = categories.findIndex((c) => c.id === id);
+    const token = request.headers.get("Authorization");
 
-    if (index === -1) {
-      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+      method: "DELETE",
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      return NextResponse.json({ error: data.message || "Failed to delete category on backend" }, { status: res.status });
     }
 
-    const filtered = categories.filter((c) => c.id !== id);
-    await writeCategories(filtered);
-
     return NextResponse.json({ message: "Category deleted successfully" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("DELETE Category Error:", error);
-    return NextResponse.json({ error: "Failed to delete category" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to delete category" }, { status: 500 });
   }
 }

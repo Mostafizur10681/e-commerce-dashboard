@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readReviews, writeReviews } from "../route";
+import { Review } from "@/types";
 
 export async function PUT(
   request: Request,
@@ -7,33 +7,54 @@ export async function PUT(
 ) {
   try {
     const { id } = await (params as any);
+    const token = request.headers.get("Authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { customerName, productName, rating, comment, status, approved } = body;
 
-    const reviews = await readReviews();
-    const idx = reviews.findIndex((r) => r.id === id);
-
-    if (idx === -1) {
-      return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    const payload: any = {};
+    if (rating !== undefined) payload.rating = Number(rating);
+    if (comment !== undefined) payload.comment = comment;
+    if (status !== undefined) {
+      payload.status = status === "Approved" || status === true;
+    } else if (approved !== undefined) {
+      payload.status = approved === true;
     }
 
-    const updatedReview = {
-      ...reviews[idx],
-      customerName: customerName !== undefined ? customerName : reviews[idx].customerName,
-      productName: productName !== undefined ? productName : reviews[idx].productName,
-      rating: rating !== undefined ? Number(rating) : reviews[idx].rating,
-      comment: comment !== undefined ? comment : reviews[idx].comment,
-      status: status !== undefined ? status : reviews[idx].status,
-      approved: approved !== undefined ? approved : (status !== undefined ? status === "Approved" : reviews[idx].approved)
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/reviews/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Failed to update review on backend" }, { status: res.status });
+    }
+
+    const updated = data.data;
+    const responseData: Review = {
+      id: String(updated.id),
+      productName: productName || updated.product?.name || "General Product",
+      customerName: customerName || updated.user?.name || "Anonymous",
+      rating: Number(updated.rating),
+      comment: updated.comment || "",
+      approved: Boolean(updated.status),
+      status: updated.status === true || updated.status === 1 ? "Approved" : "Pending",
+      date: updated.created_at ? new Date(updated.created_at).toISOString().split("T")[0] : "",
     };
 
-    reviews[idx] = updatedReview;
-    await writeReviews(reviews);
-
-    return NextResponse.json(updatedReview);
-  } catch (error) {
+    return NextResponse.json(responseData);
+  } catch (error: any) {
     console.error("PUT Review Error:", error);
-    return NextResponse.json({ error: "Failed to update review" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to update review" }, { status: 500 });
   }
 }
 
@@ -43,17 +64,26 @@ export async function DELETE(
 ) {
   try {
     const { id } = await (params as any);
-    const reviews = await readReviews();
-    const filtered = reviews.filter((r) => r.id !== id);
-
-    if (reviews.length === filtered.length) {
-      return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    const token = request.headers.get("Authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await writeReviews(filtered);
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/reviews/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": token,
+      },
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      return NextResponse.json({ error: data.message || "Failed to delete review on backend" }, { status: res.status });
+    }
+
     return NextResponse.json({ message: "Review deleted successfully" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("DELETE Review Error:", error);
-    return NextResponse.json({ error: "Failed to delete review" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to delete review" }, { status: 500 });
   }
 }

@@ -77,13 +77,16 @@ export default function CategoriesPage() {
     try {
       setLoading(true);
       setError(null);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const url = `/api/categories?q=${encodeURIComponent(searchTerm)}&status=${statusFilter}&page=${currentPage}&limit=${pageSize}`;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Failed to load categories");
       const data = await res.json();
-      setCategories(data.categories);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
+      setCategories(data.categories || []);
+      setTotal(data.total || 0);
+      setTotalPages(data.totalPages || 1);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An error occurred while loading categories");
@@ -103,8 +106,10 @@ export default function CategoriesPage() {
     if (!deletingCategory) return;
     try {
       setIsDeleting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/categories/${deletingCategory.id}`, {
         method: "DELETE",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
 
       if (!res.ok) {
