@@ -22,13 +22,33 @@ export default function EditProductPage() {
   const { toast } = useToast();
   const id = params?.id as string;
 
-  const { products, updateProduct, categories } = useStore();
+  const { products, updateProduct } = useStore();
   const [mounted, setMounted] = useState(false);
   const [images, setImages] = useState<ImageEntry[]>([]);
   const [featuredIdx, setFeaturedIdx] = useState(0);
   const [imageError, setImageError] = useState("");
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
 
-  const product = products.find((p) => p.id === id);
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch("/api/categories?limit=1000", {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCategoriesList(data.categories || []);
+        }
+      } catch (e) {
+        console.error("Failed to load categories in edit page", e);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  const [product, setProduct] = useState<any>(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
 
   const methods = useForm({
     defaultValues: {
@@ -64,39 +84,56 @@ export default function EditProductPage() {
     setMounted(true);
   }, []);
 
-  // Prefill form when product loads
+  // Fetch product details
   useEffect(() => {
-    if (!product) return;
-    reset({
-      name: product.name || "",
-      category: product.category || "",
-      subCategory: (product as any).subCategory || "",
-      brand: (product as any).brand || "",
-      sku: (product as any).sku || "",
-      shortDescription: (product as any).shortDescription || "",
-      description: product.description || "",
-      regularPrice: product.price || 0,
-      salePrice: (product as any).salePrice || 0,
-      costPrice: (product as any).costPrice || 0,
-      tax: (product as any).tax || 0,
-      discount: (product as any).discount || 0,
-      stockQuantity: product.stock || 0,
-      unit: (product as any).unit || "",
-      status: (product as any).status || "active",
-      stockStatus: (product as any).stockStatus || "in-stock",
-      featured: (product as any).featured || false,
-      bestSeller: (product as any).bestSeller || false,
-      organic: (product as any).organic || false,
-      newArrival: (product as any).newArrival || false,
-      metaTitle: (product as any).metaTitle || "",
-      metaDescription: (product as any).metaDescription || "",
-      metaKeywords: (product as any).metaKeywords || "",
-    });
-    // Load existing images
-    if (product.images?.length) {
-      setImages(product.images.map((src) => ({ file: null, preview: src })));
-    }
-  }, [product, reset]);
+    if (!mounted || !id) return;
+    const fetchProd = async () => {
+      try {
+        setLoadingProduct(true);
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch(`/api/products/${id}`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (!res.ok) throw new Error("Failed to load product details");
+        const data = await res.json();
+        setProduct(data);
+        reset({
+          name: data.name || "",
+          category: data.category || "",
+          subCategory: data.subCategory || "",
+          brand: data.brand || "",
+          sku: data.sku || "",
+          shortDescription: data.shortDescription || "",
+          description: data.description || "",
+          regularPrice: data.regularPrice || 0,
+          salePrice: data.salePrice || 0,
+          costPrice: data.costPrice || 0,
+          tax: data.tax || 0,
+          discount: data.discount || 0,
+          stockQuantity: data.stockQuantity || 0,
+          unit: data.unit || "pcs",
+          status: data.status || "active",
+          stockStatus: data.stockStatus || "in-stock",
+          featured: data.featured || false,
+          bestSeller: data.bestSeller || false,
+          organic: data.organic || false,
+          newArrival: data.newArrival || false,
+          metaTitle: data.metaTitle || "",
+          metaDescription: data.metaDescription || "",
+          metaKeywords: data.metaKeywords || "",
+        });
+        if (data.images?.length) {
+          setImages(data.images.map((src: string) => ({ file: null, preview: src })));
+        }
+      } catch (e: any) {
+        console.error(e);
+        toast(e.message || "Failed to load product", "error");
+      } finally {
+        setLoadingProduct(false);
+      }
+    };
+    fetchProd();
+  }, [mounted, id, reset]);
 
   const handleAddImages = (entries: ImageEntry[]) => {
     setImages((prev) => [...prev, ...entries]);
@@ -109,25 +146,45 @@ export default function EditProductPage() {
     else if (featuredIdx === idx) setFeaturedIdx(0);
   };
 
-  const onSubmit = (data: any) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const onSubmit = async (data: any) => {
     if (images.length === 0) {
       setImageError("At least one product image is required.");
       return;
     }
-    updateProduct(id, {
-      name: data.name,
-      price: Number(data.regularPrice) || 0,
-      stock: Number(data.stockQuantity) || 0,
-      category: data.category,
-      description: data.description || "",
-      images: images.map((e) => e.preview),
-      ...(data as any),
-    });
-    toast("Product updated successfully");
-    router.push("/admin/products");
+
+    try {
+      setIsSubmitting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          ...data,
+          images: images.map((e) => e.preview),
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update product");
+      }
+
+      toast("Product updated successfully");
+      router.push("/admin/products");
+    } catch (e: any) {
+      console.error(e);
+      toast(e.message || "Failed to update product", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (!mounted) {
+  if (!mounted || loadingProduct) {
     return (
       <div className="h-64 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#16A34A]" />
@@ -215,8 +272,8 @@ export default function EditProductPage() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.length > 0
-                          ? categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                        {categoriesList.length > 0
+                          ? categoriesList.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
                           : ["Electronics", "Clothing", "Food", "Sports"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)
                         }
                       </SelectContent>
@@ -363,8 +420,8 @@ export default function EditProductPage() {
 
             {/* Action buttons */}
             <div className="flex gap-3 pt-2">
-              <Button type="submit" className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl px-6">
-                Update Product
+              <Button type="submit" disabled={isSubmitting} className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl px-6">
+                {isSubmitting ? "Updating..." : "Update Product"}
               </Button>
               <Button type="button" variant="outline" className="rounded-xl" onClick={() => router.back()}>
                 Cancel

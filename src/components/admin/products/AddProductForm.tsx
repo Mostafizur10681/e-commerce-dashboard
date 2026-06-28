@@ -18,10 +18,10 @@ import { useToast } from "@/components/ui/toast";
 export default function AddProductForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const addProduct = useStore((state) => state.addProduct);
   const [images, setImages] = useState<ImageEntry[]>([]);
   const [featuredIdx, setFeaturedIdx] = useState(0);
   const [imageError, setImageError] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const methods = useForm({
     defaultValues: {
@@ -69,25 +69,40 @@ export default function AddProductForm() {
     }
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     if (images.length === 0) {
       setImageError("At least one product image is required.");
       return;
     }
-    const slug =
-      data.name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
-    addProduct({
-      name: data.name,
-      price: Number(data.regularPrice) || 0,
-      stock: Number(data.stockQuantity) || 0,
-      category: data.category,
-      description: data.description || "",
-      images: images.map((e) => e.preview),
-      slug,
-      status: data.status,
-    } as any);
-    toast("Product saved successfully!");
-    router.push("/admin/products");
+
+    try {
+      setIsSubmitting(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          ...data,
+          images: images.map((e) => e.preview),
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to save product");
+      }
+
+      toast("Product saved successfully!");
+      router.push("/admin/products");
+    } catch (e: any) {
+      console.error(e);
+      toast(e.message || "Failed to save product", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -125,9 +140,10 @@ export default function AddProductForm() {
           <div className="flex gap-3 pt-2">
             <Button
               type="submit"
+              disabled={isSubmitting}
               className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl px-6"
             >
-              Save Product
+              {isSubmitting ? "Saving..." : "Save Product"}
             </Button>
             <Button type="button" variant="outline" className="rounded-xl">
               Save &amp; Publish

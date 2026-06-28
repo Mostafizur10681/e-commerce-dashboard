@@ -17,22 +17,43 @@ export default function ViewProductPage() {
   const { toast } = useToast();
   const id = params?.id as string;
 
-  const { products, deleteProduct } = useStore();
   const [mounted, setMounted] = useState(false);
+  const [product, setProduct] = useState<any>(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
   const [mainImage, setMainImage] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  const product = products.find((p) => p.id === id);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Fetch product details
   useEffect(() => {
-    if (product?.images?.[0]) setMainImage(product.images[0]);
-  }, [product]);
+    if (!mounted || !id) return;
+    const fetchProd = async () => {
+      try {
+        setLoadingProduct(true);
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch(`/api/products/${id}`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (!res.ok) throw new Error("Failed to load product details");
+        const data = await res.json();
+        setProduct(data);
+        if (data.images?.[0]) {
+          setMainImage(data.images[0]);
+        }
+      } catch (e: any) {
+        console.error(e);
+        toast(e.message || "Failed to load product", "error");
+      } finally {
+        setLoadingProduct(false);
+      }
+    };
+    fetchProd();
+  }, [mounted, id]);
 
-  if (!mounted) {
+  if (!mounted || loadingProduct) {
     return (
       <div className="h-64 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#16A34A]" />
@@ -52,11 +73,21 @@ export default function ViewProductPage() {
     );
   }
 
-  const handleDelete = () => {
-    deleteProduct(product.id);
-    toast("Product deleted successfully");
-    setShowDeleteDialog(false);
-    router.push("/admin/products");
+  const handleDelete = async () => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch(`/api/products/${id}`, {
+        method: "DELETE",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Failed to delete product");
+      toast("Product deleted successfully", "success");
+      setShowDeleteDialog(false);
+      router.push("/admin/products");
+    } catch (e: any) {
+      console.error(e);
+      toast(e.message || "Failed to delete product", "error");
+    }
   };
 
   const badges: string[] = [];
@@ -131,7 +162,7 @@ export default function ViewProductPage() {
           {/* Thumbnails */}
           {allImages.length > 1 && (
             <div className="grid grid-cols-4 gap-3">
-              {allImages.map((imgUrl, index) => {
+              {allImages.map((imgUrl: string, index: number) => {
                 const isActive = mainImage === imgUrl;
                 return (
                   <button

@@ -63,7 +63,6 @@ type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function ProductsPage() {
   const router = useRouter();
-  const { products, categories, addProduct, updateProduct, deleteProduct } = useStore();
   const [mounted, setMounted] = useState(false);
   const { toast } = useToast();
 
@@ -76,76 +75,75 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Dialog States
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+
+  // Dynamic Data States
+  const [productsList, setProductsList] = useState<Product[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  // Categories list for filtering dropdown
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      category: "",
-      price: 0,
-      stock: 0,
-      description: "",
-      imageUrl: "",
-    },
-  });
-
-  // Reset form when changing edit/add mode
+  // Fetch categories for filtering dropdown
   useEffect(() => {
-    if (editingProduct) {
-      form.reset({
-        name: editingProduct.name,
-        category: editingProduct.category,
-        price: editingProduct.price,
-        stock: editingProduct.stock,
-        description: editingProduct.description,
-        imageUrl: editingProduct.images?.[0] || "",
+    if (!mounted) return;
+    const fetchCats = async () => {
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch("/api/categories?limit=1000", {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCategoriesList(data.categories || []);
+        }
+      } catch (e) {
+        console.error("Failed to load categories", e);
+      }
+    };
+    fetchCats();
+  }, [mounted]);
+
+  // Fetch products dynamically
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const statusParam = selectedStatus === "In Stock" ? "active" : (selectedStatus === "Out of Stock" ? "inactive" : "All");
+      const url = `/api/products?q=${encodeURIComponent(searchTerm)}&category=${selectedCategory}&status=${statusParam}&page=${currentPage}&limit=${pageSize}`;
+      const res = await fetch(url, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
-    } else {
-      form.reset({
-        name: "",
-        category: categories[0]?.name || "Electronics",
-        price: 0,
-        stock: 0,
-        description: "",
-        imageUrl: "",
-      });
+      if (!res.ok) throw new Error("Failed to load products");
+      const data = await res.json();
+      setProductsList(data.products || []);
+      setTotalItems(data.total || 0);
+      setTotalPages(data.totalPages || 1);
+    } catch (e) {
+      console.error(e);
+      toast("Error loading products", "error");
+    } finally {
+      setLoading(false);
     }
-  }, [editingProduct, isFormOpen, categories, form]);
+  };
 
-  if (!mounted) {
-    return (
-      <div className="h-64 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#16A34A]" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (mounted) {
+      const handler = setTimeout(() => {
+        fetchProducts();
+      }, 300);
+      return () => clearTimeout(handler);
+    }
+  }, [mounted, searchTerm, selectedCategory, selectedStatus, currentPage, pageSize]);
 
-  // Filter products by Search, Category, Status
-  let filteredProducts = products.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.id.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesCategory =
-      selectedCategory === "All" || p.category === selectedCategory;
-
-    const matchesStatus =
-      selectedStatus === "All" ||
-      (selectedStatus === "In Stock" && p.stock > 0) ||
-      (selectedStatus === "Out of Stock" && p.stock <= 0);
-
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
-
-  // Apply sorting
-  filteredProducts = [...filteredProducts].sort((a, b) => {
+  // Sorting can be done on client side
+  const sortedProducts = [...productsList].sort((a, b) => {
     switch (sortBy) {
       case "Name-ASC":
         return a.name.localeCompare(b.name);
@@ -164,54 +162,27 @@ export default function ProductsPage() {
     }
   });
 
-  // Calculate pagination specs
-  const totalItems = filteredProducts.length;
-  const totalPages = Math.ceil(totalItems / pageSize) || 1;
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
-
-  const onSubmit = (values: ProductFormValues) => {
-    const finalImage = values.imageUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=60";
-
-    if (editingProduct) {
-      updateProduct(editingProduct.id, {
-        name: values.name,
-        category: values.category,
-        price: values.price,
-        stock: values.stock,
-        description: values.description,
-        images: [finalImage],
+  const handleDeleteConfirm = async () => {
+    if (!deletingProduct) return;
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch(`/api/products/${deletingProduct.id}`, {
+        method: "DELETE",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
-    } else {
-      addProduct({
-        name: values.name,
-        category: values.category,
-        price: values.price,
-        stock: values.stock,
-        description: values.description,
-        images: [finalImage],
-      });
-    }
-    setIsFormOpen(false);
-    setEditingProduct(null);
-  };
-
-  const handleEditClick = (product: Product) => {
-    setEditingProduct(product);
-    setIsFormOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deletingProduct) {
-      deleteProduct(deletingProduct.id);
-      toast("Product deleted successfully");
-      setDeletingProduct(null);
-      // Reset page if needed
-      if (paginatedProducts.length === 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
+      if (!res.ok) {
+        throw new Error("Failed to delete product");
       }
+      toast("Product deleted successfully", "success");
+      setDeletingProduct(null);
+      fetchProducts();
+    } catch (err: any) {
+      console.error(err);
+      toast(err.message || "Failed to delete product", "error");
     }
   };
+
+  const startIndex = (currentPage - 1) * pageSize;
 
   return (
     <div className="space-y-6">
@@ -282,7 +253,7 @@ export default function ProductsPage() {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-650 cursor-pointer"
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-655 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -301,7 +272,7 @@ export default function ProductsPage() {
               className="bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-750 dark:text-gray-300 h-10"
             >
               <option value="All">All Categories</option>
-              {categories.map((cat) => (
+              {categoriesList.map((cat) => (
                 <option key={cat.id} value={cat.name}>
                   {cat.name}
                 </option>
@@ -365,7 +336,7 @@ export default function ProductsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedProducts.length === 0 ? (
+              {sortedProducts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="h-40 text-center text-gray-400">
                     <div className="flex flex-col items-center justify-center space-y-2 py-6">
@@ -375,7 +346,7 @@ export default function ProductsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedProducts.map((product) => {
+                sortedProducts.map((product) => {
                   const isOutOfStock = product.stock <= 0;
                   // Generate stable mocks for display matching UI rules
                   const productCode = product.id.toUpperCase();
@@ -532,152 +503,6 @@ export default function ProductsPage() {
           </div>
         )}
       </div>
-
-      {/* Product Add / Edit Dialog Form */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-md bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-3xl p-6 shadow-2xl">
-          <DialogHeader className="space-y-1">
-            <DialogTitle className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-              {editingProduct ? "Edit Product Details" : "Add New Product"}
-            </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500 dark:text-gray-400">
-              Provide catalog specifications for this inventory item. Click submit to save.
-            </DialogDescription>
-          </DialogHeader>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-gray-700 dark:text-gray-300">Product Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter product title"
-                        className="rounded-xl border-gray-300 dark:border-gray-700 focus-visible:ring-[#16A34A]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold text-gray-700 dark:text-gray-300">Category</FormLabel>
-                      <FormControl>
-                        <select
-                          className="flex h-10 w-full rounded-xl border border-gray-300 bg-white dark:bg-gray-900 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#16A34A] dark:border-gray-700 text-gray-800 dark:text-gray-250 cursor-pointer"
-                          {...field}
-                        >
-                          {categories.map((cat) => (
-                            <option key={cat.id} value={cat.name}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold text-gray-700 dark:text-gray-300">Price ($)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          className="rounded-xl border-gray-300 dark:border-gray-700 focus-visible:ring-[#16A34A]"
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="stock"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold text-gray-700 dark:text-gray-300">Available Stock</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          className="rounded-xl border-gray-300 dark:border-gray-700 focus-visible:ring-[#16A34A]"
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold text-gray-700 dark:text-gray-300">Image URL (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://images.unsplash.com/..."
-                          className="rounded-xl border-gray-300 dark:border-gray-700 focus-visible:ring-[#16A34A] text-xs"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-gray-700 dark:text-gray-300">Description</FormLabel>
-                    <FormControl>
-                      <textarea
-                        className="flex min-h-[80px] w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-800 dark:text-gray-250"
-                        placeholder="Write detailed descriptions..."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter className="mt-6 flex gap-2">
-                <Button variant="outline" type="button" onClick={() => setIsFormOpen(false)} className="rounded-xl h-10 cursor-pointer">
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-5 cursor-pointer">
-                  {editingProduct ? "Save Changes" : "Create Product"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Alert */}
       <AlertDialog open={!!deletingProduct} onOpenChange={(open) => !open && setDeletingProduct(null)}>
