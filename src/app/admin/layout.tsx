@@ -30,7 +30,8 @@ import {
   Sparkles,
   Sliders,
   ChevronDown,
-  HelpCircle
+  HelpCircle,
+  MapPin
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -75,6 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isPartnersOpen, setIsPartnersOpen] = useState(true);
   const [isReviewsOpen, setIsReviewsOpen] = useState(true);
   const [isFaqsOpen, setIsFaqsOpen] = useState(true);
+  const [isLocationsOpen, setIsLocationsOpen] = useState(true);
 
   useEffect(() => {
     if (pathname.startsWith("/admin/products")) {
@@ -94,6 +96,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     if (pathname.startsWith("/admin/faqs")) {
       setIsFaqsOpen(true);
+    }
+    if (pathname.startsWith("/admin/locations")) {
+      setIsLocationsOpen(true);
     }
   }, [pathname]);
 
@@ -608,6 +613,84 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   <span className="mr-1.5 font-bold">○</span>
                   Add FAQ
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Collapsible Locations Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsLocationsOpen(true);
+                } else {
+                  setIsLocationsOpen(!isLocationsOpen);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
+                pathname.startsWith("/admin/locations") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                isCollapsed && "justify-center px-2"
+              )}
+              title="Locations"
+            >
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 shrink-0 text-gray-550 dark:text-gray-400" />
+                {!isCollapsed && <span>Locations</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-300",
+                    isLocationsOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+
+            {/* Submenus (Only visible if not collapsed and isLocationsOpen is true) */}
+            {!isCollapsed && isLocationsOpen && (
+              <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
+                <Link
+                  href="/admin/locations/divisions"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname.startsWith("/admin/locations/divisions")
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Division
+                </Link>
+                <Link
+                  href="/admin/locations/districts"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname.startsWith("/admin/locations/districts")
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  District
+                </Link>
+                <Link
+                  href="/admin/locations/thanas"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname.startsWith("/admin/locations/thanas")
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Thana
                 </Link>
               </div>
             )}

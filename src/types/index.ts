@@ -159,3 +159,42 @@ export interface FAQ {
   updatedAt: string;
 }
 
+export interface Division {
+  id: string | number;
+  division_name: string;
+  division_name_bn: string;
+  division_code: string;
+  status: boolean | number;
+  created_at: string;
+  updated_at: string;
+  districts_count?: number;
+}
+
+export interface District {
+  id: string | number;
+  division_id: string | number;
+  district_name: string;
+  district_name_bn: string;
+  district_code: string;
+  status: boolean | number;
+  division?: Division;
+  thanas_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Thana {
+  id: string | number;
+  district_id: string | number;
+  thana_name: string;
+  thana_name_bn: string;
+  thana_code: string;
+  postal_code?: string;
+  status: boolean | number;
+  district?: District;
+  division?: Division;
+  created_at: string;
+  updated_at: string;
+}
+
+
