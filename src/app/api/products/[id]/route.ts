@@ -44,6 +44,24 @@ export async function GET(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    let imagesArray: string[] = [];
+    if (item.images && Array.isArray(item.images)) {
+      imagesArray = item.images.map((img: any) => {
+        if (typeof img === "string") return img;
+        if (img && img.image_path) {
+          return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+        }
+        return "";
+      }).filter(Boolean);
+    }
+    if (imagesArray.length === 0) {
+      if (item.gallery && Array.isArray(item.gallery)) {
+        imagesArray = item.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+      } else if (item.image) {
+        imagesArray = [item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`];
+      }
+    }
+
     const responseData: Product = {
       id: String(item.id),
       name: item.name,
@@ -51,7 +69,7 @@ export async function GET(
       price: Number(item.price) || 0,
       stock: Number(item.stock) || 0,
       description: item.description || "",
-      images: item.gallery && item.gallery.length > 0 ? item.gallery : (item.image ? [item.image] : []),
+      images: imagesArray,
       status: item.status === true || item.status === 1 ? "active" : "inactive",
       sku: item.SKU || "",
       // Add other details for form compatibility
@@ -61,6 +79,8 @@ export async function GET(
       regularPrice: Number(item.price) || 0,
       salePrice: Number(item.sale_price) || 0,
       stockQuantity: Number(item.stock) || 0,
+      tax: Number(item.tax) || 0,
+      discount: Number(item.discount) || 0,
       unit: item.unit || "pcs",
       stockStatus: item.stock_status || "in-stock",
       featured: Boolean(item.featured),
@@ -103,6 +123,19 @@ export async function PUT(
       category,
       status,
       images,
+      subCategory,
+      brand,
+      tax,
+      discount,
+      unit,
+      stockStatus,
+      featured,
+      bestSeller,
+      organic,
+      newArrival,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
     } = body;
 
     const resolvedCategoryId = await resolveCategoryId(category || "", token);
@@ -119,6 +152,19 @@ export async function PUT(
       status: status === "active" || status === true,
       image: images?.[0] || "",
       gallery: images || [],
+      sub_category: subCategory || "",
+      brand: brand || "",
+      tax: Number(tax) || 0,
+      discount: Number(discount) || 0,
+      unit: unit || "",
+      stock_status: stockStatus || "in-stock",
+      featured: Boolean(featured),
+      best_seller: Boolean(bestSeller),
+      organic: Boolean(organic),
+      new_arrival: Boolean(newArrival),
+      meta_title: metaTitle || "",
+      meta_description: metaDescription || "",
+      meta_keywords: metaKeywords || "",
     };
 
     const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
@@ -137,6 +183,24 @@ export async function PUT(
     }
 
     const updated = data.data;
+    let updatedImagesArray: string[] = [];
+    if (updated.images && Array.isArray(updated.images)) {
+      updatedImagesArray = updated.images.map((img: any) => {
+        if (typeof img === "string") return img;
+        if (img && img.image_path) {
+          return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+        }
+        return "";
+      }).filter(Boolean);
+    }
+    if (updatedImagesArray.length === 0) {
+      if (updated.gallery && Array.isArray(updated.gallery)) {
+        updatedImagesArray = updated.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+      } else if (updated.image) {
+        updatedImagesArray = [updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`];
+      }
+    }
+
     const responseData: Product = {
       id: String(updated.id),
       name: updated.name,
@@ -144,9 +208,26 @@ export async function PUT(
       price: Number(updated.price) || 0,
       stock: Number(updated.stock) || 0,
       description: updated.description || "",
-      images: updated.gallery || (updated.image ? [updated.image] : []),
+      images: updatedImagesArray,
       status: updated.status === true || updated.status === 1 ? "active" : "inactive",
       sku: updated.SKU || "",
+      subCategory: updated.sub_category || "",
+      brand: updated.brand || "",
+      shortDescription: updated.short_description || "",
+      regularPrice: Number(updated.price) || 0,
+      salePrice: Number(updated.sale_price) || 0,
+      stockQuantity: Number(updated.stock) || 0,
+      tax: Number(updated.tax) || 0,
+      discount: Number(updated.discount) || 0,
+      unit: updated.unit || "",
+      stockStatus: updated.stock_status || "in-stock",
+      featured: Boolean(updated.featured),
+      bestSeller: Boolean(updated.best_seller),
+      organic: Boolean(updated.organic),
+      newArrival: Boolean(updated.new_arrival),
+      metaTitle: updated.meta_title || "",
+      metaDescription: updated.meta_description || "",
+      metaKeywords: updated.meta_keywords || "",
     } as any;
 
     return NextResponse.json(responseData);

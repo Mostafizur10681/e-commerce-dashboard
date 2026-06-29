@@ -15,6 +15,13 @@ import ImageUploader, { ImageEntry } from "@/components/admin/products/ImageUplo
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
+const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result as string);
+  reader.onerror = error => reject(error);
+});
+
 export default function AddProductForm() {
   const router = useRouter();
   const { toast } = useToast();
@@ -78,6 +85,17 @@ export default function AddProductForm() {
     try {
       setIsSubmitting(true);
       const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+
+      // Convert all new files to base64 strings
+      const imagePayload = await Promise.all(
+        images.map(async (img) => {
+          if (img.file) {
+            return await toBase64(img.file);
+          }
+          return img.preview;
+        })
+      );
+
       const res = await fetch("/api/products", {
         method: "POST",
         headers: {
@@ -86,7 +104,7 @@ export default function AddProductForm() {
         },
         body: JSON.stringify({
           ...data,
-          images: images.map((e) => e.preview),
+          images: imagePayload,
         }),
       });
 
@@ -104,6 +122,7 @@ export default function AddProductForm() {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <FormProvider {...methods}>

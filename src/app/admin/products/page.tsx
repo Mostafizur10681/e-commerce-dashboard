@@ -28,6 +28,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+import { formatImage } from "@/lib/imageHelper";
 import {
   Form,
   FormControl,
@@ -365,7 +367,7 @@ export default function ProductsPage() {
                             {product.images?.[0] ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
-                                src={product.images[0]}
+                                src={formatImage(product.images[0])}
                                 alt={product.name}
                                 className="h-full w-full object-cover"
                               />

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { formatImage } from "@/lib/imageHelper";
 
 export default function ViewProductPage() {
   const params = useParams();
@@ -39,9 +40,10 @@ export default function ViewProductPage() {
         });
         if (!res.ok) throw new Error("Failed to load product details");
         const data = await res.json();
-        setProduct(data);
-        if (data.images?.[0]) {
-          setMainImage(data.images[0]);
+        const formattedImages = data.images?.map((img: string) => formatImage(img)) ?? [];
+        setProduct({ ...data, images: formattedImages });
+        if (formattedImages.length) {
+          setMainImage(formattedImages[0]);
         }
       } catch (e: any) {
         console.error(e);
@@ -168,11 +170,10 @@ export default function ViewProductPage() {
                   <button
                     key={index}
                     onClick={() => setMainImage(imgUrl)}
-                    className={`aspect-square rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-950 border transition-all duration-300 cursor-pointer ${
-                      isActive
+                    className={`aspect-square rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-950 border transition-all duration-300 cursor-pointer ${isActive
                         ? "border-2 border-[#16A34A] scale-102 ring-4 ring-[#16A34A]/10 shadow-sm"
                         : "border-gray-200 dark:border-gray-800 hover:border-gray-400 hover:scale-[1.03]"
-                    }`}
+                      }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={imgUrl} alt={`thumb-${index + 1}`} className="h-full w-full object-cover" />

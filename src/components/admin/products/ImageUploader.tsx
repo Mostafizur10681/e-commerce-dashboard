@@ -79,7 +79,7 @@ export default function ImageUploader({
               className="h-full w-full object-cover transition-all duration-500"
             />
             <span className="absolute top-3 left-3 bg-[#16A34A] text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-              <Star className="h-2.5 w-2.5 fill-white" /> Featured
+              <Star className="h-2.5 w-2.5 fill-white" /> Main Image
             </span>
           </>
         ) : (
@@ -162,7 +162,7 @@ export default function ImageUploader({
                 <button
                   type="button"
                   onClick={() => onSetFeatured(idx)}
-                  title="Set as featured"
+                  title="Set as main image"
                   className="h-7 w-7 rounded-full bg-white/90 flex items-center justify-center hover:bg-yellow-100 transition shadow"
                 >
                   <Star

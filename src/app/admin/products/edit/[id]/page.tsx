@@ -15,6 +15,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import ImageUploader, { ImageEntry } from "@/components/admin/products/ImageUploader";
 import ProductPreviewCard from "@/components/admin/products/ProductPreviewCard";
+import { formatImage } from "@/lib/imageHelper";
+
+const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result as string);
+  reader.onerror = error => reject(error);
+});
 
 export default function EditProductPage() {
   const params = useParams();
@@ -96,6 +104,10 @@ export default function EditProductPage() {
         });
         if (!res.ok) throw new Error("Failed to load product details");
         const data = await res.json();
+        console.log('Fetched product data', data);
+        console.log('Images array', data.images);
+        console.log('Image field', data.image);
+        console.log('Gallery images', data.images);
         setProduct(data);
         reset({
           name: data.name || "",
@@ -122,8 +134,13 @@ export default function EditProductPage() {
           metaDescription: data.metaDescription || "",
           metaKeywords: data.metaKeywords || "",
         });
-        if (data.images?.length) {
-          setImages(data.images.map((src: string) => ({ file: null, preview: src })));
+        // Use the reusable formatImage helper for any image source (old path or base64)
+        // The API may return images under either "images" or "product_images"
+        const imgArray = data.images?.length ? data.images : (data.product_images?.map((p:any)=>p.image) ?? []);
+        if (data.image) {
+          setImages([{ file: null, preview: formatImage(data.image) }]);
+        } else if (imgArray?.length) {
+          setImages(imgArray.map((src: string) => ({ file: null, preview: formatImage(src) })));
         }
       } catch (e: any) {
         console.error(e);
@@ -157,6 +174,17 @@ export default function EditProductPage() {
     try {
       setIsSubmitting(true);
       const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+
+      // Convert new files to base64 strings
+      const imagePayload = await Promise.all(
+        images.map(async (img) => {
+          if (img.file) {
+            return await toBase64(img.file);
+          }
+          return img.preview;
+        })
+      );
+
       const res = await fetch(`/api/products/${id}`, {
         method: "PUT",
         headers: {
@@ -165,7 +193,7 @@ export default function EditProductPage() {
         },
         body: JSON.stringify({
           ...data,
-          images: images.map((e) => e.preview),
+          images: imagePayload,
         }),
       });
 
@@ -183,6 +211,7 @@ export default function EditProductPage() {
       setIsSubmitting(false);
     }
   };
+
 
   if (!mounted || loadingProduct) {
     return (

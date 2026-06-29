@@ -43,18 +43,55 @@ export async function GET(request: Request) {
     let all: Product[] = [];
 
     const rawList = json.data?.data || json.data || [];
-    all = rawList.map((item: any) => ({
-      id: String(item.id),
-      name: item.name,
-      category: item.category?.name || "General",
-      price: Number(item.price) || 0,
-      stock: Number(item.stock) || 0,
-      description: item.description || "",
-      images: item.gallery && item.gallery.length > 0 ? item.gallery : (item.image ? [item.image] : []),
-      // Extra fields for compatibility
-      status: item.status === true || item.status === 1 ? "active" : "inactive",
-      sku: item.SKU || "",
-    }));
+    all = rawList.map((item: any) => {
+      let imagesArray: string[] = [];
+      if (item.images && Array.isArray(item.images)) {
+        imagesArray = item.images.map((img: any) => {
+          if (typeof img === "string") return img;
+          if (img && img.image_path) {
+            return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+          }
+          return "";
+        }).filter(Boolean);
+      }
+      if (imagesArray.length === 0) {
+        if (item.gallery && Array.isArray(item.gallery)) {
+          imagesArray = item.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+        } else if (item.image) {
+          imagesArray = [item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`];
+        }
+      }
+
+      return {
+        id: String(item.id),
+        name: item.name,
+        category: item.category?.name || "General",
+        price: Number(item.price) || 0,
+        stock: Number(item.stock) || 0,
+        description: item.description || "",
+        images: imagesArray,
+        status: item.status === true || item.status === 1 ? "active" : "inactive",
+        sku: item.SKU || "",
+        subCategory: item.sub_category || "",
+        brand: item.brand || "",
+        shortDescription: item.short_description || "",
+        regularPrice: Number(item.price) || 0,
+        salePrice: Number(item.sale_price) || 0,
+        stockQuantity: Number(item.stock) || 0,
+        tax: Number(item.tax) || 0,
+        discount: Number(item.discount) || 0,
+        unit: item.unit || "",
+        stockStatus: item.stock_status || "in-stock",
+        featured: Boolean(item.featured),
+        bestSeller: Boolean(item.best_seller),
+        organic: Boolean(item.organic),
+        newArrival: Boolean(item.new_arrival),
+        metaTitle: item.meta_title || "",
+        metaDescription: item.meta_description || "",
+        metaKeywords: item.meta_keywords || "",
+      };
+    });
+
 
     if (q) {
       const lower = q.toLowerCase();
@@ -111,6 +148,19 @@ export async function POST(request: Request) {
       category,
       status,
       images,
+      subCategory,
+      brand,
+      tax,
+      discount,
+      unit,
+      stockStatus,
+      featured,
+      bestSeller,
+      organic,
+      newArrival,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
     } = body;
 
     if (!name) {
@@ -131,6 +181,19 @@ export async function POST(request: Request) {
       status: status === "active" || status === true,
       image: images?.[0] || "",
       gallery: images || [],
+      sub_category: subCategory || "",
+      brand: brand || "",
+      tax: Number(tax) || 0,
+      discount: Number(discount) || 0,
+      unit: unit || "",
+      stock_status: stockStatus || "in-stock",
+      featured: Boolean(featured),
+      best_seller: Boolean(bestSeller),
+      organic: Boolean(organic),
+      new_arrival: Boolean(newArrival),
+      meta_title: metaTitle || "",
+      meta_description: metaDescription || "",
+      meta_keywords: metaKeywords || "",
     };
 
     const res = await fetch("http://127.0.0.1:8000/api/admin/products", {
@@ -149,6 +212,24 @@ export async function POST(request: Request) {
     }
 
     const created = data.data;
+    let createdImagesArray: string[] = [];
+    if (created.images && Array.isArray(created.images)) {
+      createdImagesArray = created.images.map((img: any) => {
+        if (typeof img === "string") return img;
+        if (img && img.image_path) {
+          return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+        }
+        return "";
+      }).filter(Boolean);
+    }
+    if (createdImagesArray.length === 0) {
+      if (created.gallery && Array.isArray(created.gallery)) {
+        createdImagesArray = created.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+      } else if (created.image) {
+        createdImagesArray = [created.image.startsWith("http") ? created.image : `http://127.0.0.1:8000/storage/${created.image}`];
+      }
+    }
+
     const responseData: Product = {
       id: String(created.id),
       name: created.name,
@@ -156,9 +237,26 @@ export async function POST(request: Request) {
       price: Number(created.price) || 0,
       stock: Number(created.stock) || 0,
       description: created.description || "",
-      images: created.gallery || (created.image ? [created.image] : []),
+      images: createdImagesArray,
       status: created.status === true || created.status === 1 ? "active" : "inactive",
       sku: created.SKU || "",
+      subCategory: created.sub_category || "",
+      brand: created.brand || "",
+      shortDescription: created.short_description || "",
+      regularPrice: Number(created.price) || 0,
+      salePrice: Number(created.sale_price) || 0,
+      stockQuantity: Number(created.stock) || 0,
+      tax: Number(created.tax) || 0,
+      discount: Number(created.discount) || 0,
+      unit: created.unit || "",
+      stockStatus: created.stock_status || "in-stock",
+      featured: Boolean(created.featured),
+      bestSeller: Boolean(created.best_seller),
+      organic: Boolean(created.organic),
+      newArrival: Boolean(created.new_arrival),
+      metaTitle: created.meta_title || "",
+      metaDescription: created.meta_description || "",
+      metaKeywords: created.meta_keywords || "",
     } as any;
 
     return NextResponse.json(responseData, { status: 201 });
