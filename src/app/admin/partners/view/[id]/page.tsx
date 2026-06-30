@@ -29,10 +29,29 @@ export default function ViewPartnerPage() {
   const [partner, setPartner] = useState<any>(null);
 
   useEffect(() => {
+    const loadPartner = async () => {
+      try {
+        setLoading(true);
+        let data = getPartnerById(id);
+        if (!data) {
+          const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+          const res = await fetch(`/api/partners/${id}`, {
+            headers: token ? { "Authorization": `Bearer ${token}` } : {},
+          });
+          if (res.ok) {
+            data = await res.json();
+          }
+        }
+        setPartner(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (id) {
-      const data = getPartnerById(id);
-      setPartner(data);
-      setLoading(false);
+      loadPartner();
     }
   }, [id, getPartnerById]);
 

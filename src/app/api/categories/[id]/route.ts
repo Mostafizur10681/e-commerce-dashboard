@@ -31,7 +31,7 @@ export async function GET(
       id: String(item.id),
       name: item.name,
       description: item.description || "",
-      imageUrl: item.image ? (item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+      imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
       status: item.status === true || item.status === 1 ? "Active" : "Inactive",
       createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
       seoTitle: item.name,
@@ -78,12 +78,10 @@ export async function PUT(
 
     let imageUrl = existing.image || "";
     if (imageFile && imageFile.size > 0) {
-      const uploadDir = path.join(process.cwd(), "public/uploads/categories");
-      await fs.mkdir(uploadDir, { recursive: true });
-      const filename = `${Date.now()}-${imageFile.name.replace(/\s+/g, "-")}`;
       const buffer = Buffer.from(await imageFile.arrayBuffer());
-      await fs.writeFile(path.join(uploadDir, filename), buffer);
-      imageUrl = `/uploads/categories/${filename}`;
+      const base64String = buffer.toString("base64");
+      const mimeType = imageFile.type || "image/jpeg";
+      imageUrl = `data:${mimeType};base64,${base64String}`;
     }
 
     const payload = {
@@ -113,7 +111,7 @@ export async function PUT(
       id: String(updated.id),
       name: updated.name,
       description: updated.description || "",
-      imageUrl: updated.image ? (updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`) : imageUrl,
+      imageUrl: updated.image ? (updated.image.startsWith("data:image/") || updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`) : imageUrl,
       status: updated.status === true || updated.status === 1 ? "Active" : "Inactive",
       createdDate: updated.created_at ? new Date(updated.created_at).toISOString().split("T")[0] : "",
       seoTitle: updated.name,

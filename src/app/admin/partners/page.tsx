@@ -46,7 +46,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 export default function PartnersPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { partners, deletePartner } = useStore();
+  const { partners, deletePartner, fetchPartners } = useStore();
 
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,12 +58,17 @@ export default function PartnersPage() {
 
   useEffect(() => {
     setMounted(true);
+    fetchPartners();
   }, []);
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deletingPartner) {
-      deletePartner(deletingPartner.id);
-      toast("Partner deleted successfully", "success");
+      const success = await deletePartner(deletingPartner.id);
+      if (success) {
+        toast("Partner deleted successfully", "success");
+      } else {
+        toast("Failed to delete partner", "error");
+      }
       setDeletingPartner(null);
     }
   };

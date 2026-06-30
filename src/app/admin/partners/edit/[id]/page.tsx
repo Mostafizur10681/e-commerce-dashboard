@@ -47,18 +47,42 @@ export default function EditPartnerPage() {
   }>({});
 
   useEffect(() => {
-    if (id) {
-      const partner = getPartnerById(id);
-      if (partner) {
-        setName(partner.name);
-        setWebsite(partner.website);
-        setStatus((partner.status as "Active" | "Inactive") || "Active");
-        setLogo(partner.logo || "");
-        setDescription(partner.description || "");
+    const loadPartner = async () => {
+      try {
+        setLoading(true);
+        let partner = getPartnerById(id);
+        if (!partner) {
+          const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+          const res = await fetch(`/api/partners/${id}`, {
+            headers: token ? { "Authorization": `Bearer ${token}` } : {},
+          });
+          if (res.ok) {
+            partner = await res.json();
+          }
+        }
+
+        if (partner) {
+          setName(partner.name);
+          setWebsite(partner.website);
+          setStatus((partner.status as "Active" | "Inactive") || "Active");
+          setLogo(partner.logo || "");
+          setDescription(partner.description || "");
+        } else {
+          toast("Partner not found", "error");
+          router.push("/admin/partners");
+        }
+      } catch (err) {
+        console.error(err);
+        toast("Error loading partner details", "error");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
+    };
+
+    if (id) {
+      loadPartner();
     }
-  }, [id, getPartnerById]);
+  }, [id, getPartnerById, router, toast]);
 
   // react-dropzone handling
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -99,7 +123,9 @@ export default function EditPartnerPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) {
@@ -107,17 +133,28 @@ export default function EditPartnerPage() {
       return;
     }
 
-    updatePartner(id, {
-      name,
-      website,
-      logo,
-      status,
-      description,
-      updatedAt: new Date().toISOString().split("T")[0],
-    });
+    try {
+      setIsSaving(true);
+      const success = await updatePartner(id, {
+        name,
+        website,
+        logo,
+        status,
+        description,
+      });
 
-    toast("Partner updated successfully", "success");
-    router.push("/admin/partners");
+      if (success) {
+        toast("Partner updated successfully", "success");
+        router.push("/admin/partners");
+      } else {
+        toast("Failed to update partner. Please try again.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      toast("An error occurred while saving", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (loading) {
@@ -304,9 +341,17 @@ export default function EditPartnerPage() {
             </Button>
             <Button
               type="submit"
+              disabled={isSaving}
               className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-8 font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer border-transparent"
             >
-              Update Partner
+              {isSaving ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update Partner"
+              )}
             </Button>
           </div>
         </div>

@@ -65,9 +65,10 @@ interface StoreState {
   deleteReview: (id: string) => void;
 
   // Partners CRUD
-  addPartner: (partner: Omit<Partner, "id">) => void;
-  updatePartner: (id: string, partner: Partial<Partner>) => void;
-  deletePartner: (id: string) => void;
+  fetchPartners: () => Promise<void>;
+  addPartner: (partner: Omit<Partner, "id">) => Promise<boolean>;
+  updatePartner: (id: string, partner: Partial<Partner>) => Promise<boolean>;
+  deletePartner: (id: string) => Promise<boolean>;
   getPartnerById: (id: string) => Partner | undefined;
 
   // Banners CRUD
@@ -374,26 +375,90 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   // Partners CRUD
-  addPartner: (partner) => {
-    const newPartner: Partner = {
-      ...partner,
-      id: `part-${Date.now()}`,
-    };
-    const updated = [...get().partners, newPartner];
-    set({ partners: updated });
-    saveToLocalStorage("df_partners", updated);
+  fetchPartners: async () => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch("/api/partners", {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        set({ partners: data.partners || [] });
+        saveToLocalStorage("df_partners", data.partners || []);
+      }
+    } catch (error) {
+      console.error("fetchPartners error:", error);
+    }
   },
 
-  updatePartner: (id, data) => {
-    const updated = get().partners.map((p) => (p.id === id ? { ...p, ...data } : p));
-    set({ partners: updated });
-    saveToLocalStorage("df_partners", updated);
+  addPartner: async (partner) => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch("/api/partners", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(partner),
+      });
+      if (res.ok) {
+        const newPartner = await res.json();
+        const updated = [...get().partners, newPartner];
+        set({ partners: updated });
+        saveToLocalStorage("df_partners", updated);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("addPartner error:", error);
+      return false;
+    }
   },
 
-  deletePartner: (id) => {
-    const updated = get().partners.filter((p) => p.id !== id);
-    set({ partners: updated });
-    saveToLocalStorage("df_partners", updated);
+  updatePartner: async (id, data) => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch(`/api/partners/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const updatedPartner = await res.json();
+        const updated = get().partners.map((p) => (p.id === id ? updatedPartner : p));
+        set({ partners: updated });
+        saveToLocalStorage("df_partners", updated);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("updatePartner error:", error);
+      return false;
+    }
+  },
+
+  deletePartner: async (id) => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch(`/api/partners/${id}`, {
+        method: "DELETE",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const updated = get().partners.filter((p) => p.id !== id);
+        set({ partners: updated });
+        saveToLocalStorage("df_partners", updated);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("deletePartner error:", error);
+      return false;
+    }
   },
 
   getPartnerById: (id) => {

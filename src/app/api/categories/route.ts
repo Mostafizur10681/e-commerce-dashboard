@@ -33,7 +33,7 @@ export async function GET(request: Request) {
         id: String(item.id),
         name: item.name,
         description: item.description || "",
-        imageUrl: item.image ? (item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+        imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
         status: item.status === true || item.status === 1 ? "Active" : "Inactive",
         createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
         seoTitle: item.name,
@@ -95,12 +95,10 @@ export async function POST(request: Request) {
 
     let imageUrl = "";
     if (imageFile && imageFile.size > 0) {
-      const uploadDir = path.join(process.cwd(), "public/uploads/categories");
-      await fs.mkdir(uploadDir, { recursive: true });
-      const filename = `${Date.now()}-${imageFile.name.replace(/\s+/g, "-")}`;
       const buffer = Buffer.from(await imageFile.arrayBuffer());
-      await fs.writeFile(path.join(uploadDir, filename), buffer);
-      imageUrl = `/uploads/categories/${filename}`;
+      const base64String = buffer.toString("base64");
+      const mimeType = imageFile.type || "image/jpeg";
+      imageUrl = `data:${mimeType};base64,${base64String}`;
     } else {
       return NextResponse.json({ error: "Category Image is required" }, { status: 400 });
     }

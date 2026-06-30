@@ -81,7 +81,9 @@ export default function AddPartnerPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) {
@@ -89,17 +91,28 @@ export default function AddPartnerPage() {
       return;
     }
 
-    addPartner({
-      name,
-      website,
-      logo,
-      status,
-      description,
-      createdAt: new Date().toISOString().split("T")[0],
-    });
+    try {
+      setIsSaving(true);
+      const success = await addPartner({
+        name,
+        website,
+        logo,
+        status,
+        description,
+      });
 
-    toast("Partner created successfully", "success");
-    router.push("/admin/partners");
+      if (success) {
+        toast("Partner created successfully", "success");
+        router.push("/admin/partners");
+      } else {
+        toast("Failed to create partner. Please try again.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      toast("An error occurred while saving", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -275,11 +288,19 @@ export default function AddPartnerPage() {
             >
               Cancel
             </Button>
-            <Button
+             <Button
               type="submit"
+              disabled={isSaving}
               className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-8 font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer border-transparent"
             >
-              Save Partner
+              {isSaving ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Partner"
+              )}
             </Button>
           </div>
         </div>
