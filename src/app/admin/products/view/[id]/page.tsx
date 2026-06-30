@@ -38,7 +38,15 @@ export default function ViewProductPage() {
         const res = await fetch(`/api/products/${id}`, {
           headers: token ? { "Authorization": `Bearer ${token}` } : {},
         });
-        if (!res.ok) throw new Error("Failed to load product details");
+        if (!res.ok) {
+          if (res.status === 401) {
+            useStore.getState().logout();
+            router.push("/login");
+            toast("Session expired. Please log in again.", "error");
+            return;
+          }
+          throw new Error("Failed to load product details");
+        }
         const data = await res.json();
         const formattedImages = data.images?.map((img: string) => formatImage(img)) ?? [];
         setProduct({ ...data, images: formattedImages });
@@ -53,7 +61,7 @@ export default function ViewProductPage() {
       }
     };
     fetchProd();
-  }, [mounted, id]);
+  }, [mounted, id, router, toast]);
 
   if (!mounted || loadingProduct) {
     return (

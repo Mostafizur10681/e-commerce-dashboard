@@ -104,13 +104,17 @@ export default function ProductsPage() {
         if (res.ok) {
           const data = await res.json();
           setCategoriesList(data.categories || []);
+        } else if (res.status === 401) {
+          useStore.getState().logout();
+          router.push("/login");
+          toast("Session expired. Please log in again.", "error");
         }
       } catch (e) {
         console.error("Failed to load categories", e);
       }
     };
     fetchCats();
-  }, [mounted]);
+  }, [mounted, router, toast]);
 
   // Fetch products dynamically
   const fetchProducts = async () => {
@@ -122,7 +126,15 @@ export default function ProductsPage() {
       const res = await fetch(url, {
         headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Failed to load products");
+      if (!res.ok) {
+        if (res.status === 401) {
+          useStore.getState().logout();
+          router.push("/login");
+          toast("Session expired. Please log in again.", "error");
+          return;
+        }
+        throw new Error("Failed to load products");
+      }
       const data = await res.json();
       setProductsList(data.products || []);
       setTotalItems(data.total || 0);

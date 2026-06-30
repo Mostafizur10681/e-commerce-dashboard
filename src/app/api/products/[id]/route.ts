@@ -34,6 +34,9 @@ export async function GET(
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 

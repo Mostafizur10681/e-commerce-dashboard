@@ -19,6 +19,9 @@ export async function GET(request: Request) {
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       throw new Error("Failed to fetch categories from backend");
     }
 

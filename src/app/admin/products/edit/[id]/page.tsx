@@ -47,13 +47,17 @@ export default function EditProductPage() {
         if (res.ok) {
           const data = await res.json();
           setCategoriesList(data.categories || []);
+        } else if (res.status === 401) {
+          useStore.getState().logout();
+          router.push("/login");
+          toast("Session expired. Please log in again.", "error");
         }
       } catch (e) {
         console.error("Failed to load categories in edit page", e);
       }
     };
     fetchCats();
-  }, []);
+  }, [router, toast]);
 
   const [product, setProduct] = useState<any>(null);
   const [loadingProduct, setLoadingProduct] = useState(true);
@@ -102,7 +106,16 @@ export default function EditProductPage() {
         const res = await fetch(`/api/products/${id}`, {
           headers: token ? { "Authorization": `Bearer ${token}` } : {},
         });
-        if (!res.ok) throw new Error("Failed to load product details");
+        if (!res.ok) {
+          if (res.status === 401) {
+            // Token invalid or expired – clear and redirect to login
+            useStore.getState().logout();
+            router.push("/login");
+            toast("Session expired. Please log in again.", "error");
+            return;
+          }
+          throw new Error("Failed to load product details");
+        }
         const data = await res.json();
         console.log('Fetched product data', data);
         console.log('Images array', data.images);
@@ -150,7 +163,7 @@ export default function EditProductPage() {
       }
     };
     fetchProd();
-  }, [mounted, id, reset]);
+  }, [mounted, id, reset, router, toast]);
 
   const handleAddImages = (entries: ImageEntry[]) => {
     setImages((prev) => [...prev, ...entries]);
