@@ -13,11 +13,12 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { customerName, productName, rating, comment, status, approved } = body;
+    const { customerName, productName, rating, comment, status, approved, imageUrl } = body;
 
     const payload: any = {};
     if (rating !== undefined) payload.rating = Number(rating);
     if (comment !== undefined) payload.comment = comment;
+    if (imageUrl !== undefined) payload.image_path = imageUrl;
     if (status !== undefined) {
       payload.status = status === "Approved" || status === true;
     } else if (approved !== undefined) {
@@ -46,6 +47,7 @@ export async function PUT(
       customerName: customerName || updated.user?.name || "Anonymous",
       rating: Number(updated.rating),
       comment: updated.comment || "",
+      imageUrl: updated.image_path || null,
       approved: Boolean(updated.status),
       status: updated.status === true || updated.status === 1 ? "Approved" : "Pending",
       date: updated.created_at ? new Date(updated.created_at).toISOString().split("T")[0] : "",

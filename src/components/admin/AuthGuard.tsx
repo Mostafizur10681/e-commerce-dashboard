@@ -14,6 +14,44 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [hydrate]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const originalFetch = window.fetch;
+    window.fetch = async (input, init) => {
+      try {
+        const response = await originalFetch(input, init);
+        
+        if (response.status === 401) {
+          let url = "";
+          if (typeof input === "string") {
+            url = input;
+          } else if (input instanceof URL) {
+            url = input.href;
+          } else if (input && typeof input === "object" && "url" in input) {
+            url = (input as Request).url;
+          }
+
+          const isAuthApi = url.includes("/login") || url.includes("/register");
+          const isAuthPage = window.location.pathname === "/login" || window.location.pathname === "/register";
+
+          if (!isAuthApi && !isAuthPage) {
+            useStore.getState().logout();
+            router.push("/login?session_expired=1");
+          }
+        }
+        
+        return response;
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, [router]);
+
+  useEffect(() => {
     if (isHydrated) {
       const isLoginOrRegister = pathname === "/login" || pathname === "/register";
       

@@ -48,6 +48,15 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
     setMode(defaultMode);
   }, [defaultMode]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("session_expired") === "1") {
+        setLoginError("Session expired. Please log in again.");
+      }
+    }
+  }, []);
+
   // Sync state changes back and forth to browser popstate (e.g. back button)
   useEffect(() => {
     const handlePopState = () => {

@@ -4,13 +4,14 @@ import { Review } from "@/types";
 // Helper to resolve product ID from name
 async function resolveProductId(productName: string, token: string | null): Promise<number> {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products?q=${encodeURIComponent(productName)}`, {
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/products?per_page=1000`, {
       headers: token ? { "Authorization": token } : {},
     });
     if (res.ok) {
       const json = await res.json();
       const list = json.data?.data || json.data || [];
-      if (list.length > 0) return list[0].id;
+      const match = list.find((p: any) => p.name.toLowerCase() === productName.toLowerCase());
+      if (match) return match.id;
     }
   } catch (e) {
     console.error("Resolve product ID failed", e);
@@ -75,6 +76,7 @@ export async function GET(request: Request) {
         customerName: item.user?.name || "Anonymous",
         rating: Number(item.rating),
         comment: item.comment || "",
+        imageUrl: item.image_path || null,
         date: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
         approved: Boolean(item.status),
         status: item.status === true || item.status === 1 || item.status === "Approved" ? "Approved" : "Pending",
@@ -92,6 +94,7 @@ export async function GET(request: Request) {
           customerName: item.user?.name || "Anonymous",
           rating: Number(item.rating),
           comment: item.comment || "",
+          imageUrl: item.image_path || null,
           date: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
           approved: Boolean(item.status),
           status: item.status === true || item.status === 1 || item.status === "Approved" ? "Approved" : "Pending",
@@ -152,14 +155,15 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { customerName, productName, rating, comment, status } = body;
+    const { customerName, productName, rating, comment, status, imageUrl } = body;
 
     if (!rating || !comment) {
       return NextResponse.json({ error: "Rating and comment are required" }, { status: 400 });
     }
 
-    // Resolve current user profile ID and role
-    let fallbackUserId = 1;
+    // Resolve current user profile ID, name, and role from authenticated user
+    let authUserId = 1;
+    let authUserName = "Anonymous";
     let userRole = "customer";
     try {
       const profileRes = await fetch("http://127.0.0.1:8000/api/user", {
@@ -168,23 +172,24 @@ export async function POST(request: Request) {
       if (profileRes.ok) {
         const profileJson = await profileRes.json();
         const profileData = profileJson.data || profileJson;
-        fallbackUserId = profileData.id || 1;
+        authUserId = profileData.id || 1;
+        authUserName = profileData.name || "Anonymous";
         userRole = profileData.role || "customer";
       }
     } catch (e) {
       console.error("Failed to fetch user profile fallback", e);
     }
 
-    // Resolve product_id and user_id relations
+    // Resolve product_id relation
     const resolvedProductId = await resolveProductId(productName || "", token);
-    const resolvedUserId = await resolveUserId(customerName || "", token, fallbackUserId);
 
     const payload = {
       product_id: resolvedProductId,
-      user_id: resolvedUserId,
+      user_id: authUserId,
       rating: Number(rating),
       comment: comment,
       status: status === "Approved" || status === true,
+      image_path: imageUrl || null,
     };
 
     const targetUrl = userRole === "admin"
@@ -210,9 +215,10 @@ export async function POST(request: Request) {
     const responseData: Review = {
       id: String(created.id),
       productName: productName || created.product?.name || "General Product",
-      customerName: customerName || created.user?.name || "Anonymous",
+      customerName: authUserName || created.user?.name || "Anonymous",
       rating: Number(created.rating),
       comment: created.comment || "",
+      imageUrl: created.image_path || null,
       approved: Boolean(created.status),
       status: created.status === true || created.status === 1 ? "Approved" : "Pending",
       date: created.created_at ? new Date(created.created_at).toISOString().split("T")[0] : "",

@@ -75,6 +75,7 @@ const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
   comment: z.string().min(5, "Comment must be at least 5 characters"),
   status: z.enum(["Approved", "Pending", "Rejected"]),
+  imageUrl: z.string().optional().nullable(),
 });
 
 type ReviewFormValues = z.infer<typeof reviewSchema>;
@@ -101,6 +102,53 @@ export default function ReviewsPage() {
   const [deletingReview, setDeletingReview] = useState<Review | null>(null);
   const [quickViewReview, setQuickViewReview] = useState<Review | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Product select states (select2-like behavior) for Edit Modal
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [fetchingProducts, setFetchingProducts] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchProductsList = async () => {
+      setFetchingProducts(true);
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch(`/api/products?q=${encodeURIComponent(searchQuery)}&limit=100`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      } finally {
+        setFetchingProducts(false);
+      }
+    };
+
+    const delayDebounce = setTimeout(() => {
+      if (isDropdownOpen || searchQuery) {
+        fetchProductsList();
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery, isDropdownOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Metrics Summary
   const [stats, setStats] = useState({
@@ -164,6 +212,7 @@ export default function ReviewsPage() {
       rating: 5,
       comment: "",
       status: "Pending",
+      imageUrl: "",
     },
   });
 
@@ -176,6 +225,7 @@ export default function ReviewsPage() {
         rating: editingReview.rating,
         comment: editingReview.comment,
         status: editingReview.status || "Pending",
+        imageUrl: editingReview.imageUrl || "",
       });
     }
   }, [editingReview, isFormOpen, form]);
@@ -793,7 +843,8 @@ export default function ReviewsPage() {
                       <Input
                         placeholder="John Doe"
                         {...field}
-                        className="h-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
+                        readOnly
+                        className="h-10 border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/40 text-gray-500 dark:text-slate-400 rounded-xl focus-visible:ring-transparent cursor-not-allowed"
                       />
                     </FormControl>
                     <FormMessage />
@@ -809,11 +860,58 @@ export default function ReviewsPage() {
                   <FormItem className="space-y-1">
                     <FormLabel className="text-xs font-semibold text-gray-705 dark:text-slate-300">Product Name</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="iPhone 15 Pro Max"
-                        {...field}
-                        className="h-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
-                      />
+                      <div className="relative w-full" ref={dropdownRef}>
+                        <div className="relative">
+                          <Input
+                            placeholder="Search and select product..."
+                            value={isDropdownOpen ? searchQuery : (field.value || "")}
+                            onChange={(e) => {
+                              if (!isDropdownOpen) setIsDropdownOpen(true);
+                              setSearchQuery(e.target.value);
+                            }}
+                            onFocus={() => {
+                              setIsDropdownOpen(true);
+                              setSearchQuery("");
+                            }}
+                            className="h-10 pr-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
+                          />
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 dark:text-slate-500">
+                            {fetchingProducts ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Search className="h-4 w-4" />
+                            )}
+                          </div>
+                        </div>
+
+                        {isDropdownOpen && (
+                          <div className="absolute z-50 w-full mt-1.5 bg-white dark:bg-slate-900 border border-gray-205 dark:border-slate-800 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800/50">
+                            {!fetchingProducts && products.length === 0 && (
+                              <div className="p-3.5 text-xs text-gray-500 dark:text-slate-400 italic text-center">
+                                No products found
+                              </div>
+                            )}
+                            {products.map((product) => (
+                              <button
+                                key={product.id}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(product.name);
+                                  setIsDropdownOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 dark:hover:bg-green-950/20 hover:text-green-600 dark:hover:text-green-400 text-gray-800 dark:text-slate-200 transition-colors flex items-center justify-between"
+                              >
+                                <span>{product.name}</span>
+                                {field.value === product.name && (
+                                  <span className="text-green-600 dark:text-green-400 text-xs font-semibold">
+                                    Selected
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -863,6 +961,65 @@ export default function ReviewsPage() {
                         placeholder="Write customer review content..."
                         className="w-full border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl p-3 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Image Attachment (Optional) */}
+              <FormField
+                control={form.control}
+                name="imageUrl"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs font-semibold text-gray-705 dark:text-slate-300">
+                      Review Photo (Optional)
+                    </FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        {field.value ? (
+                          <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-gray-205 dark:border-slate-800 bg-black/5 flex items-center justify-center">
+                            <img
+                              src={field.value}
+                              alt="Review attachment preview"
+                              className="max-h-32 object-contain"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => field.onChange("")}
+                              className="absolute top-2 right-2 h-7 w-7 rounded-lg bg-red-505 hover:bg-red-600 text-white shadow-md cursor-pointer flex items-center justify-center border-none"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="border border-dashed border-gray-300 dark:border-slate-700 rounded-xl p-4 text-center hover:border-green-500 hover:bg-gray-50/50 dark:hover:bg-slate-800/10 transition-colors">
+                            <label className="text-xs font-semibold text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 hover:underline cursor-pointer block">
+                              <span>Upload new photo</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    if (!file.type.startsWith("image/")) {
+                                      toast("Selected file must be an image", "error");
+                                      return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      field.onChange(reader.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -15,9 +15,11 @@ import {
   Sparkles,
   Info,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Search
 } from "lucide-react";
 
+import { useStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,10 +56,59 @@ export default function AddReviewPage() {
   const [imageError, setImageError] = useState<string | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
 
+  // Product select states (select2-like behavior)
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [fetchingProducts, setFetchingProducts] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const fetchProductsList = async () => {
+      setFetchingProducts(true);
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch(`/api/products?q=${encodeURIComponent(searchQuery)}&limit=100`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      } finally {
+        setFetchingProducts(false);
+      }
+    };
+
+    const delayDebounce = setTimeout(() => {
+      if (isDropdownOpen || searchQuery) {
+        fetchProductsList();
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery, isDropdownOpen]);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const { currentUser } = useStore();
+
   const form = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
-      customerName: "",
+      customerName: currentUser?.name || "",
       productName: "",
       rating: 5,
       comment: "",
@@ -65,6 +116,12 @@ export default function AddReviewPage() {
       imageUrl: "",
     },
   });
+
+  React.useEffect(() => {
+    if (currentUser) {
+      form.setValue("customerName", currentUser.name);
+    }
+  }, [currentUser, form]);
 
   const { setValue } = form;
 
@@ -198,7 +255,8 @@ export default function AddReviewPage() {
                       <Input
                         placeholder="e.g. Jane Doe"
                         {...field}
-                        className="h-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
+                        readOnly
+                        className="h-10 border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/40 text-gray-500 dark:text-slate-400 rounded-xl focus-visible:ring-transparent cursor-not-allowed"
                       />
                     </FormControl>
                     <FormMessage />
@@ -216,11 +274,58 @@ export default function AddReviewPage() {
                       Product Name <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="e.g. Organic Avocados, Wireless Headset"
-                        {...field}
-                        className="h-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
-                      />
+                      <div className="relative w-full" ref={dropdownRef}>
+                        <div className="relative">
+                          <Input
+                            placeholder="Search and select product..."
+                            value={isDropdownOpen ? searchQuery : (field.value || "")}
+                            onChange={(e) => {
+                              if (!isDropdownOpen) setIsDropdownOpen(true);
+                              setSearchQuery(e.target.value);
+                            }}
+                            onFocus={() => {
+                              setIsDropdownOpen(true);
+                              setSearchQuery("");
+                            }}
+                            className="h-10 pr-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
+                          />
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400 dark:text-slate-500">
+                            {fetchingProducts ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Search className="h-4 w-4" />
+                            )}
+                          </div>
+                        </div>
+
+                        {isDropdownOpen && (
+                          <div className="absolute z-50 w-full mt-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800/50">
+                            {!fetchingProducts && products.length === 0 && (
+                              <div className="p-3.5 text-xs text-gray-500 dark:text-slate-400 italic text-center">
+                                No products found
+                              </div>
+                            )}
+                            {products.map((product) => (
+                              <button
+                                key={product.id}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(product.name);
+                                  setIsDropdownOpen(false);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 dark:hover:bg-green-950/20 hover:text-green-600 dark:hover:text-green-400 text-gray-800 dark:text-slate-200 transition-colors flex items-center justify-between"
+                              >
+                                <span>{product.name}</span>
+                                {field.value === product.name && (
+                                  <span className="text-green-600 dark:text-green-400 text-xs font-semibold">
+                                    Selected
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
