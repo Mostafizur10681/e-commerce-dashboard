@@ -91,10 +91,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (pathname.startsWith("/admin/partners")) {
       setIsPartnersOpen(true);
     }
-    if (pathname.startsWith("/admin/reviews")) {
-      setIsReviewsOpen(true);
-    }
-    if (pathname.startsWith("/admin/faqs")) {
+    if (pathname.startsWith("/admin/faqs") || pathname.startsWith("/admin/faq-categories")) {
       setIsFaqsOpen(true);
     }
     if (pathname.startsWith("/admin/locations")) {
@@ -125,6 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Reviews", href: "/admin/reviews", icon: Star },
     { name: "Partners", href: "/admin/partners", icon: Handshake },
     { name: "FAQs", href: "/admin/faqs", icon: HelpCircle },
+    { name: "FAQ Categories", href: "/admin/faq-categories", icon: Layers },
     { name: "Subscriptions", href: "/admin/subscriptions", icon: Package },
     { name: "Banners", href: "/admin/banners", icon: ImageIcon },
     { name: "Users", href: "/admin/users", icon: UserCog },
@@ -553,7 +551,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               }}
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
-                pathname.startsWith("/admin/faqs") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                (pathname.startsWith("/admin/faqs") || pathname.startsWith("/admin/faq-categories")) && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
                 isCollapsed && "justify-center px-2"
               )}
               title="FAQs"
@@ -576,13 +574,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {!isCollapsed && isFaqsOpen && (
               <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
                 <Link
+                  href="/admin/faq-categories"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/faq-categories"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  FAQ Category List
+                </Link>
+                <Link
+                  href="/admin/faq-categories/add"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/faq-categories/add"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Add FAQ Category
+                </Link>
+                <Link
                   href="/admin/faqs"
                   onClick={() => setIsMobileOpen(false)}
                   className={cn(
                     "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
                     pathname === "/admin/faqs"
                       ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
-                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                      : "text-gray-555 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
                   )}
                 >
                   <span className="mr-1.5 font-bold">○</span>
@@ -684,7 +708,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Other Menu Items */}
-          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Partners" && m.name !== "Reviews" && m.name !== "FAQs").map((item) => {
+          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Partners" && m.name !== "Reviews" && m.name !== "FAQs" && m.name !== "FAQ Categories").map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (

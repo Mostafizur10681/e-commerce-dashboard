@@ -1,33 +1,5 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { FAQ } from "@/types";
-
-const dataFilePath = path.join(process.cwd(), "src/data/faqs.json");
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: CORS_HEADERS });
-}
-
-export async function readFaqs(): Promise<FAQ[]> {
-  try {
-    const content = await fs.readFile(dataFilePath, "utf-8");
-    return JSON.parse(content);
-  } catch (err) {
-    return [];
-  }
-}
-
-export async function writeFaqs(data: FAQ[]) {
-  await fs.mkdir(path.dirname(dataFilePath), { recursive: true });
-  await fs.writeFile(dataFilePath, JSON.stringify(data, null, 2), "utf-8");
-}
 
 export async function GET(request: Request) {
   try {
@@ -37,8 +9,34 @@ export async function GET(request: Request) {
     const sort = searchParams.get("sort") || "display_asc";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const category = searchParams.get("category") || "All";
 
-    let list = await readFaqs();
+    const token = request.headers.get("Authorization");
+
+    // Fetch from backend (retrieve all to perform client-side filtering/sorting)
+    const res = await fetch("http://127.0.0.1:8000/api/faqs?all=1", {
+      headers: token ? { "Authorization": token } : {},
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      throw new Error("Failed to fetch FAQs from backend");
+    }
+
+    const json = await res.json();
+    const rawList = json.data || [];
+    let list: FAQ[] = rawList.map((item: any) => ({
+      id: String(item.id),
+      category: item.category || "General",
+      question: item.question,
+      answer: item.answer,
+      displayOrder: item.id ? Number(item.id) : 1,
+      status: item.status === true || item.status === 1 ? "active" : "inactive",
+      createdAt: item.created_at || new Date().toISOString(),
+      updatedAt: item.updated_at || new Date().toISOString(),
+    }));
 
     // 1. Filter by search query
     if (q) {
@@ -49,22 +47,21 @@ export async function GET(request: Request) {
       );
     }
 
-    // 2. Filter by status (case insensitive)
+    // 2. Filter by status
     if (status !== "All") {
       list = list.filter(
         (f) => f.status.toLowerCase() === status.toLowerCase()
       );
     }
 
-    // 2.5. Filter by category
-    const category = searchParams.get("category") || "All";
+    // 3. Filter by category
     if (category !== "All") {
       list = list.filter(
         (f) => f.category && f.category.toLowerCase() === category.toLowerCase()
       );
     }
 
-    // 3. Sort
+    // 4. Sort
     list.sort((a, b) => {
       if (sort === "display_desc") {
         return b.displayOrder - a.displayOrder;
@@ -83,54 +80,72 @@ export async function GET(request: Request) {
     const start = (page - 1) * limit;
     const paginatedData = list.slice(start, start + limit);
 
-    return NextResponse.json(
-      {
-        data: paginatedData,
-        total,
-        page,
-        limit,
-        totalPages,
-      },
-      { headers: CORS_HEADERS }
-    );
-  } catch (err) {
+    return NextResponse.json({
+      data: paginatedData,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
+  } catch (err: any) {
     console.error("GET FAQs error:", err);
     return NextResponse.json(
-      { error: "Failed to fetch FAQs" },
-      { status: 550, headers: CORS_HEADERS }
+      { error: err.message || "Failed to fetch FAQs" },
+      { status: 500 }
     );
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const token = request.headers.get("Authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const faqs = await readFaqs();
+    const { question, answer, category, status } = body;
 
-    const displayOrder = parseInt(body.displayOrder, 10);
-
-    const newFaq: FAQ = {
-      id: `faq-${Date.now()}`,
-      category: body.category || "General Questions",
-      question: body.question || "",
-      answer: body.answer || "",
-      displayOrder: isNaN(displayOrder) ? 1 : displayOrder,
-      status: body.status || "active",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const payload = {
+      question,
+      answer,
+      category,
+      status: status === "active" || status === true,
     };
 
-    faqs.push(newFaq);
-    // Auto sort by display order before saving
-    faqs.sort((a, b) => a.displayOrder - b.displayOrder);
-    await writeFaqs(faqs);
+    const res = await fetch("http://127.0.0.1:8000/api/v1/auth/faqs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+      },
+      body: JSON.stringify(payload),
+    });
 
-    return NextResponse.json(newFaq, { status: 201, headers: CORS_HEADERS });
-  } catch (err) {
+    const data = await res.json();
+
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Failed to create FAQ on backend" }, { status: res.status });
+    }
+
+    const created = data.data;
+    const responseData: FAQ = {
+      id: String(created.id),
+      category: created.category || "General",
+      question: created.question,
+      answer: created.answer,
+      displayOrder: created.id ? Number(created.id) : 1,
+      status: created.status === true || created.status === 1 ? "active" : "inactive",
+      createdAt: created.created_at || new Date().toISOString(),
+      updatedAt: created.updated_at || new Date().toISOString(),
+    };
+
+    return NextResponse.json(responseData, { status: 201 });
+  } catch (err: any) {
     console.error("POST FAQ error:", err);
     return NextResponse.json(
-      { error: "Failed to create FAQ" },
-      { status: 500, headers: CORS_HEADERS }
+      { error: err.message || "Failed to create FAQ" },
+      { status: 500 }
     );
   }
 }

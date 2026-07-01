@@ -31,6 +31,33 @@ export default function EditFaqPage() {
   const [displayOrder, setDisplayOrder] = useState("1");
   const [status, setStatus] = useState<"active" | "inactive">("active");
 
+  // Dynamic categories
+  const [categories, setCategories] = useState<any[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch("/api/faq-categories", {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const list = json && Array.isArray(json.faqCategories) ? json.faqCategories : (Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []));
+          setCategories(list);
+        }
+      } catch (err) {
+        console.error("Failed to load FAQ categories:", err);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Tab State: "edit" or "preview"
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
 
@@ -57,7 +84,10 @@ export default function EditFaqPage() {
         setLoading(false);
       } else {
         // Fetch from API
-        fetch(`/api/faqs/${id}`)
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        fetch(`/api/faqs/${id}`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        })
           .then((res) => {
             if (res.ok) return res.json();
             throw new Error("FAQ not found");
@@ -118,9 +148,13 @@ export default function EditFaqPage() {
         status,
       };
 
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/faqs/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(payload),
       });
 
@@ -246,15 +280,20 @@ export default function EditFaqPage() {
                   id="category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full h-10 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-900 dark:text-white cursor-pointer transition-colors"
+                  disabled={categoriesLoading}
+                  className="w-full h-10 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-900 dark:text-white cursor-pointer transition-colors disabled:opacity-50"
                 >
-                  <option value="Orders">Orders</option>
-                  <option value="Shipping">Shipping</option>
-                  <option value="Returns & Refunds">Returns & Refunds</option>
-                  <option value="Payments">Payments</option>
-                  <option value="Accounts">Accounts</option>
-                  <option value="Products">Products</option>
-                  <option value="General Questions">General Questions</option>
+                  {categoriesLoading ? (
+                    <option value="">Loading categories...</option>
+                  ) : categories.length === 0 ? (
+                    <option value="General">General</option>
+                  ) : (
+                    categories.map((cat: any) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 

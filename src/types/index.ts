@@ -19,6 +19,15 @@ export interface Category {
   seoDescription?: string;
 }
 
+export interface FAQCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  status: "Active" | "Inactive";
+  createdDate?: string;
+}
+
 export type OrderStatus = "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
 
 export type PaymentStatus = "Paid" | "Pending" | "Failed" | "Refunded";

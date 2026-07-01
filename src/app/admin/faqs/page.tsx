@@ -69,10 +69,13 @@ export default function FaqsPage() {
   const fetchFaqs = async () => {
     setLoading(true);
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const url = `/api/faqs?q=${encodeURIComponent(
         searchTerm
       )}&status=${statusFilter}&category=${categoryFilter}&sort=${sortFilter}&page=${currentPage}&limit=${limit}`;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Failed to fetch FAQs");
       const data = await res.json();
       setFaqs(data.data || []);
@@ -95,8 +98,10 @@ export default function FaqsPage() {
   const handleDeleteConfirm = async () => {
     if (deletingFaq) {
       try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
         const res = await fetch(`/api/faqs/${deletingFaq.id}`, {
           method: "DELETE",
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
         });
         if (!res.ok) throw new Error("Failed to delete FAQ");
         

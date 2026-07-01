@@ -34,8 +34,10 @@ export default function ViewFaqPage() {
         setFaq(storeData);
         setLoading(false);
       } else {
-        // Fetch from API
-        fetch(`/api/faqs/${id}`)
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        fetch(`/api/faqs/${id}`, {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        })
           .then((res) => {
             if (res.ok) return res.json();
             throw new Error("Not found");
