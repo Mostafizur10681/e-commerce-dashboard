@@ -92,6 +92,7 @@ export async function GET(request: Request) {
         metaTitle: item.meta_title || "",
         metaDescription: item.meta_description || "",
         metaKeywords: item.meta_keywords || "",
+        attributes: item.attributes || [],
       };
     });
 
@@ -164,6 +165,7 @@ export async function POST(request: Request) {
       metaTitle,
       metaDescription,
       metaKeywords,
+      attributes,
     } = body;
 
     if (!name) {
@@ -197,6 +199,7 @@ export async function POST(request: Request) {
       meta_title: metaTitle || "",
       meta_description: metaDescription || "",
       meta_keywords: metaKeywords || "",
+      attributes: attributes || [],
     };
 
     const res = await fetch("http://127.0.0.1:8000/api/admin/products", {
@@ -260,6 +263,7 @@ export async function POST(request: Request) {
       metaTitle: created.meta_title || "",
       metaDescription: created.meta_description || "",
       metaKeywords: created.meta_keywords || "",
+      attributes: created.attributes || [],
     } as any;
 
     return NextResponse.json(responseData, { status: 201 });

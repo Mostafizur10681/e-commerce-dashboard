@@ -93,6 +93,7 @@ export async function GET(
       metaTitle: item.meta_title || "",
       metaDescription: item.meta_description || "",
       metaKeywords: item.meta_keywords || "",
+      attributes: item.attributes || [],
     } as any;
 
     return NextResponse.json(responseData);
@@ -139,6 +140,7 @@ export async function PUT(
       metaTitle,
       metaDescription,
       metaKeywords,
+      attributes,
     } = body;
 
     const resolvedCategoryId = await resolveCategoryId(category || "", token);
@@ -168,6 +170,7 @@ export async function PUT(
       meta_title: metaTitle || "",
       meta_description: metaDescription || "",
       meta_keywords: metaKeywords || "",
+      attributes: attributes || [],
     };
 
     const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
@@ -231,6 +234,7 @@ export async function PUT(
       metaTitle: updated.meta_title || "",
       metaDescription: updated.meta_description || "",
       metaKeywords: updated.meta_keywords || "",
+      attributes: updated.attributes || [],
     } as any;
 
     return NextResponse.json(responseData);

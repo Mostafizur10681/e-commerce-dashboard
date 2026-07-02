@@ -14,6 +14,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import ImageUploader, { ImageEntry } from "@/components/admin/products/ImageUploader";
+import AttributesFields from "@/components/admin/products/AttributesFields";
 import ProductPreviewCard from "@/components/admin/products/ProductPreviewCard";
 import { formatImage } from "@/lib/imageHelper";
 
@@ -87,6 +88,7 @@ export default function EditProductPage() {
       metaTitle: "",
       metaDescription: "",
       metaKeywords: "",
+      attributes: [] as { name: string; value: string }[],
     },
   });
 
@@ -146,6 +148,7 @@ export default function EditProductPage() {
           metaTitle: data.metaTitle || "",
           metaDescription: data.metaDescription || "",
           metaKeywords: data.metaKeywords || "",
+          attributes: data.attributes || [],
         });
         // Use the reusable formatImage helper for any image source (old path or base64)
         // The API may return images under either "images" or "product_images"
@@ -459,6 +462,9 @@ export default function EditProductPage() {
                 </div>
               </div>
             </div>
+
+            {/* Attributes */}
+            <AttributesFields />
 
             {/* Action buttons */}
             <div className="flex gap-3 pt-2">

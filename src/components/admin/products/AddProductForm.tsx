@@ -10,6 +10,7 @@ import InventoryFields from "@/components/admin/products/InventoryFields";
 import StatusFields from "@/components/admin/products/StatusFields";
 import BadgeCheckboxes from "@/components/admin/products/BadgeCheckboxes";
 import SEOFields from "@/components/admin/products/SEOFields";
+import AttributesFields from "@/components/admin/products/AttributesFields";
 import ProductPreviewCard from "@/components/admin/products/ProductPreviewCard";
 import ImageUploader, { ImageEntry } from "@/components/admin/products/ImageUploader";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ export default function AddProductForm() {
       metaTitle: "",
       metaDescription: "",
       metaKeywords: "",
+      attributes: [] as { name: string; value: string }[],
     },
   });
 
@@ -155,6 +157,7 @@ export default function AddProductForm() {
           <StatusFields />
           <BadgeCheckboxes />
           <SEOFields />
+          <AttributesFields />
 
           <div className="flex gap-3 pt-2">
             <Button

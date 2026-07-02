@@ -6,6 +6,7 @@ export interface Product {
   stock: number;
   description: string;
   images: string[];
+  attributes?: { name: string; value: string }[];
 }
 
 export interface Category {
