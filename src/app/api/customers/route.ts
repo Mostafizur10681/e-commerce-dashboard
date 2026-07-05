@@ -68,5 +68,46 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  return NextResponse.json({ error: "Creating customer from dashboard is not supported currently. Users register themselves." }, { status: 400 });
+  try {
+    const token = request.headers.get("Authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    
+    const payload: any = {
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      password: body.password,
+    };
+
+    if (body.profilePic) {
+      payload.profile_pic = body.profilePic;
+    }
+    if (body.status) {
+      payload.status = body.status === 'Active' ? 'active' : 'blocked';
+    }
+
+    const res = await fetch(`http://127.0.0.1:8000/api/admin/customers`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token,
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(data, { status: res.status });
+    }
+
+    return NextResponse.json(data, { status: 201 });
+  } catch (error: any) {
+    console.error("POST Customer Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to create customer" }, { status: 500 });
+  }
 }

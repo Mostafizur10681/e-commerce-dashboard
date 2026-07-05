@@ -66,10 +66,10 @@ import {
 const customerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(6, "Phone must be at least 6 characters"),
+  phone: z.string().length(11, "Phone number must be exactly 11 digits").regex(/^\d+$/, "Phone number must contain only digits"),
   ordersCount: z.number().min(0, "Orders count cannot be negative"),
   status: z.enum(["Active", "Inactive"]),
-  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -129,6 +129,7 @@ export default function CustomersPage() {
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
+    mode: "onChange",
     defaultValues: {
       name: "",
       email: "",
@@ -148,6 +149,7 @@ export default function CustomersPage() {
         phone: "",
         ordersCount: 0,
         status: "Active",
+        password: "",
       });
       setProfilePicPreview(null);
     }
@@ -160,8 +162,8 @@ export default function CustomersPage() {
         payload.profilePic = profilePicPreview;
       }
       
-      if (data.password) {
-        payload.password = data.password;
+      if (values.password) {
+        payload.password = values.password;
       }
 
       const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
@@ -175,14 +177,30 @@ export default function CustomersPage() {
         headers,
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed to create customer");
-      toast("New customer profile created", "success");
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        
+        if (res.status === 422 && errorData.errors) {
+          Object.keys(errorData.errors).forEach((key) => {
+            form.setError(key as keyof CustomerFormValues, { 
+              type: "server", 
+              message: errorData.errors[key][0] 
+            });
+          });
+          throw new Error("Please correct the highlighted errors.");
+        }
+        
+        throw new Error(errorData.message || errorData.error || "Failed to create customer");
+      }
+      
+      const successData = await res.json().catch(() => ({}));
+      toast(successData.message || "New customer profile created", "success");
       
       setIsFormOpen(false);
       fetchCustomers();
-    } catch (err) {
-      console.error(err);
-      toast("Failed to save customer details", "error");
+    } catch (err: any) {
+      toast(err.message || "Failed to save customer details", "error");
     }
   };
 

@@ -118,10 +118,14 @@ export default function SubscriptionsPage() {
   const fetchSubscribers = async () => {
     setLoading(true);
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const url = `/api/subscriptions?q=${encodeURIComponent(
         searchTerm
       )}&status=${statusFilter}&date=${dateFilter}&sort=${sortFilter}&page=${currentPage}&limit=${limit}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers });
       if (!res.ok) throw new Error("Failed to fetch subscribers");
       const data = await res.json();
       setSubscribers(data.data || []);
@@ -178,40 +182,69 @@ export default function SubscriptionsPage() {
 
   const onSubmit = async (values: SubscriberFormValues) => {
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      let res;
       if (editingSubscriber) {
-        const res = await fetch(`/api/subscriptions/${editingSubscriber.id}`, {
+        res = await fetch(`/api/subscriptions/${editingSubscriber.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(values),
         });
-        if (!res.ok) throw new Error("Failed to update subscriber");
-        toast("Subscriber profile updated successfully", "success");
       } else {
-        const res = await fetch("/api/subscriptions", {
+        res = await fetch("/api/subscriptions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(values),
         });
-        if (!res.ok) throw new Error("Failed to create subscriber");
-        toast("New subscriber added successfully", "success");
       }
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        if (res.status === 422 && errorData.errors) {
+          Object.keys(errorData.errors).forEach((key) => {
+            form.setError(key as keyof SubscriberFormValues, { 
+              type: "server", 
+              message: errorData.errors[key][0] 
+            });
+          });
+          throw new Error("Please correct the highlighted errors.");
+        }
+        throw new Error(errorData.message || errorData.error || `Failed to ${editingSubscriber ? 'update' : 'create'} subscriber`);
+      }
+
+      const successData = await res.json().catch(() => ({}));
+      toast(successData.message || `Subscriber ${editingSubscriber ? 'updated' : 'added'} successfully`, "success");
+
       setIsFormOpen(false);
       setEditingSubscriber(null);
       fetchSubscribers();
-    } catch (err) {
-      console.error(err);
-      toast("Failed to save subscriber details", "error");
+    } catch (err: any) {
+      toast(err.message || "Failed to save subscriber details", "error");
     }
   };
 
   const handleDeleteConfirm = async () => {
     if (!deletingSubscriber) return;
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(`/api/subscriptions/${deletingSubscriber.id}`, {
         method: "DELETE",
+        headers,
       });
-      if (!res.ok) throw new Error("Failed to delete subscriber");
-      toast("Subscriber profile deleted successfully", "success");
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || "Failed to delete subscriber");
+      }
+      
+      const successData = await res.json().catch(() => ({}));
+      toast(successData.message || "Subscriber deleted successfully", "success");
       setDeletingSubscriber(null);
       // Adjust page if deleting last item
       if (subscribers.length === 1 && currentPage > 1) {
@@ -219,9 +252,8 @@ export default function SubscriptionsPage() {
       } else {
         fetchSubscribers();
       }
-    } catch (err) {
-      console.error(err);
-      toast("Failed to delete subscriber", "error");
+    } catch (err: any) {
+      toast(err.message || "Failed to delete subscriber", "error");
     }
   };
 
@@ -342,7 +374,7 @@ export default function SubscriptionsPage() {
                 setEditingSubscriber(null);
                 setIsFormOpen(true);
               }}
-              className="bg-green-650 hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer focus:ring-2 focus:ring-green-500 dark:bg-green-505 dark:hover:bg-green-600 dark:border-none"
+              className="hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer focus:ring-2 focus:ring-green-500 dark:bg-green-505 dark:hover:bg-green-600 dark:border-none"
             >
               <Plus className="h-4.5 w-4.5" />
               Add Subscriber
