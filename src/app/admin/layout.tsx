@@ -710,7 +710,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Other Menu Items */}
           {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Partners" && m.name !== "Reviews" && m.name !== "FAQs" && m.name !== "FAQ Categories").map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.name}

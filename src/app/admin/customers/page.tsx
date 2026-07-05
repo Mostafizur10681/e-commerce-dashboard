@@ -21,7 +21,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-
+import Link from "next/link";
 import { Customer } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +69,7 @@ const customerSchema = z.object({
   phone: z.string().min(6, "Phone must be at least 6 characters"),
   ordersCount: z.number().min(0, "Orders count cannot be negative"),
   status: z.enum(["Active", "Inactive"]),
+  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -90,9 +91,9 @@ export default function CustomersPage() {
   // Modals & Selections
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [deletingCustomer, setDeletingCustomer] = useState<Customer | null>(null);
   const [quickViewCustomer, setQuickViewCustomer] = useState<Customer | null>(null);
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -103,7 +104,10 @@ export default function CustomersPage() {
     setLoading(true);
     try {
       const url = `/api/customers?q=${encodeURIComponent(searchTerm)}&status=${statusFilter}&page=${currentPage}&limit=${limit}`;
-      const res = await fetch(url);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch(url, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Failed to fetch customers");
       const data = await res.json();
       setCustomers(data.customers || []);
@@ -131,20 +135,13 @@ export default function CustomersPage() {
       phone: "",
       ordersCount: 0,
       status: "Active",
+      password: "",
     },
   });
 
-  // Handle Form open for Edit vs Add
+  // Handle Form open for Add
   useEffect(() => {
-    if (editingCustomer) {
-      form.reset({
-        name: editingCustomer.name,
-        email: editingCustomer.email,
-        phone: editingCustomer.phone,
-        ordersCount: editingCustomer.ordersCount,
-        status: editingCustomer.status || "Active",
-      });
-    } else {
+    if (isFormOpen) {
       form.reset({
         name: "",
         email: "",
@@ -152,30 +149,36 @@ export default function CustomersPage() {
         ordersCount: 0,
         status: "Active",
       });
+      setProfilePicPreview(null);
     }
-  }, [editingCustomer, isFormOpen, form]);
+  }, [isFormOpen, form]);
 
   const onSubmit = async (values: CustomerFormValues) => {
     try {
-      if (editingCustomer) {
-        const res = await fetch(`/api/customers/${editingCustomer.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-        });
-        if (!res.ok) throw new Error("Failed to update customer");
-        toast("Customer profile updated successfully", "success");
-      } else {
-        const res = await fetch("/api/customers", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-        });
-        if (!res.ok) throw new Error("Failed to create customer");
-        toast("New customer profile created", "success");
+      const payload: any = { ...values };
+      if (profilePicPreview) {
+        payload.profilePic = profilePicPreview;
       }
+      
+      if (data.password) {
+        payload.password = data.password;
+      }
+
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      };
+
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Failed to create customer");
+      toast("New customer profile created", "success");
+      
       setIsFormOpen(false);
-      setEditingCustomer(null);
       fetchCustomers();
     } catch (err) {
       console.error(err);
@@ -186,8 +189,10 @@ export default function CustomersPage() {
   const handleDeleteConfirm = async () => {
     if (!deletingCustomer) return;
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
       const res = await fetch(`/api/customers/${deletingCustomer.id}`, {
         method: "DELETE",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("Failed to delete customer");
       toast("Customer deleted successfully", "success");
@@ -293,10 +298,9 @@ export default function CustomersPage() {
             </Button>
             <Button
               onClick={() => {
-                setEditingCustomer(null);
                 setIsFormOpen(true);
               }}
-              className="bg-green-650 hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer focus:ring-2 focus:ring-green-500 dark:bg-green-505 dark:hover:bg-green-600 dark:border-none"
+              className=" hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer focus:ring-2 focus:ring-green-500 dark:bg-green-505 dark:hover:bg-green-600 dark:border-none"
             >
               <Plus className="h-4.5 w-4.5" />
               Add Customer
@@ -431,9 +435,13 @@ export default function CustomersPage() {
                         </TableCell>
                         <TableCell className="py-4 font-semibold text-gray-900 dark:text-slate-100 text-sm">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50 dark:border-green-900/30 shadow-xs">
-                              {customer.name.charAt(0).toUpperCase()}
-                            </div>
+                            {customer.profilePic ? (
+                              <img src={customer.profilePic} alt={customer.name} className="h-9 w-9 rounded-full object-cover border border-gray-200 dark:border-slate-700 shadow-xs" />
+                            ) : (
+                              <div className="h-9 w-9 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50 dark:border-green-900/30 shadow-xs">
+                                {customer.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
                             <span>{customer.name}</span>
                           </div>
                         </TableCell>
@@ -448,11 +456,10 @@ export default function CustomersPage() {
                         </TableCell>
                         <TableCell className="py-4">
                           <Badge
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border-transparent ${
-                              isActive
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border-transparent ${isActive
                                 ? "bg-green-105 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                 : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                            }`}
+                              }`}
                           >
                             {customer.status || "Active"}
                           </Badge>
@@ -474,18 +481,16 @@ export default function CustomersPage() {
                             >
                               <Eye className="h-4.5 w-4.5" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditingCustomer(customer);
-                                setIsFormOpen(true);
-                              }}
-                              className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors duration-200 cursor-pointer"
-                              title="Edit Customer"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
+                            <Link href={`/admin/customers/${customer.id}/edit`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors duration-200 cursor-pointer"
+                                title="Edit Customer"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            </Link>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -512,20 +517,23 @@ export default function CustomersPage() {
                   <div key={customer.id} className="p-4 space-y-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-all duration-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50">
-                          {customer.name.charAt(0).toUpperCase()}
-                        </div>
+                        {customer.profilePic ? (
+                          <img src={customer.profilePic} alt={customer.name} className="h-8 w-8 rounded-full object-cover border border-gray-200 dark:border-slate-700" />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50">
+                            {customer.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <h4 className="font-bold text-gray-900 dark:text-slate-100 text-sm">{customer.name}</h4>
                           <span className="text-[10px] text-gray-400 dark:text-slate-500 block font-mono mt-0.5">{customer.id.toUpperCase()}</span>
                         </div>
                       </div>
                       <Badge
-                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold border-transparent ${
-                          isActive
+                        className={`rounded-full px-2 py-0.5 text-[9px] font-bold border-transparent ${isActive
                             ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                             : "bg-red-100 text-red-750 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
+                          }`}
                       >
                         {customer.status || "Active"}
                       </Badge>
@@ -612,9 +620,13 @@ export default function CustomersPage() {
             <div className="space-y-5 text-sm">
               <DialogHeader className="border-b pb-4 border-gray-100 dark:border-slate-800">
                 <div className="flex items-center gap-3.5">
-                  <div className="h-12 w-12 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-base flex items-center justify-center border border-green-100/50">
-                    {quickViewCustomer.name.charAt(0).toUpperCase()}
-                  </div>
+                  {quickViewCustomer.profilePic ? (
+                    <img src={quickViewCustomer.profilePic} alt={quickViewCustomer.name} className="h-12 w-12 rounded-full object-cover border border-gray-200 dark:border-slate-700" />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-base flex items-center justify-center border border-green-100/50">
+                      {quickViewCustomer.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div>
                     <DialogTitle className="text-lg font-bold text-gray-900 dark:text-slate-105">
                       {quickViewCustomer.name}
@@ -646,11 +658,10 @@ export default function CustomersPage() {
                 <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800 pb-2">
                   <span className="text-gray-500 dark:text-slate-400">Account Status:</span>
                   <Badge
-                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border-transparent ${
-                      quickViewCustomer.status !== "Inactive"
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border-transparent ${quickViewCustomer.status !== "Inactive"
                         ? "bg-green-101 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                         : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                    }`}
+                      }`}
                   >
                     {quickViewCustomer.status || "Active"}
                   </Badge>
@@ -679,7 +690,7 @@ export default function CustomersPage() {
         <DialogContent className="max-w-md bg-white dark:bg-slate-900 border border-gray-250 dark:border-slate-800 rounded-2xl p-6 shadow-xl dark:shadow-none transition-all duration-200">
           <DialogHeader className="border-b pb-4 border-gray-100 dark:border-slate-800">
             <DialogTitle className="text-lg font-bold text-gray-900 dark:text-slate-105">
-              {editingCustomer ? "Edit Customer Profile" : "Create New Customer"}
+              Create New Customer
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500 dark:text-slate-400 mt-1">
               Provide the client contact details and purchase stats. Click save profile when complete.
@@ -688,6 +699,47 @@ export default function CustomersPage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+
+              {/* Profile Pic Upload */}
+              <div className="space-y-1">
+                <FormLabel className="text-xs font-semibold text-gray-700 dark:text-slate-300">Profile Picture</FormLabel>
+                <div className="flex items-center gap-4">
+                  {profilePicPreview ? (
+                    <img src={profilePicPreview} alt="Preview" className="h-14 w-14 rounded-full object-cover border border-gray-200 dark:border-slate-700" />
+                  ) : (
+                    <div className="h-14 w-14 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center border border-gray-200 dark:border-slate-700">
+                      <Users className="h-6 w-6 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setProfilePicPreview(reader.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="cursor-pointer file:cursor-pointer file:bg-gray-100 file:border-0 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:text-xs file:font-semibold text-xs border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl"
+                    />
+                  </div>
+                  {profilePicPreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setProfilePicPreview(null)}
+                      className="text-red-500 hover:text-red-600 p-2 h-auto"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               {/* Name */}
               <FormField
                 control={form.control}
@@ -788,6 +840,26 @@ export default function CustomersPage() {
                 )}
               />
 
+              {/* Password */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs font-semibold text-gray-700 dark:text-slate-300">Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Leave blank to keep unchanged"
+                        {...field}
+                        className="h-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <DialogFooter className="mt-6 gap-2">
                 <Button
                   variant="outline"
@@ -801,7 +873,7 @@ export default function CustomersPage() {
                   type="submit"
                   className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded-xl h-10 px-6 font-semibold cursor-pointer shadow-sm dark:border-none"
                 >
-                  {editingCustomer ? "Save Profile" : "Create Profile"}
+                  Create Profile
                 </Button>
               </DialogFooter>
             </form>

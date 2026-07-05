@@ -72,6 +72,7 @@ export interface Customer {
   ordersCount: number;
   joinedDate: string;
   status?: "Active" | "Inactive";
+  profilePic?: string;
 }
 
 export interface Review {
