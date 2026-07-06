@@ -1,13 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Edit2, Trash2, Loader2, ImageIcon, Link as LinkIcon, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, ImageIcon, Link as LinkIcon, ImagePlus, X } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
-import { useStore } from "@/store";
-import { Banner } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +27,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -37,55 +43,107 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const bannerSchema = z.object({
-  title: z.string().min(2, "Banner title must be at least 2 characters"),
-  linkUrl: z.string().min(1, "Please enter a redirect URL path"),
-  imageUrl: z.string().optional(),
-  active: z.boolean(),
+  title: z.string().min(2, "Title must be at least 2 characters").optional().or(z.literal('')),
+  subtitle: z.string().optional().or(z.literal('')),
+  image: z.any().optional(),
+  badge: z.string().optional().or(z.literal('')),
+  cta_text: z.string().optional().or(z.literal('')),
+  cta_link: z.string().optional().or(z.literal('')),
+  order: z.number(),
+  is_active: z.boolean(),
+  menu_location: z.string().min(1, "Menu location is required"),
 });
 
 type BannerFormValues = z.infer<typeof bannerSchema>;
 
+const MENU_LOCATIONS = [
+  "Main Slider",
+  "Shop Sidebar",
+  "Header Banner",
+  "Footer Ad"
+];
+
 export default function BannersPage() {
-  const { banners, addBanner, updateBanner, deleteBanner } = useStore();
+  const { toast } = useToast();
+  const [banners, setBanners] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   // States
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
-  const [deletingBanner, setDeletingBanner] = useState<Banner | null>(null);
+  const [editingBanner, setEditingBanner] = useState<any | null>(null);
+  const [deletingBanner, setDeletingBanner] = useState<any | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchBanners = async () => {
+    setLoading(true);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/banners", { headers });
+      const data = await res.json();
+      if (data.data) {
+        setBanners(data.data);
+      }
+    } catch (err) {
+      console.error(err);
+      toast("Failed to fetch banners", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
+    fetchBanners();
   }, []);
 
   const form = useForm<BannerFormValues>({
     resolver: zodResolver(bannerSchema),
     defaultValues: {
       title: "",
-      linkUrl: "",
-      imageUrl: "",
-      active: true,
+      subtitle: "",
+      badge: "",
+      cta_text: "",
+      cta_link: "",
+      order: 0,
+      is_active: true,
+      menu_location: "Main Slider",
     },
   });
 
   useEffect(() => {
     if (editingBanner) {
       form.reset({
-        title: editingBanner.title,
-        linkUrl: editingBanner.linkUrl,
-        imageUrl: editingBanner.imageUrl || "",
-        active: editingBanner.active,
+        title: editingBanner.title || "",
+        subtitle: editingBanner.subtitle || "",
+        badge: editingBanner.badge || "",
+        cta_text: editingBanner.cta_text || "",
+        cta_link: editingBanner.cta_link || "",
+        order: editingBanner.order || 0,
+        is_active: editingBanner.is_active ?? true,
+        menu_location: editingBanner.menu_location || "Main Slider",
       });
+      setPreviewImage(editingBanner.image || null);
     } else {
       form.reset({
         title: "",
-        linkUrl: "",
-        imageUrl: "",
-        active: true,
+        subtitle: "",
+        badge: "",
+        cta_text: "",
+        cta_link: "",
+        order: 0,
+        is_active: true,
+        menu_location: "Main Slider",
       });
+      setPreviewImage(null);
     }
   }, [editingBanner, isFormOpen, form]);
 
@@ -97,231 +155,360 @@ export default function BannersPage() {
     );
   }
 
-  const onSubmit = (values: BannerFormValues) => {
-    const finalImage = values.imageUrl || `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='300' viewBox='0 0 800 300'><defs><linearGradient id='gb1' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%236366f1'/><stop offset='100%' stop-color='%23a855f7'/></linearGradient></defs><rect width='800' height='300' fill='url(%23gb1)'/><text x='400' y='160' font-family='sans-serif' font-weight='bold' font-size='36' fill='white' text-anchor='middle'>${values.title}</text></svg>`;
-
-    if (editingBanner) {
-      updateBanner(editingBanner.id, {
-        title: values.title,
-        linkUrl: values.linkUrl,
-        imageUrl: finalImage,
-        active: values.active,
-      });
-    } else {
-      addBanner({
-        title: values.title,
-        linkUrl: values.linkUrl,
-        imageUrl: finalImage,
-        active: values.active,
-      });
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue("image", file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-    setIsFormOpen(false);
-    setEditingBanner(null);
   };
 
-  const handleEditClick = (banner: Banner) => {
-    setEditingBanner(banner);
-    setIsFormOpen(true);
+  const clearImage = () => {
+    form.setValue("image", undefined);
+    setPreviewImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
-  const handleToggleStatus = (banner: Banner) => {
-    updateBanner(banner.id, { active: !banner.active });
+  const onSubmit = async (values: BannerFormValues) => {
+    try {
+      const isEdit = !!editingBanner;
+      
+      if (!isEdit && !values.image && !previewImage) {
+        toast("Image is required for new banners", "error");
+        return;
+      }
+
+      const url = isEdit ? `/api/banners/${editingBanner.id}` : `/api/banners`;
+      
+      const formData = new FormData();
+      if (values.title) formData.append("title", values.title);
+      if (values.subtitle) formData.append("subtitle", values.subtitle);
+      if (values.badge) formData.append("badge", values.badge);
+      if (values.cta_text) formData.append("cta_text", values.cta_text);
+      if (values.cta_link) formData.append("cta_link", values.cta_link);
+      formData.append("order", values.order.toString());
+      formData.append("is_active", values.is_active ? "1" : "0");
+      formData.append("menu_location", values.menu_location);
+      
+      if (previewImage) {
+        formData.append("image", previewImage);
+      }
+      
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST", // The proxy routes handle PUT via POST override if needed
+        headers,
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to save banner");
+
+      toast(`Banner successfully ${isEdit ? "updated" : "created"}!`, "success");
+
+      setIsFormOpen(false);
+      fetchBanners();
+    } catch (err) {
+      console.error(err);
+      toast("Failed to save banner", "error");
+    }
   };
 
-  const handleDeleteConfirm = () => {
-    if (deletingBanner) {
-      deleteBanner(deletingBanner.id);
+  const confirmDelete = async () => {
+    if (!deletingBanner) return;
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`/api/banners/${deletingBanner.id}`, { 
+        method: "DELETE",
+        headers 
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      
+      toast("Banner deleted successfully", "success");
+      fetchBanners();
+    } catch (error) {
+      console.error(error);
+      toast("Failed to delete banner", "error");
+    } finally {
       setDeletingBanner(null);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Promotional Banners</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Control homepage slider promotions, active marketing offers, and redirect links.
+          <h2 className="text-3xl font-bold tracking-tight">Slider / Banners</h2>
+          <p className="text-muted-foreground mt-1">
+            Manage your dynamic website hero sliders and promotional banners.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingBanner(null);
-            setIsFormOpen(true);
-          }}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> Add Banner
+        <Button onClick={() => { setEditingBanner(null); setIsFormOpen(true); }} className="gap-2">
+          <Plus className="h-4 w-4" /> Add New Banner
         </Button>
       </div>
 
-      {/* Grid of Banners */}
-      {banners.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-400 border border-dashed rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-          <ImageIcon className="h-10 w-10 stroke-1 mb-2 text-indigo-500" />
-          <p className="text-sm font-semibold">No promotional banners created.</p>
+      {loading ? (
+        <div className="h-64 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         </div>
+      ) : banners.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center py-12 bg-slate-50 border-dashed">
+          <ImageIcon className="h-12 w-12 text-slate-300 mb-4" />
+          <h3 className="text-lg font-medium">No Banners Found</h3>
+          <p className="text-sm text-slate-500 mb-4">Add your first banner to display it on the website slider.</p>
+          <Button onClick={() => { setEditingBanner(null); setIsFormOpen(true); }} variant="outline">
+            <Plus className="h-4 w-4 mr-2" /> Add Banner
+          </Button>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {banners.map((banner) => (
-            <Card key={banner.id} className="border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-sm font-bold truncate max-w-xs">{banner.title}</CardTitle>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    onClick={() => handleEditClick(banner)}
-                  >
-                    <Edit2 className="h-3.5 w-3.5" />
+            <Card key={banner.id} className={`overflow-hidden transition-all duration-200 ${!banner.is_active && "opacity-60 grayscale-[0.5]"}`}>
+              <div className="relative h-48 bg-slate-100 group">
+                <img 
+                  src={banner.image} 
+                  alt={banner.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://placehold.co/800x400?text=Invalid+Image";
+                  }}
+                />
+                {!banner.is_active && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Badge variant="secondary" className="text-lg">Inactive</Badge>
+                  </div>
+                )}
+                
+                {/* Actions Overlay */}
+                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button size="icon" variant="secondary" className="h-8 w-8 shadow-sm" onClick={() => { setEditingBanner(banner); setIsFormOpen(true); }}>
+                    <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-slate-500 hover:text-red-650 hover:bg-red-50 dark:hover:bg-red-950/20"
-                    onClick={() => setDeletingBanner(banner)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
+                  <Button size="icon" variant="destructive" className="h-8 w-8 shadow-sm" onClick={() => setDeletingBanner(banner)}>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0 border-y border-slate-100 dark:border-slate-850">
-                <div className="aspect-[2.6/1] w-full overflow-hidden bg-slate-100 dark:bg-slate-900 flex items-center justify-center relative">
-                  {banner.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={banner.imageUrl}
-                      alt={banner.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-xs font-semibold text-slate-400">No Image</div>
-                  )}
-                  {/* Status Overlay Badge */}
-                  <div className="absolute top-2.5 right-2.5">
-                    {banner.active ? (
-                      <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold border-0">Active</Badge>
-                    ) : (
-                      <Badge className="bg-slate-500 hover:bg-slate-600 text-white font-semibold border-0">Inactive</Badge>
-                    )}
-                  </div>
+              </div>
+              
+              <CardContent className="p-5">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-lg line-clamp-1" title={banner.title}>{banner.title || "Untitled Banner"}</h3>
+                  <Badge variant="outline" className="shrink-0">{banner.menu_location}</Badge>
+                </div>
+                {banner.subtitle && <p className="text-sm text-slate-500 line-clamp-2 mb-3">{banner.subtitle}</p>}
+                
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <LinkIcon className="h-4 w-4 shrink-0" />
+                  <span className="line-clamp-1">{banner.cta_link || "No Link Provided"}</span>
                 </div>
               </CardContent>
-              <CardFooter className="p-3 bg-white dark:bg-slate-950 flex justify-between items-center text-xs text-slate-400">
-                <div className="flex items-center gap-1.5 font-medium truncate text-slate-655 dark:text-slate-400">
-                  <LinkIcon className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-                  <span>Redirect: </span>
-                  <code className="text-indigo-600 dark:text-indigo-400 font-mono font-semibold max-w-[150px] truncate">{banner.linkUrl}</code>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-[11px] gap-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-450"
-                  onClick={() => handleToggleStatus(banner)}
-                >
-                  {banner.active ? (
-                    <>
-                      <ToggleRight className="h-4 w-4 text-emerald-500" />
-                      Deactivate
-                    </>
-                  ) : (
-                    <>
-                      <ToggleLeft className="h-4 w-4 text-slate-400" />
-                      Activate
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
             </Card>
           ))}
         </div>
       )}
 
-      {/* Banner Dialog */}
+      {/* CREATE/EDIT MODAL */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingBanner ? "Edit Banner Details" : "Create Promotional Banner"}
-            </DialogTitle>
+            <DialogTitle>{editingBanner ? "Edit Banner" : "Add New Banner"}</DialogTitle>
             <DialogDescription>
-              Provide slider text, banner images, links, and status triggers.
+              Configure the banner details and placement.
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Banner Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Winter Sales Kickoff" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="linkUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Redirect Link Path</FormLabel>
-                    <FormControl>
-                      <Input placeholder="/products?sale=winter" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image URL (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="data:image/svg..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="active"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-slate-200 dark:border-slate-800 p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-sm">Active Status</FormLabel>
-                      <p className="text-xs text-slate-500">Enable this banner immediately on home slider</p>
+              
+              <div className="space-y-2">
+                <FormLabel>Banner Image *</FormLabel>
+                <div className="flex items-center justify-center w-full">
+                  {previewImage ? (
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-200">
+                      <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button 
+                          type="button" 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={clearImage}
+                          className="gap-2"
+                        >
+                          <X className="h-4 w-4" /> Remove Image
+                        </Button>
+                      </div>
                     </div>
+                  ) : (
+                    <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <ImagePlus className="w-10 h-10 mb-3 text-slate-400" />
+                        <p className="mb-2 text-sm text-slate-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                        <p className="text-xs text-slate-500">PNG, JPG, WEBP up to 2MB</p>
+                      </div>
+                      <input 
+                        id="dropzone-file" 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        ref={fileInputRef}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="menu_location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Menu Location *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a location" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {MENU_LOCATIONS.map(loc => (
+                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="order"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Order</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Fresh Vegetables" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="badge"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Badge Text</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 50% OFF" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="subtitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subtitle</FormLabel>
                     <FormControl>
-                      <input
-                        type="checkbox"
+                      <Input placeholder="Short description below the title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="cta_text"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Button Text</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Shop Now" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="cta_link"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Button Link URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. /shop" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="is_active"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm mt-4">
+                    <FormControl>
+                      <Checkbox
                         checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4 text-indigo-650 bg-slate-100 border-slate-300 rounded focus:ring-indigo-500"
+                        onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Active Status
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Toggle to make this banner visible on the frontend slider.
+                      </p>
+                    </div>
                   </FormItem>
                 )}
               />
 
               <DialogFooter className="mt-6">
-                <Button variant="outline" type="button" onClick={() => setIsFormOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {editingBanner ? "Save Changes" : "Create Banner"}
                 </Button>
               </DialogFooter>
@@ -330,19 +517,19 @@ export default function BannersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Alert */}
+      {/* DELETE CONFIRMATION */}
       <AlertDialog open={!!deletingBanner} onOpenChange={(open) => !open && setDeletingBanner(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete homepage banner{" "}
-              <strong className="text-slate-900 dark:text-slate-100">&quot;{deletingBanner?.title}&quot;</strong>.
+              This action cannot be undone. This will permanently delete the banner
+              "{deletingBanner?.title}" and remove it from your servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-650 hover:bg-red-750 text-white">
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
               Delete Banner
             </AlertDialogAction>
           </AlertDialogFooter>

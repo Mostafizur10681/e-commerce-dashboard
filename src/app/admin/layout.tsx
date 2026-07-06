@@ -77,6 +77,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isReviewsOpen, setIsReviewsOpen] = useState(true);
   const [isFaqsOpen, setIsFaqsOpen] = useState(true);
   const [isLocationsOpen, setIsLocationsOpen] = useState(true);
+  const [isOrdersOpen, setIsOrdersOpen] = useState(true);
 
   useEffect(() => {
     if (pathname.startsWith("/admin/products")) {
@@ -96,6 +97,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     if (pathname.startsWith("/admin/locations")) {
       setIsLocationsOpen(true);
+    }
+    if (pathname.startsWith("/admin/orders")) {
+      setIsOrdersOpen(true);
     }
   }, [pathname]);
 
@@ -408,6 +412,58 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
           </div>
 
+          {/* Collapsible Orders Menu */}
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                if (isCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  setIsOrdersOpen(true);
+                } else {
+                  setIsOrdersOpen(!isOrdersOpen);
+                }
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-600 dark:text-gray-300 hover:bg-primary/10 hover:text-primary cursor-pointer",
+                pathname.startsWith("/admin/orders") && "bg-gray-50 dark:bg-gray-800/40 text-primary font-semibold",
+                isCollapsed && "justify-center px-2"
+              )}
+              title="Orders"
+            >
+              <div className="flex items-center gap-3">
+                <ClipboardList className="h-5 w-5 shrink-0 text-gray-500 dark:text-gray-400" />
+                {!isCollapsed && <span>Orders</span>}
+              </div>
+              {!isCollapsed && (
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-gray-400 transition-transform duration-300",
+                    isOrdersOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+
+            {/* Submenus (Only visible if not collapsed and isOrdersOpen is true) */}
+            {!isCollapsed && isOrdersOpen && (
+              <div className="pl-4 pr-1 py-1 space-y-1 transition-all duration-300">
+                <Link
+                  href="/admin/orders"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/orders"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Order List
+                </Link>
+              </div>
+            )}
+          </div>
+
           {/* Collapsible Partners Menu */}
           <div className="space-y-1">
             <button
@@ -708,7 +764,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Other Menu Items */}
-          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Partners" && m.name !== "Reviews" && m.name !== "FAQs" && m.name !== "FAQ Categories").map((item) => {
+          {menuItems.filter(m => m.name !== "Dashboard" && m.name !== "Categories" && m.name !== "Orders" && m.name !== "Partners" && m.name !== "Reviews" && m.name !== "FAQs" && m.name !== "FAQ Categories").map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (

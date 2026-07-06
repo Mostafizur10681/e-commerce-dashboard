@@ -400,7 +400,6 @@ export default function CustomersPage() {
             <Button
               className="bg-green-600 hover:bg-green-700 text-white rounded-xl h-10 px-6 font-semibold shadow-sm transition-colors duration-200 cursor-pointer focus:ring-2 focus:ring-green-500 dark:bg-green-500 dark:hover:bg-green-600"
               onClick={() => {
-                setEditingCustomer(null);
                 setIsFormOpen(true);
               }}
             >
@@ -575,17 +574,15 @@ export default function CustomersPage() {
                       >
                         <Eye className="h-4.5 w-4.5" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditingCustomer(customer);
-                          setIsFormOpen(true);
-                        }}
-                        className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-405 dark:hover:text-green-300 cursor-pointer transition-colors duration-200"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
+                      <Link href={`/admin/customers/${customer.id}/edit`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-405 dark:hover:text-green-300 cursor-pointer transition-colors duration-200"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon"
