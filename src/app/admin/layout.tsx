@@ -32,7 +32,8 @@ import {
   ChevronDown,
   HelpCircle,
   MapPin,
-  Info
+  Info,
+  PhoneCall
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -57,7 +58,12 @@ interface MenuItem {
   icon: React.ComponentType<any>;
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = (url: string) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+  const headers: any = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return fetch(url, { headers }).then((res) => res.json());
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -131,6 +137,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Subscriptions", href: "/admin/subscriptions", icon: Package },
     { name: "Banners", href: "/admin/banners", icon: ImageIcon },
     { name: "About Page", href: "/admin/about", icon: Info },
+    { name: "Contact Page", href: "/admin/contact-settings", icon: PhoneCall },
     { name: "Users", href: "/admin/users", icon: UserCog },
     { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
   ];

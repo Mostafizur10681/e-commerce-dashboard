@@ -118,7 +118,10 @@ export default function MessagesPage() {
       const url = `/api/messages?q=${encodeURIComponent(
         searchTerm
       )}&status=${statusFilter}&date=${dateFilter}&sort=${sortFilter}&page=${currentPage}&limit=${limit}`;
-      const res = await fetch(url);
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(url, { headers });
       if (!res.ok) throw new Error("Failed to fetch messages");
       const data = await res.json();
       setMessages(data.data || []);
@@ -163,9 +166,12 @@ export default function MessagesPage() {
     setQuickViewMessage(msg);
     if (msg.status === "Unread") {
       try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const headers: any = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
         const res = await fetch(`/api/messages/${msg.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ status: "Read" }),
         });
         if (res.ok) {
@@ -192,7 +198,10 @@ export default function MessagesPage() {
           window.history.replaceState({ path: newUrl }, "", newUrl);
         } else if (messages.length > 0) {
           try {
-            const res = await fetch(`/api/messages/${msgId}`);
+            const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+            const headers: any = {};
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+            const res = await fetch(`/api/messages/${msgId}`, { headers });
             if (res.ok) {
               const msg = await res.json();
               handleOpenQuickView(msg);
@@ -211,9 +220,12 @@ export default function MessagesPage() {
   const onSubmit = async (values: EditMessageFormValues) => {
     if (!editingMessage) return;
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(`/api/messages/${editingMessage.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(values),
       });
       if (!res.ok) throw new Error("Failed to update message");
@@ -232,8 +244,12 @@ export default function MessagesPage() {
   const handleDeleteConfirm = async () => {
     if (!deletingMessage) return;
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const headers: any = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch(`/api/messages/${deletingMessage.id}`, {
         method: "DELETE",
+        headers,
       });
       if (!res.ok) throw new Error("Failed to delete message");
       

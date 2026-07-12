@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { readMessages, writeMessages } from "../messages/route";
-import { ContactMessage } from "@/types";
 
 export async function POST(request: Request) {
   try {
@@ -13,27 +11,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const messages = await readMessages();
-    const todayStr = new Date().toISOString();
+    const res = await fetch(`http://127.0.0.1:8000/api/v1/messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        name: body.name,
+        email: body.email,
+        phone: body.phone || "",
+        subject: body.subject,
+        message: body.message
+      }),
+    });
 
-    const newMsg: ContactMessage = {
-      id: `msg-${Date.now()}`,
-      name: body.name,
-      email: body.email,
-      phone: body.phone || "",
-      subject: body.subject,
-      message: body.message,
-      status: "Unread",
-      adminNote: "",
-      createdAt: todayStr,
-    };
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(data, { status: res.status });
+    }
 
-    messages.push(newMsg);
-    await writeMessages(messages);
-
-    return NextResponse.json(newMsg, { status: 201 });
+    return NextResponse.json(data.data, { status: 201 });
   } catch (err) {
-    console.error("POST contact form submission error:", err);
+    console.error("POST contact form proxy error:", err);
     return NextResponse.json(
       { error: "Failed to submit contact form. Please try again." },
       { status: 500 }

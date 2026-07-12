@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { readMessages, writeMessages } from "../route";
-import { ContactMessage } from "@/types";
 
 export async function GET(
   request: Request,
@@ -8,16 +6,24 @@ export async function GET(
 ) {
   try {
     const { id } = await (params as any);
-    const messages = await readMessages();
-    const message = messages.find((m) => m.id === id);
+    const token = request.headers.get("Authorization") || "";
 
-    if (!message) {
-      return NextResponse.json({ error: "Message not found" }, { status: 404 });
+    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/${id}`, {
+      headers: {
+        "Authorization": token,
+        "Accept": "application/json",
+      },
+      next: { revalidate: 0 }
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(data, { status: res.status });
     }
 
-    return NextResponse.json(message);
+    return NextResponse.json(data.data);
   } catch (err) {
-    console.error("GET message error:", err);
+    console.error("GET message proxy error:", err);
     return NextResponse.json({ error: "Failed to get message" }, { status: 500 });
   }
 }
@@ -28,37 +34,27 @@ export async function PUT(
 ) {
   try {
     const { id } = await (params as any);
+    const token = request.headers.get("Authorization") || "";
     const body = await request.json();
-    const messages = await readMessages();
-    const idx = messages.findIndex((m) => m.id === id);
 
-    if (idx === -1) {
-      return NextResponse.json({ error: "Message not found" }, { status: 404 });
+    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/${id}`, {
+      method: "PUT",
+      headers: {
+        "Authorization": token,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(data, { status: res.status });
     }
 
-    const currentMsg = messages[idx];
-
-    // Support both adminNote and adminNotes from request
-    const adminNoteVal = body.adminNote !== undefined ? body.adminNote : body.adminNotes;
-
-    const updatedMsg: ContactMessage = {
-      ...currentMsg,
-      status: body.status !== undefined ? body.status : currentMsg.status,
-      adminNote: adminNoteVal !== undefined ? adminNoteVal : currentMsg.adminNote,
-      // If replyStatus or specific replies are handled, we can map them, or just merge other fields
-      name: body.name !== undefined ? body.name : currentMsg.name,
-      email: body.email !== undefined ? body.email : currentMsg.email,
-      phone: body.phone !== undefined ? body.phone : currentMsg.phone,
-      subject: body.subject !== undefined ? body.subject : currentMsg.subject,
-      message: body.message !== undefined ? body.message : currentMsg.message,
-    };
-
-    messages[idx] = updatedMsg;
-    await writeMessages(messages);
-
-    return NextResponse.json(updatedMsg);
+    return NextResponse.json(data.data);
   } catch (err) {
-    console.error("PUT message error:", err);
+    console.error("PUT message proxy error:", err);
     return NextResponse.json({ error: "Failed to update message" }, { status: 500 });
   }
 }
@@ -69,17 +65,24 @@ export async function DELETE(
 ) {
   try {
     const { id } = await (params as any);
-    const messages = await readMessages();
-    const filtered = messages.filter((m) => m.id !== id);
+    const token = request.headers.get("Authorization") || "";
 
-    if (messages.length === filtered.length) {
-      return NextResponse.json({ error: "Message not found" }, { status: 404 });
+    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": token,
+        "Accept": "application/json",
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(data, { status: res.status });
     }
 
-    await writeMessages(filtered);
-    return NextResponse.json({ success: true, message: "Message deleted successfully" });
+    return NextResponse.json(data);
   } catch (err) {
-    console.error("DELETE message error:", err);
+    console.error("DELETE message proxy error:", err);
     return NextResponse.json({ error: "Failed to delete message" }, { status: 500 });
   }
 }
