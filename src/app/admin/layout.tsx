@@ -31,7 +31,8 @@ import {
   Sliders,
   ChevronDown,
   HelpCircle,
-  MapPin
+  MapPin,
+  Info
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -129,6 +130,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "FAQ Categories", href: "/admin/faq-categories", icon: Layers },
     { name: "Subscriptions", href: "/admin/subscriptions", icon: Package },
     { name: "Banners", href: "/admin/banners", icon: ImageIcon },
+    { name: "About Page", href: "/admin/about", icon: Info },
     { name: "Users", href: "/admin/users", icon: UserCog },
     { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
   ];
