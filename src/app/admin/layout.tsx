@@ -469,6 +469,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <span className="mr-1.5 font-bold">○</span>
                   Order List
                 </Link>
+                <Link
+                  href="/admin/orders/payment-status"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/orders/payment-status"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Payment Status
+                </Link>
+                <Link
+                  href="/admin/orders/order-status"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/orders/order-status"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Order Status
+                </Link>
               </div>
             )}
           </div>
