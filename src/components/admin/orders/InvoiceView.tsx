@@ -25,9 +25,39 @@ interface InvoiceViewProps {
   order: Order;
 }
 
-export default function InvoiceView({ order }: InvoiceViewProps) {
+export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
   const router = useRouter();
   const { toast } = useToast();
+
+  // Normalize API snake_case data to the camelCase shape this component expects
+  const order = {
+    ...rawOrder,
+    id: rawOrder.id,
+    order_number: (rawOrder as any).order_number || String(rawOrder.id),
+    customerName: (rawOrder as any).customerName || (rawOrder as any).customer_name || 'N/A',
+    customerEmail: (rawOrder as any).customerEmail || (rawOrder as any).customer_email || '',
+    customerPhone: (rawOrder as any).customerPhone || (rawOrder as any).customer_phone || '',
+    date: (rawOrder as any).date || ((rawOrder as any).created_at ? new Date((rawOrder as any).created_at).toLocaleDateString() : 'N/A'),
+    created_at: (rawOrder as any).created_at || (rawOrder as any).date || '',
+    amount: Number((rawOrder as any).amount || (rawOrder as any).total || 0),
+    subtotal: Number((rawOrder as any).subtotal || 0),
+    shippingCost: Number((rawOrder as any).shippingCost || (rawOrder as any).shipping_cost || 0),
+    paymentMethod: (rawOrder as any).paymentMethod || (rawOrder as any).payment_method || 'Cash on Delivery',
+    paymentStatus: (rawOrder as any).paymentStatus || (rawOrder as any).payment_status || 'Pending',
+    status: (rawOrder as any).status || 'Pending',
+    shippingAddress: (rawOrder as any).shippingAddress || {
+      street: (rawOrder as any).address || '',
+      city: (rawOrder as any).district || '',
+      state: (rawOrder as any).thana || '',
+      country: (rawOrder as any).division || 'Bangladesh',
+    },
+    items: ((rawOrder as any).items || []).map((item: any) => ({
+      ...item,
+      productName: item.productName || item.product?.name || 'Product',
+      quantity: Number(item.quantity || 0),
+      price: Number(item.price || 0),
+    })),
+  };
 
   const subtotalVal = order.subtotal || (order.amount - (order.shippingCost || 0));
   const shippingVal = order.shippingCost || 0;
@@ -107,9 +137,9 @@ export default function InvoiceView({ order }: InvoiceViewProps) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(80, 80, 80);
-      doc.text(`Invoice No: INV-2026-${order.id.replace("ord-", "")}`, 150, 26);
-      doc.text(`Order ID: #${order.id}`, 150, 31);
-      doc.text(`Date: 2026-06-21`, 150, 36);
+      doc.text(`Invoice No: INV-${order.order_number || String(order.id)}`, 150, 26);
+      doc.text(`Order ID: #${order.order_number || String(order.id)}`, 150, 31);
+      doc.text(`Date: ${order.date}`, 150, 36);
 
       // Horizontal separator line
       y = 42;
@@ -134,15 +164,15 @@ export default function InvoiceView({ order }: InvoiceViewProps) {
       doc.text(`Order Date: ${order.date}`, 110, y);
       
       y += 5;
-      doc.text(`Phone: +880 1555-555123`, 15, y);
-      doc.text(`Payment Method: ${order.paymentMethod || "PayPal"}`, 110, y);
+      doc.text(`Phone: ${order.customerPhone || 'N/A'}`, 15, y);
+      doc.text(`Payment Method: ${order.paymentMethod}`, 110, y);
       
       y += 5;
-      doc.text(`Email: ${order.customerEmail || `${order.customerName.replace(" ", ".").toLowerCase()}@example.com`}`, 15, y);
+      doc.text(`Email: ${order.customerEmail || 'N/A'}`, 15, y);
       doc.text(`Payment Status: ${payStatus}`, 110, y);
       
       y += 5;
-      doc.text(`Address: ${order.shippingAddress?.street || "123 Main Street"}`, 15, y);
+      doc.text(`Address: ${order.shippingAddress?.street || 'N/A'}`, 15, y);
       doc.text(`Order Status: ${order.status}`, 110, y);
       
       y += 5;
@@ -301,9 +331,9 @@ export default function InvoiceView({ order }: InvoiceViewProps) {
 
           <div className="md:text-right space-y-1 text-sm">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white print:text-black tracking-tight">INVOICE</h1>
-            <p className="text-xs text-gray-500 font-medium">Invoice No: <span className="font-mono font-semibold text-gray-800 dark:text-gray-200 print:text-black">INV-2026-{order.id.replace("ord-", "")}</span></p>
-            <p className="text-xs text-gray-505">Order ID: <span className="font-semibold text-gray-800 dark:text-gray-200 print:text-black">#{order.id}</span></p>
-            <p className="text-xs text-gray-505">Invoice Date: <span className="font-semibold text-gray-800 dark:text-gray-200 print:text-black">2026-06-21</span></p>
+            <p className="text-xs text-gray-500 font-medium">Invoice No: <span className="font-mono font-semibold text-gray-800 dark:text-gray-200 print:text-black">INV-{order.order_number || String(order.id)}</span></p>
+            <p className="text-xs text-gray-505">Order ID: <span className="font-semibold text-gray-800 dark:text-gray-200 print:text-black">#{order.order_number || String(order.id)}</span></p>
+            <p className="text-xs text-gray-505">Invoice Date: <span className="font-semibold text-gray-800 dark:text-gray-200 print:text-black">{order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</span></p>
           </div>
         </div>
 
@@ -316,15 +346,15 @@ export default function InvoiceView({ order }: InvoiceViewProps) {
             </h3>
             <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300 print:text-black">
               <p className="text-sm font-bold text-gray-900 dark:text-white print:text-black">{order.customerName}</p>
-              <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-gray-400" /> +880 1555-555123</p>
-              <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-gray-400" /> {order.customerEmail || `${order.customerName.replace(" ", ".").toLowerCase()}@example.com`}</p>
+              <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-gray-400" /> {order.customerPhone || 'N/A'}</p>
+              <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-gray-400" /> {order.customerEmail || 'N/A'}</p>
               <p className="flex items-start gap-1.5">
                 <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5 shrink-0" />
                 <span>
-                  {order.shippingAddress?.street || "123 Main Street"}<br />
-                  District: {order.shippingAddress?.city || "Dhaka"}<br />
-                  Thana: {order.shippingAddress?.state || "Gulshan"}<br />
-                  Country: {order.shippingAddress?.country || "USA"}
+                  {order.shippingAddress?.street || 'N/A'}<br />
+                  District: {order.shippingAddress?.city || 'N/A'}<br />
+                  Thana: {order.shippingAddress?.state || 'N/A'}<br />
+                  Division: {order.shippingAddress?.country || 'Bangladesh'}
                 </span>
               </p>
             </div>

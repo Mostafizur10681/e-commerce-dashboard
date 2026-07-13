@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Loader2, XCircle } from "lucide-react";
-import { useStore } from "@/store";
-import { Order } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import InvoiceView from "@/components/admin/orders/InvoiceView";
@@ -13,25 +11,42 @@ export default function OrderInvoicePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { orders } = useStore() as any;
 
   const [mounted, setMounted] = useState(false);
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (mounted && id && orders.length > 0) {
-      const foundOrder = orders.find((o: Order) => o.id === id);
-      if (foundOrder) {
-        setOrder(foundOrder);
-      }
+    if (mounted && id) {
+      fetchOrder();
     }
-  }, [mounted, id, orders]);
+  }, [mounted, id]);
 
-  if (!mounted) {
+  const fetchOrder = async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch(`/api/orders/${id}`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Failed to fetch order");
+      const json = await res.json();
+      setOrder(json.data || json);
+    } catch (err) {
+      console.error(err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!mounted || loading) {
     return (
       <div className="h-96 flex flex-col items-center justify-center gap-3 bg-gray-50 dark:bg-gray-955">
         <Loader2 className="h-8 w-8 animate-spin text-[#16A34A]" />
@@ -40,7 +55,7 @@ export default function OrderInvoicePage() {
     );
   }
 
-  if (mounted && !order) {
+  if (error || !order) {
     return (
       <div className="space-y-6 min-h-screen p-6 bg-gray-50 dark:bg-gray-955 flex flex-col items-center justify-center">
         <div className="text-center max-w-md mx-auto space-y-4">
@@ -49,7 +64,7 @@ export default function OrderInvoicePage() {
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Order Invoice Not Found</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            We couldn't find the order with ID #{id} to generate an invoice.
+            We couldn&apos;t find the order with ID #{id} to generate an invoice.
           </p>
           <Button
             onClick={() => router.push("/admin/orders")}
@@ -71,7 +86,7 @@ export default function OrderInvoicePage() {
             { label: "Dashboard", href: "/admin/dashboard" },
             { label: "Sales", href: "/admin/orders" },
             { label: "Orders", href: "/admin/orders" },
-            { label: `Invoice #${order?.id}` },
+            { label: `Invoice #${order?.order_number || order?.id}` },
           ]}
         />
         <div className="pt-2">

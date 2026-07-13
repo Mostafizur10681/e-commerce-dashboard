@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  Edit
+  Edit,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,13 +179,32 @@ export default function OrdersPage() {
   const getStatusBadge = (status: string) => {
     switch(status.toLowerCase()) {
       case 'completed':
-        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-transparent font-bold">Completed</Badge>;
+      case 'delivered':
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-transparent font-bold capitalize">{status}</Badge>;
       case 'processing':
-        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-transparent font-bold">Processing</Badge>;
+        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-transparent font-bold capitalize">{status}</Badge>;
+      case 'shipped':
+      case 'out for delivery':
+        return <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-transparent font-bold capitalize">{status}</Badge>;
+      case 'packed':
+        return <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-transparent font-bold capitalize">{status}</Badge>;
       case 'cancelled':
-        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-transparent font-bold">Cancelled</Badge>;
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-transparent font-bold capitalize">{status}</Badge>;
       default:
-        return <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-transparent font-bold">Pending</Badge>;
+        return <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-transparent font-bold capitalize">{status || 'Pending'}</Badge>;
+    }
+  };
+
+  const getPaymentStatusBadge = (status: string) => {
+    switch(status?.toLowerCase()) {
+      case 'paid':
+        return <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-transparent font-bold"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
+      case 'failed':
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-transparent font-bold"><XCircle className="h-3 w-3 mr-1" />Failed</Badge>;
+      case 'refunded':
+        return <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-transparent font-bold">Refunded</Badge>;
+      default:
+        return <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-transparent font-bold"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
     }
   };
 
@@ -258,7 +278,8 @@ export default function OrdersPage() {
                     <TableHead className="py-4 font-semibold">Customer</TableHead>
                     <TableHead className="py-4 font-semibold">Date</TableHead>
                     <TableHead className="py-4 font-semibold text-center">Total</TableHead>
-                    <TableHead className="py-4 font-semibold">Status</TableHead>
+                    <TableHead className="py-4 font-semibold">Order Status</TableHead>
+                    <TableHead className="py-4 font-semibold">Payment Status</TableHead>
                     <TableHead className="py-4 font-semibold text-right pr-6">Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -281,7 +302,10 @@ export default function OrdersPage() {
                       <TableCell className="py-4">
                         {getStatusBadge(order.status)}
                       </TableCell>
-                      <TableCell className="py-4 text-right pr-6 space-x-2">
+                      <TableCell className="py-4">
+                        {getPaymentStatusBadge(order.payment_status)}
+                      </TableCell>
+                      <TableCell className="py-4 text-right pr-6 space-x-1">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -290,6 +314,15 @@ export default function OrdersPage() {
                           title="View Order Details"
                         >
                           <Eye className="h-4.5 w-4.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => router.push(`/admin/orders/invoice/${order.id}`)}
+                          className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400"
+                          title="View Invoice / PDF"
+                        >
+                          <FileText className="h-4.5 w-4.5" />
                         </Button>
                         <Button
                           variant="ghost"
