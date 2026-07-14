@@ -34,7 +34,8 @@ import {
   MapPin,
   Info,
   PhoneCall,
-  LayoutTemplate
+  LayoutTemplate,
+  Heart
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -132,6 +133,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Customers", href: "/admin/customers", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
     { name: "Reviews", href: "/admin/reviews", icon: Star },
+    { name: "Wishlist",         href: "/admin/wishlist",         icon: Heart },
     { name: "Partners", href: "/admin/partners", icon: Handshake },
     { name: "FAQs", href: "/admin/faqs", icon: HelpCircle },
     { name: "FAQ Categories", href: "/admin/faq-categories", icon: Layers },
