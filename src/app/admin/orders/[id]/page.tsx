@@ -24,6 +24,7 @@ interface OrderItem {
   product_id: number;
   quantity: number;
   price: string;
+  attributes?: Record<string, string> | any;
   product?: {
     id: number;
     name: string;
@@ -58,6 +59,7 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [availableStatuses, setAvailableStatuses] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -81,9 +83,25 @@ export default function OrderDetailsPage() {
     }
   };
 
+  const fetchOrderStatuses = async () => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+      const res = await fetch("/api/order-statuses?all=true", {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Failed to fetch order statuses");
+      const json = await res.json();
+      const activeStatuses = (json.orderStatuses || json || []).filter((s: any) => s.status === "Active");
+      setAvailableStatuses(activeStatuses);
+    } catch (err) {
+      console.error("Failed to load order statuses:", err);
+    }
+  };
+
   useEffect(() => {
     if (mounted && id) {
       fetchOrderDetails();
+      fetchOrderStatuses();
     }
   }, [mounted, id]);
 
@@ -166,10 +184,15 @@ export default function OrderDetailsPage() {
   const getOrderBadgeStyle = (status: string) => {
     switch (status.toLowerCase()) {
       case "completed":
+      case "delivered":
         return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
       case "processing":
+      case "packed":
+      case "shipped":
+      case "out-for-delivery":
         return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
       case "pending":
+      case "order-placed":
         return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
       case "cancelled":
         return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
@@ -193,7 +216,19 @@ export default function OrderDetailsPage() {
     }
   };
 
-  const orderStatuses = ["pending", "processing", "completed", "cancelled"];
+  const statusesToRender = [...(availableStatuses.length > 0 ? availableStatuses : [
+    { slug: "pending", name: "Pending" },
+    { slug: "processing", name: "Processing" },
+    { slug: "completed", name: "Completed" },
+    { slug: "cancelled", name: "Cancelled" }
+  ])];
+
+  if (currentOrder && !statusesToRender.some(s => s.slug.toLowerCase() === currentOrder.status.toLowerCase())) {
+    statusesToRender.push({
+      slug: currentOrder.status.toLowerCase(),
+      name: currentOrder.status.charAt(0).toUpperCase() + currentOrder.status.slice(1)
+    });
+  }
 
   return (
     <div className="space-y-6 min-h-screen p-6 bg-gray-55 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
@@ -323,6 +358,19 @@ export default function OrderDetailsPage() {
                               <span className="font-bold text-gray-900 dark:text-slate-100 text-sm block leading-tight">
                                 {item.product?.name || `Product #${item.product_id}`}
                               </span>
+                              {item.attributes && Object.keys(item.attributes).length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                  {Object.entries(item.attributes).map(([key, val]: [string, any]) => (
+                                    <Badge
+                                      key={key}
+                                      variant="outline"
+                                      className="text-[10px] px-1.5 py-0 bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-slate-350 border-gray-200 dark:border-slate-700 capitalize font-medium"
+                                    >
+                                      {key}: {val}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -370,8 +418,8 @@ export default function OrderDetailsPage() {
                 disabled={updatingStatus}
                 className="w-full h-11 border border-gray-200 dark:border-slate-800 dark:bg-slate-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-green-500 text-gray-700 dark:text-slate-400 cursor-pointer disabled:opacity-50"
               >
-                {orderStatuses.map((s) => (
-                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                {statusesToRender.map((s) => (
+                  <option key={s.slug} value={s.slug}>{s.name}</option>
                 ))}
               </select>
             </div>

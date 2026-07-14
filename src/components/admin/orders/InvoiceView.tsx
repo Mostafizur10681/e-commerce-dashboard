@@ -56,6 +56,7 @@ export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
       productName: item.productName || item.product?.name || 'Product',
       quantity: Number(item.quantity || 0),
       price: Number(item.price || 0),
+      attributes: item.attributes || null,
     })),
   };
 
@@ -198,15 +199,28 @@ export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
       doc.setTextColor(30, 41, 59);
       y += 8;
 
-      order.items.forEach((item) => {
+      order.items.forEach((item: any) => {
         doc.setDrawColor(241, 245, 249);
         doc.line(15, y, 195, y);
         y += 6.5;
         doc.text(item.productName, 18, y);
         doc.text(String(item.quantity), 120, y);
-        doc.text(`$${item.price}`, 145, y);
-        doc.text(`$${item.price * item.quantity}`, 175, y);
-        y += 1.5;
+        doc.text(`BDT ${item.price}`, 145, y);
+        doc.text(`BDT ${item.price * item.quantity}`, 175, y);
+        // Print attributes below product name
+        if (item.attributes && typeof item.attributes === 'object') {
+          const attrPairs = Object.entries(item.attributes);
+          if (attrPairs.length > 0) {
+            y += 4.5;
+            doc.setFontSize(8);
+            doc.setTextColor(120, 120, 120);
+            const attrText = attrPairs.map(([k, v]) => `${k}: ${v}`).join('  |  ');
+            doc.text(attrText, 20, y);
+            doc.setFontSize(9);
+            doc.setTextColor(30, 41, 59);
+          }
+        }
+        y += 2;
       });
 
       // Horizontal separator line before calculations
@@ -403,19 +417,33 @@ export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {order.items.map((item, idx) => (
+                {order.items.map((item: any, idx: number) => (
                   <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/10 transition-colors">
-                    <td className="pl-5 py-4 font-semibold text-gray-900 dark:text-white print:text-black">
-                      {item.productName}
+                    <td className="pl-5 py-4">
+                      <span className="font-semibold text-gray-900 dark:text-white print:text-black block">
+                        {item.productName}
+                      </span>
+                      {item.attributes && Object.keys(item.attributes).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {Object.entries(item.attributes).map(([key, val]: [string, any]) => (
+                            <span
+                              key={key}
+                              className="inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 capitalize print:border print:border-gray-300 print:text-gray-700 print:bg-transparent"
+                            >
+                              {key}: {val}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 text-center font-bold text-gray-800 dark:text-gray-200 print:text-black">
                       {item.quantity}
                     </td>
                     <td className="py-4 text-center font-medium text-gray-700 dark:text-gray-300 print:text-black">
-                      ${item.price}
+                      ৳{item.price}
                     </td>
                     <td className="pr-5 py-4 text-right font-extrabold text-gray-900 dark:text-white print:text-black">
-                      ${item.price * item.quantity}
+                      ৳{item.price * item.quantity}
                     </td>
                   </tr>
                 ))}

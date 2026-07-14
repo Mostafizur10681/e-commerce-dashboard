@@ -48,7 +48,10 @@ export default function EditOrderPage() {
   const fetchStatuses = async () => {
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
 
       const [orderRes, paymentRes] = await Promise.all([
         fetch("/api/order-statuses?all=true", { headers }),

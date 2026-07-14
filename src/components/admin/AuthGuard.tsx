@@ -16,8 +16,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    if ((window.fetch as any).__intercepted) {
+      return;
+    }
+
     const originalFetch = window.fetch;
-    window.fetch = async (input, init) => {
+    const interceptedFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       try {
         const response = await originalFetch(input, init);
         
@@ -36,7 +40,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
           if (!isAuthApi && !isAuthPage) {
             useStore.getState().logout();
-            router.push("/login?session_expired=1");
+            window.location.href = "/login?session_expired=1";
           }
         }
         
@@ -46,10 +50,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     };
 
+    (interceptedFetch as any).__intercepted = true;
+    window.fetch = interceptedFetch;
+
     return () => {
-      window.fetch = originalFetch;
+      if (window.fetch === interceptedFetch) {
+        window.fetch = originalFetch;
+      }
     };
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     if (isHydrated) {
