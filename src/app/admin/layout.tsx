@@ -33,7 +33,8 @@ import {
   HelpCircle,
   MapPin,
   Info,
-  PhoneCall
+  PhoneCall,
+  LayoutTemplate
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -136,10 +137,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "FAQ Categories", href: "/admin/faq-categories", icon: Layers },
     { name: "Subscriptions", href: "/admin/subscriptions", icon: Package },
     { name: "Banners", href: "/admin/banners", icon: ImageIcon },
-    { name: "About Page", href: "/admin/about", icon: Info },
-    { name: "Contact Page", href: "/admin/contact-settings", icon: PhoneCall },
-    { name: "Users", href: "/admin/users", icon: UserCog },
-    { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
+    { name: "About Page",       href: "/admin/about",           icon: Info },
+    { name: "Contact Page",     href: "/admin/contact-settings",icon: PhoneCall },
+    { name: "Footer Settings",  href: "/admin/footer-settings", icon: LayoutTemplate },
+    { name: "Users",            href: "/admin/users",            icon: UserCog },
+    { name: "Settings",         href: "/admin/settings",         icon: SettingsIcon },
   ];
 
   const handleLogout = () => {
