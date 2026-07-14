@@ -47,12 +47,26 @@ const ordersTrendData = [
   { name: "Jun 16", Orders: 30 },
 ];
 
-export function DashboardCharts() {
+interface DashboardChartsProps {
+  revenueData?: any[];
+  salesData?: any[];
+  ordersTrendData?: any[];
+}
+
+export function DashboardCharts({
+  revenueData: propRevenueData,
+  salesData: propSalesData,
+  ordersTrendData: propOrdersTrendData,
+}: DashboardChartsProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const revenueChartData = propRevenueData || revenueData;
+  const salesChartData = propSalesData || salesData;
+  const ordersChartData = propOrdersTrendData || ordersTrendData;
 
   if (!mounted) {
     return (
@@ -75,7 +89,7 @@ export function DashboardCharts() {
         <CardContent>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+              <LineChart data={revenueChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
@@ -106,7 +120,7 @@ export function DashboardCharts() {
         <CardContent>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={salesData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+              <BarChart data={salesChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
@@ -134,7 +148,7 @@ export function DashboardCharts() {
         <CardContent>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={ordersTrendData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+              <AreaChart data={ordersChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                 <defs>
                   <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#16A34A" stopOpacity={0.4} />
