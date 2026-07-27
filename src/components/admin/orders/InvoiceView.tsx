@@ -41,7 +41,7 @@ export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
     created_at: (rawOrder as any).created_at || (rawOrder as any).date || '',
     amount: Number((rawOrder as any).amount || (rawOrder as any).total || 0),
     subtotal: Number((rawOrder as any).subtotal || 0),
-    shippingCost: Number((rawOrder as any).shippingCost || (rawOrder as any).shipping_cost || 0),
+    shippingCost: Number((rawOrder as any).shippingCost || (rawOrder as any).shipping_cost || (rawOrder as any).shipping_amount || 0),
     paymentMethod: (rawOrder as any).paymentMethod || (rawOrder as any).payment_method || 'Cash on Delivery',
     paymentStatus: (rawOrder as any).paymentStatus || (rawOrder as any).payment_status || 'Pending',
     status: (rawOrder as any).status || 'Pending',
@@ -231,19 +231,19 @@ export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
       // Summary
       y += 6;
       doc.text("Subtotal:", 120, y);
-      doc.text(`$${subtotalVal}`, 175, y);
+      doc.text(`BDT ${subtotalVal}`, 175, y);
 
       y += 5;
       doc.text("Discount:", 120, y);
-      doc.text(`$${discountVal}`, 175, y);
+      doc.text(`BDT ${discountVal}`, 175, y);
 
       y += 5;
       doc.text("VAT/Tax (5%):", 120, y);
-      doc.text(`$${vatVal}`, 175, y);
+      doc.text(`BDT ${vatVal}`, 175, y);
 
       y += 5;
       doc.text("Shipping Charge:", 120, y);
-      doc.text(`$${shippingVal}`, 175, y);
+      doc.text(`BDT ${shippingVal}`, 175, y);
 
       y += 6;
       doc.setDrawColor(226, 232, 240);
@@ -253,7 +253,7 @@ export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
       doc.setFont("helvetica", "bold");
       doc.text("Grand Total:", 120, y);
       doc.setTextColor(22, 163, 74); // primary green
-      doc.text(`$${grandTotalVal}`, 175, y);
+      doc.text(`BDT ${grandTotalVal}`, 175, y);
 
       // Thank You Note
       y += 20;
@@ -462,23 +462,23 @@ export default function InvoiceView({ order: rawOrder }: InvoiceViewProps) {
           <div className="w-full sm:max-w-xs space-y-2.5 text-xs">
             <div className="flex justify-between text-gray-500">
               <span>Subtotal</span>
-              <span className="font-semibold text-gray-950 dark:text-white print:text-black">${subtotalVal}</span>
+              <span className="font-semibold text-gray-950 dark:text-white print:text-black">৳{subtotalVal}</span>
             </div>
             <div className="flex justify-between text-gray-550">
               <span>Discount</span>
-              <span className="font-semibold text-gray-950 dark:text-white print:text-black">${discountVal}</span>
+              <span className="font-semibold text-gray-950 dark:text-white print:text-black">৳{discountVal}</span>
             </div>
             <div className="flex justify-between text-gray-550">
               <span>VAT/Tax (5%)</span>
-              <span className="font-semibold text-gray-950 dark:text-white print:text-black">${vatVal}</span>
+              <span className="font-semibold text-gray-950 dark:text-white print:text-black">৳{vatVal}</span>
             </div>
             <div className="flex justify-between text-gray-550">
               <span>Shipping Charge</span>
-              <span className="font-semibold text-gray-950 dark:text-white print:text-black">${shippingVal}</span>
+              <span className="font-semibold text-gray-950 dark:text-white print:text-black">৳{shippingVal}</span>
             </div>
             <div className="border-t border-gray-200 dark:border-gray-800 pt-3 flex justify-between font-extrabold text-sm text-gray-900 dark:text-white print:text-black">
               <span>Grand Total</span>
-              <span className="text-[#16A34A] dark:text-green-400 text-base">${grandTotalVal}</span>
+              <span className="text-[#16A34A] dark:text-green-400 text-base">৳{grandTotalVal}</span>
             </div>
           </div>
         </div>

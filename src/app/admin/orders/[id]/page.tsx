@@ -36,6 +36,7 @@ interface Order {
   id: number;
   order_number: string;
   total: string;
+  shipping_amount?: string;
   status: string;
   payment_status: string;
   customer_name: string;
@@ -385,15 +386,19 @@ export default function OrderDetailsPage() {
             </div>
 
             {/* Calculations Panel */}
-            <div className="p-6 bg-gray-50/50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-slate-800 flex justify-end">
+            <div className="p-6 bg-gray-55/50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-slate-800 flex justify-end">
               <div className="w-full max-w-xs space-y-3 text-sm">
                 <div className="flex justify-between text-gray-500 dark:text-slate-400">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-gray-900 dark:text-slate-100">৳{Number(currentOrder.total).toFixed(2)}</span>
+                  <span className="font-semibold text-gray-900 dark:text-slate-100">
+                    ৳{(Number(currentOrder.total) - Number(currentOrder.shipping_amount || 0)).toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-gray-500 dark:text-slate-400">
                   <span>Shipping Cost</span>
-                  <span className="font-semibold text-gray-900 dark:text-slate-100">Free</span>
+                  <span className="font-semibold text-gray-900 dark:text-slate-100">
+                    ৳{Number(currentOrder.shipping_amount || 0).toFixed(2)}
+                  </span>
                 </div>
                 <div className="border-t border-gray-200 dark:border-slate-800 pt-3 flex justify-between font-extrabold text-base text-gray-900 dark:text-slate-100">
                   <span>Order Total</span>
