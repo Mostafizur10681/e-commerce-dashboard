@@ -32,7 +32,7 @@ interface StoreState {
 
   // Hydration & Auth Actions
   hydrate: () => void;
-  login: (email: string, password?: string) => Promise<boolean>;
+  login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password?: string, password_confirmation?: string, phone?: string) => Promise<boolean>;
   logout: () => void;
 
@@ -175,7 +175,9 @@ export const useStore = create<StoreState>((set, get) => ({
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        return false;
+        const errorData = await res.json().catch(() => ({}));
+        const errorMessage = errorData.errors?.status?.[0] || errorData.errors?.email?.[0] || errorData.message || "Invalid login credentials";
+        return { success: false, error: errorMessage };
       }
       const data = await res.json();
       if (data.success && data.data && data.data.user) {
@@ -185,18 +187,25 @@ export const useStore = create<StoreState>((set, get) => ({
           name: backendUser.name,
           email: backendUser.email,
           role: backendUser.role === 'admin' ? 'Admin' : 'Customer',
+          status: backendUser.status,
         };
+        if (mappedUser.status === 'pending') {
+          return { success: false, error: "Your account is pending admin approval." };
+        }
+        if (mappedUser.status === 'blocked') {
+          return { success: false, error: "Your account has been blocked." };
+        }
         if (typeof window !== "undefined") {
           localStorage.setItem("df_access_token", data.data.access_token);
         }
         set({ currentUser: mappedUser });
         saveToLocalStorage("df_currentUser", mappedUser);
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch (error) {
+      return { success: false, error: "Invalid login credentials" };
+    } catch (error: any) {
       console.error("Login API Error:", error);
-      return false;
+      return { success: false, error: error.message || "An unexpected error occurred. Please try again." };
     }
   },
 
@@ -227,7 +236,11 @@ export const useStore = create<StoreState>((set, get) => ({
           name: backendUser.name,
           email: backendUser.email,
           role: backendUser.role === 'admin' ? 'Admin' : 'Customer',
+          status: backendUser.status,
         };
+        if (mappedUser.status === 'pending') {
+          return true;
+        }
         if (typeof window !== "undefined") {
           localStorage.setItem("df_access_token", data.data.access_token);
         }

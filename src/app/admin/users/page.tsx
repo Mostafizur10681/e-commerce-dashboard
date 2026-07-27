@@ -47,6 +47,7 @@ export default function UsersPage() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState<"Admin" | "Customer">("Customer");
+  const [editStatus, setEditStatus] = useState<"active" | "blocked" | "pending">("active");
   const [editPassword, setEditPassword] = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
@@ -104,11 +105,31 @@ export default function UsersPage() {
     }
   };
 
+  const handleApprove = async (user: User) => {
+    try {
+      const token = localStorage.getItem("df_access_token");
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ status: "active" }),
+      });
+      if (!res.ok) throw new Error("Failed to approve user");
+      // Update local state
+      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, status: "active" } : u)));
+    } catch (error) {
+      console.error("Error approving user:", error);
+    }
+  };
+
   const handleStartEdit = (user: User) => {
     setEditingUser(user);
     setEditName(user.name);
     setEditEmail(user.email);
     setEditRole(user.role);
+    setEditStatus((user.status as any) || "active");
     setEditPassword("");
   };
 
@@ -121,6 +142,7 @@ export default function UsersPage() {
         name: editName,
         email: editEmail,
         role: editRole,
+        status: editStatus,
       };
       if (editPassword) {
         payload.password = editPassword;
@@ -178,20 +200,21 @@ export default function UsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="rounded-lg border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
+      <div className="rounded-lg border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-955 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="pl-6">User Profile</TableHead>
               <TableHead>Email Address</TableHead>
               <TableHead>Security Role</TableHead>
-              <TableHead className="w-[200px] text-right pr-6">Access Control</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="w-[280px] text-right pr-6">Access Control</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-32 text-center">
+                <TableCell colSpan={5} className="h-32 text-center">
                   <div className="flex items-center justify-center gap-2 text-slate-400">
                     <Loader2 className="h-5 w-5 animate-spin" />
                     <span>Loading users...</span>
@@ -200,7 +223,7 @@ export default function UsersPage() {
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-32 text-center text-slate-400">
+                <TableCell colSpan={5} className="h-32 text-center text-slate-400">
                   No registered users found.
                 </TableCell>
               </TableRow>
@@ -216,7 +239,7 @@ export default function UsersPage() {
                         <p className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                           {user.name}
                           {user.id === currentUser?.id && (
-                            <Badge className="bg-indigo-100 dark:bg-indigo-950/60 text-indigo-750 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-[9px] font-bold py-0 h-4">
+                            <Badge className="bg-indigo-100 dark:bg-indigo-955/60 text-indigo-750 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-[9px] font-bold py-0 h-4">
                               You
                             </Badge>
                           )}
@@ -236,8 +259,33 @@ export default function UsersPage() {
                       </Badge>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {user.status === "active" || !user.status ? (
+                      <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900/30" variant="outline">
+                        Active
+                      </Badge>
+                    ) : user.status === "pending" ? (
+                      <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-400 dark:border-amber-900/30" variant="outline">
+                        Pending Approval
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/30" variant="outline">
+                        Blocked
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right pr-6">
                     <div className="flex items-center justify-end gap-2">
+                      {user.status === "pending" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-8 bg-green-50 text-green-705 border-green-200 hover:bg-green-100 hover:text-green-800 font-bold gap-1 cursor-pointer"
+                          onClick={() => handleApprove(user)}
+                        >
+                          Approve
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -260,7 +308,7 @@ export default function UsersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-455 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 rounded-md"
+                        className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-455 hover:bg-indigo-50 dark:hover:bg-indigo-955/20 rounded-md"
                         disabled={user.id === currentUser?.id}
                         onClick={() => handleStartEdit(user)}
                         title="Edit User"
@@ -270,7 +318,7 @@ export default function UsersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-red-650 dark:hover:text-red-455 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md"
+                        className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-red-650 dark:hover:text-red-455 hover:bg-red-50 dark:hover:bg-red-955/20 rounded-md"
                         disabled={user.id === currentUser?.id}
                         onClick={() => setDeletingUser(user)}
                         title="Delete User"
@@ -299,7 +347,7 @@ export default function UsersPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-650 hover:bg-red-750 text-white">
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-650 hover:bg-red-755 text-white">
               Delete User
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -356,6 +404,21 @@ export default function UsersPage() {
                   <SelectContent>
                     <SelectItem value="Admin">Admin</SelectItem>
                     <SelectItem value="Customer">Customer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-status" className="text-right font-medium">Status</Label>
+              <div className="col-span-3">
+                <Select value={editStatus} onValueChange={(val: any) => setEditStatus(val)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="blocked">Blocked</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

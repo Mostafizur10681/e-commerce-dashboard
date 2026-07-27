@@ -224,7 +224,7 @@ export default function AttributesPage() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-750 dark:text-gray-300 cursor-pointer"
+              className="h-10 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 cursor-pointer"
             >
               <option value="All">All</option>
               <option value="Active">Active</option>
@@ -239,7 +239,7 @@ export default function AttributesPage() {
               onChange={(e) => {
                 setSortBy(e.target.value);
               }}
-              className="h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-955 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-750 dark:text-gray-300 cursor-pointer"
+              className="h-10 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 cursor-pointer"
             >
               <option value="Newest">Newest</option>
               <option value="Oldest">Oldest</option>

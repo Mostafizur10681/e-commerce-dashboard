@@ -112,6 +112,7 @@ export interface User {
   name: string;
   email: string;
   role: "Admin" | "Customer";
+  status?: "active" | "blocked" | "pending";
 }
 
 export interface Settings {

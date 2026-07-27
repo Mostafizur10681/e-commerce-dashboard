@@ -227,7 +227,7 @@ export default function AddCategoryPage() {
               <select
                 id="status"
                 {...register("status")}
-                className="w-full h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-955 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300"
+                className="w-full h-10 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200"
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>

@@ -233,8 +233,7 @@ export default function ProductsPage() {
       {/* FILTER SECTION */}
       <div className="bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-800 p-5 rounded-2xl shadow-xs space-y-4">
         <div className="flex flex-wrap gap-4 items-center justify-between">
-          
-          {/* Entries dropdown (Left) */}
+                  {/* Entries dropdown (Left) */}
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <span>Showing</span>
             <select
@@ -243,7 +242,7 @@ export default function ProductsPage() {
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-700 dark:text-gray-300"
+              className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-700 dark:text-gray-200"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -262,7 +261,7 @@ export default function ProductsPage() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-10 h-10 border-gray-250 dark:border-gray-700 dark:bg-gray-950/50 rounded-xl focus-visible:ring-[#16A34A] focus-visible:ring-1 text-xs"
+              className="pl-10 h-10 border-gray-250 dark:border-gray-700 dark:bg-gray-955/50 dark:bg-slate-900/50 rounded-xl focus-visible:ring-[#16A34A] focus-visible:ring-1 text-xs"
             />
             {searchTerm && (
               <button
@@ -283,7 +282,7 @@ export default function ProductsPage() {
                 setSelectedCategory(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-750 dark:text-gray-300 h-10"
+              className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-700 dark:text-gray-200 h-10"
             >
               <option value="All">All Categories</option>
               {categoriesList.map((cat) => (
@@ -300,7 +299,7 @@ export default function ProductsPage() {
                 setSelectedStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-750 dark:text-gray-300 h-10"
+              className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-700 dark:text-gray-200 h-10"
             >
               <option value="All">All Status</option>
               <option value="In Stock">In Stock</option>
@@ -311,7 +310,7 @@ export default function ProductsPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-gray-50 dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-750 dark:text-gray-300 h-10"
+              className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-1 focus:ring-[#16A34A] outline-none cursor-pointer text-gray-700 dark:text-gray-200 h-10"
             >
               <option value="Name-ASC">Name (A-Z)</option>
               <option value="Name-DESC">Name (Z-A)</option>

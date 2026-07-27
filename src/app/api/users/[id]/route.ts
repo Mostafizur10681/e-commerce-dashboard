@@ -81,6 +81,7 @@ export async function PUT(
         name: u.name,
         email: u.email,
         role: u.role === "admin" ? "Admin" : "Customer",
+        status: u.status,
       };
     }
 

@@ -35,7 +35,8 @@ import {
   Info,
   PhoneCall,
   LayoutTemplate,
-  Heart
+  Heart,
+  UserCheck
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -125,6 +126,59 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
   const unreadMessagesCount = messagesData?.stats?.unread || 0;
   const latestMessages = messagesData?.data || [];
+
+  // Fetch orders via SWR for notification dropdown
+  const { data: ordersData } = useSWR(
+    mounted ? "/api/orders?page=1&per_page=20" : null,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
+  const latestOrders = ordersData?.data?.data || ordersData?.data || [];
+  const pendingOrders = latestOrders.filter((o: any) => o.status.toLowerCase() === "pending");
+  const pendingOrdersCount = pendingOrders.length;
+
+  // Fetch users via SWR for pending approvals count
+  const { data: usersData } = useSWR(
+    mounted ? "/api/users" : null,
+    fetcher,
+    { refreshInterval: 5000 }
+  );
+  const pendingUsers = (usersData || []).filter((u: any) => u.status === "pending");
+  const pendingUsersCount = pendingUsers.length;
+
+  const totalNotificationsCount = pendingOrdersCount + pendingUsersCount;
+
+  const getRelativeTime = (isoString: string) => {
+    try {
+      const diff = Date.now() - new Date(isoString).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return "Just now";
+      if (mins < 60) return `${mins} min ago`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
+      return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    } catch (e) {
+      return "Recently";
+    }
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      const token = localStorage.getItem("df_access_token");
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ status: "active" }),
+      });
+      if (!res.ok) throw new Error("Failed to approve user");
+      mutate("/api/users");
+    } catch (error) {
+      console.error("Error approving user:", error);
+    }
+  };
 
   const menuItems: MenuItem[] = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -969,20 +1023,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   ) : (
                     latestMessages.map((msg: any) => {
                       const isUnread = msg.status === "Unread";
-                      
-                      const getRelativeTime = (isoString: string) => {
-                        try {
-                          const diff = Date.now() - new Date(isoString).getTime();
-                          const mins = Math.floor(diff / 60000);
-                          if (mins < 1) return "Just now";
-                          if (mins < 60) return `${mins} min ago`;
-                          const hours = Math.floor(mins / 60);
-                          if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
-                          return new Date(isoString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-                        } catch (e) {
-                          return "Recently";
-                        }
-                      };
 
                       return (
                         <div
@@ -1051,33 +1091,161 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Admin Approval Alerts Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="relative h-9 w-9 text-gray-650 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <UserCheck className="h-5 w-5" />
+                    {pendingUsersCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-primary hover:bg-primary-700 text-[10px] text-white border-2 border-white dark:border-gray-900 rounded-full font-bold">
+                        {pendingUsersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-[390px] max-w-[calc(100vw-32px)] p-0 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+                <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Admin Approvals</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    You have {pendingUsersCount} pending admin registration requests
+                  </p>
+                </div>
+                <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                  {pendingUsersCount === 0 ? (
+                    <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
+                      <div className="h-12 w-12 rounded-2xl bg-gray-50 dark:bg-gray-800/80 text-gray-400 dark:text-gray-500 flex items-center justify-center border border-transparent dark:border-gray-700/50">
+                        <UserCheck className="h-6 w-6" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-400 dark:text-slate-500">
+                        No pending approvals
+                      </p>
+                    </div>
+                  ) : (
+                    pendingUsers.map((user: any) => (
+                      <div
+                        key={`user-dropdown-${user.id}`}
+                        className="p-3.5 flex flex-col transition-colors border-b border-gray-100 dark:border-gray-800 hover:bg-gray-55 dark:hover:bg-gray-800/40 border-l-[4px] border-l-amber-500 pl-2.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span 
+                            onClick={() => router.push(`/admin/users`)}
+                            className="text-xs font-bold truncate text-gray-900 dark:text-white hover:underline cursor-pointer"
+                          >
+                            New Registration Request
+                          </span>
+                          <span className="text-[10px] text-gray-450 shrink-0 font-medium">
+                            {getRelativeTime(user.created_at)}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold truncate mt-1 text-gray-900 dark:text-white">
+                          Name: <span className="text-[#16A34A]">{user.name}</span>
+                        </p>
+                        <p className="text-[11px] mt-0.5 text-gray-500 dark:text-slate-400 line-clamp-1 leading-snug">
+                          Email: {user.email}
+                        </p>
+                        <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-gray-100/50 dark:border-gray-800/30">
+                          <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 dark:bg-amber-955 dark:text-amber-400">
+                            Pending Approval
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-[10px] h-7 px-2.5 bg-green-50 text-green-705 border-green-200 hover:bg-green-100 hover:text-green-800 font-bold cursor-pointer"
+                            onClick={() => handleApproveUser(user.id)}
+                          >
+                            Approve
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="p-2 border-t border-gray-100 dark:border-gray-800 flex justify-center bg-gray-5/50 dark:bg-gray-900/50 rounded-b-xl">
+                  <Link
+                    href="/admin/users"
+                    className="w-full text-center text-xs font-semibold text-primary hover:bg-primary/10 dark:text-primary-400 py-1.5 rounded-lg transition-colors"
+                  >
+                    View All Users
+                  </Link>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Notifications Alert Pop */}
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
                   <Button variant="ghost" size="icon" className="relative h-9 w-9 text-gray-650 dark:text-gray-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
                     <Bell className="h-5 w-5" />
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-primary hover:bg-primary-700 text-[10px] text-white border-2 border-white dark:border-gray-900 rounded-full font-bold">
-                      3
-                    </Badge>
+                    {pendingOrdersCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-primary hover:bg-primary-700 text-[10px] text-white border-2 border-white dark:border-gray-900 rounded-full font-bold">
+                        {pendingOrdersCount}
+                      </Badge>
+                    )}
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end" className="w-80 p-0 border-gray-250 dark:border-gray-800">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-800 text-sm font-semibold text-gray-900 dark:text-white">Notifications</div>
-                <div className="max-h-64 overflow-y-auto">
-                  <div className="p-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
-                    <p className="text-xs font-semibold text-gray-900 dark:text-white">New order #ord-1004 received</p>
-                    <p className="text-[10px] text-gray-400 mt-1">Just now</p>
-                  </div>
-                  <div className="p-3 border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
-                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Sarah Connor left a 5-star review</p>
-                    <p className="text-[10px] text-gray-400 mt-1">2 hours ago</p>
-                  </div>
-                  <div className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
-                    <p className="text-xs font-semibold text-gray-900 dark:text-white">Product "iPhone 15 Pro Max" stock low</p>
-                    <p className="text-[10px] text-gray-400 mt-1">1 day ago</p>
-                  </div>
+              <DropdownMenuContent align="end" className="w-[390px] max-w-[calc(100vw-32px)] p-0 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+                <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Notifications</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    You have {pendingOrdersCount} pending orders
+                  </p>
+                </div>
+                <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+                  {pendingOrdersCount === 0 ? (
+                    <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
+                      <div className="h-12 w-12 rounded-2xl bg-gray-50 dark:bg-gray-800/80 text-gray-400 dark:text-gray-500 flex items-center justify-center border border-transparent dark:border-gray-700/50">
+                        <Bell className="h-6 w-6" />
+                      </div>
+                      <p className="text-xs font-semibold text-gray-400 dark:text-slate-500">
+                        No new notifications
+                      </p>
+                    </div>
+                  ) : (
+                    pendingOrders.map((order: any) => (
+                      <div
+                        key={`order-${order.id}`}
+                        onClick={() => {
+                          router.push(`/admin/orders/${order.id}`);
+                        }}
+                        className="p-3.5 cursor-pointer flex flex-col transition-colors border-b border-gray-100 dark:border-gray-800 hover:bg-gray-55 dark:hover:bg-gray-800/40 border-l-[4px] border-l-transparent pl-2.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-bold truncate text-gray-900 dark:text-white">
+                            New Order Received
+                          </p>
+                          <span className="text-[10px] text-gray-450 shrink-0 font-medium">
+                            {getRelativeTime(order.created_at)}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold truncate mt-1 text-gray-900 dark:text-white">
+                          Order No: <span className="font-mono text-green-600 dark:text-green-400">#{order.order_number}</span>
+                        </p>
+                        <p className="text-[11px] mt-0.5 text-gray-500 dark:text-slate-400 line-clamp-1 leading-snug">
+                          Customer: {order.customer_name} ({order.customer_phone})
+                        </p>
+                        <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-gray-100/50 dark:border-gray-800/30">
+                          <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+                            Pending
+                          </span>
+                          <span className="text-[9px] font-bold text-green-650 dark:text-green-400">
+                            ৳{Number(order.total).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="p-2 border-t border-gray-100 dark:border-gray-800 flex justify-center bg-gray-5/50 dark:bg-gray-900/50 rounded-b-xl">
+                  <Link
+                    href="/admin/orders"
+                    className="w-full text-center text-xs font-semibold text-primary hover:bg-primary/10 dark:text-primary-400 py-1.5 rounded-lg transition-colors"
+                  >
+                    View All Orders
+                  </Link>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>

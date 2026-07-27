@@ -230,7 +230,7 @@ export default function ThanasPage() {
             <select
               value={divisionFilter}
               onChange={(e) => setDivisionFilter(e.target.value)}
-              className="h-10 border border-gray-200 dark:border-slate-805 dark:bg-slate-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-303 transition-colors max-w-[130px]"
+              className="h-10 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 transition-colors max-w-[130px] cursor-pointer"
             >
               <option value="All">All Divisions</option>
               {divisions.map((d) => (
@@ -250,7 +250,7 @@ export default function ThanasPage() {
                 setDistrictFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-200 dark:border-slate-800 dark:bg-slate-955 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-303 transition-colors max-w-[130px]"
+              className="h-10 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 transition-colors max-w-[130px] cursor-pointer"
             >
               <option value="All">All Districts</option>
               {districts.map((dst) => (
@@ -270,7 +270,7 @@ export default function ThanasPage() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-205 dark:border-slate-800 dark:bg-slate-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-303 transition-colors"
+              className="h-10 border border-gray-205 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="Active">Active</option>

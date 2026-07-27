@@ -42,6 +42,7 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
   const [mode, setMode] = useState<"login" | "register">(defaultMode);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -73,6 +74,9 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
 
   const switchMode = (target: "login" | "register") => {
     setMode(target);
+    if (target === "register") {
+      setSuccessMessage(null);
+    }
     // Silent state update without hard router refresh
     window.history.pushState(null, "", `/${target}`);
   };
@@ -99,16 +103,17 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     setLoginError(null);
+    setSuccessMessage(null);
     await new Promise((resolve) => setTimeout(resolve, 800));
     try {
-      const success = await login(values.email, values.password);
-      if (success) {
+      const result = await login(values.email, values.password);
+      if (result.success) {
         router.push("/admin/dashboard");
       } else {
-        setLoginError("Invalid email address or password. Please try again.");
+        setLoginError(result.error || "Invalid email address or password. Please try again.");
       }
-    } catch {
-      setLoginError("An unexpected error occurred. Please try again.");
+    } catch (error: any) {
+      setLoginError(error.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +132,8 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
         values.phone
       );
       if (success) {
-        router.push("/admin/dashboard");
+        setSuccessMessage("Registration successful! Your account is pending admin approval.");
+        switchMode("login");
       } else {
         setRegisterError("Registration failed. Please make sure the details are correct.");
       }
@@ -160,6 +166,12 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
               </h2>
 
             </div>
+
+            {successMessage && (
+              <div className="rounded-xl bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/50 p-3 text-xs font-semibold">
+                {successMessage}
+              </div>
+            )}
 
             {loginError && (
               <div className="rounded-xl bg-red-50 dark:bg-red-950/30 text-red-650 dark:text-red-400 border border-red-200 dark:border-red-900/50 p-3 text-xs font-semibold">

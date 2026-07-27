@@ -64,6 +64,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (isHydrated) {
       const isLoginOrRegister = pathname === "/login" || pathname === "/register";
       
+      const isAccessDenied = currentUser && (currentUser.status === "pending" || currentUser.status === "blocked");
+      
+      if (isAccessDenied) {
+        useStore.getState().logout();
+        router.push("/login");
+        return;
+      }
+
       if (!currentUser && !isLoginOrRegister) {
         router.push("/login");
       } else if (currentUser && isLoginOrRegister) {
