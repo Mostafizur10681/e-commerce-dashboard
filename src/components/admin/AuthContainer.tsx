@@ -142,7 +142,7 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 py-12 transition-colors duration-300">
       {/* Outer Shell Wrapper (Double Slider layout) */}
       <div className="relative w-full max-w-[420px] min-h-[580px] md:max-w-[800px] md:min-h-[520px] bg-white dark:bg-gray-900 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden transition-all duration-500">
-        
+
         {/* SIGN IN CONTAINER */}
         <div
           className={cn(
@@ -158,9 +158,7 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
                 <Sparkles className="h-5 w-5 text-[#16A34A] fill-[#16A34A]/10" />
                 Sign In
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-405">
-                Log in with <code className="text-[#16A34A] font-bold font-mono">admin@dataflow.com</code>
-              </p>
+
             </div>
 
             {loginError && (
@@ -325,7 +323,7 @@ export function AuthContainer({ defaultMode }: AuthContainerProps) {
                       <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">Phone Number</FormLabel>
                       <FormControl>
                         <AuthInput
-                          placeholder="+1 (555) 123-4567"
+                          placeholder="0170000000"
                           icon={<Phone className="h-4 w-4" />}
                           error={!!fieldState.error}
                           {...field}

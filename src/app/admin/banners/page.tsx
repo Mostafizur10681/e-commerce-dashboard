@@ -62,6 +62,7 @@ type BannerFormValues = z.infer<typeof bannerSchema>;
 
 const MENU_LOCATIONS = [
   "Main Slider",
+  "Right Banner",
   "Shop Sidebar",
   "Header Banner",
   "Footer Ad"
