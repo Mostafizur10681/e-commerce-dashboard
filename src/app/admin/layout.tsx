@@ -186,6 +186,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Orders", href: "/admin/orders", icon: ClipboardList },
     { name: "Customers", href: "/admin/customers", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
+    { name: "Live Chat", href: "/admin/chats", icon: MessageSquare },
     { name: "Reviews", href: "/admin/reviews", icon: Star },
     { name: "Wishlist", href: "/admin/wishlist", icon: Heart },
     { name: "Partners", href: "/admin/partners", icon: Handshake },
