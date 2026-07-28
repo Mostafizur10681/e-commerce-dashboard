@@ -241,7 +241,8 @@ export default function FAQCategoriesPage() {
           </div>
         ) : (
           <>
-            <div className="w-full overflow-x-auto">
+            {/* Desktop View (Table layout) */}
+            <div className="hidden lg:block w-full overflow-x-auto">
               <Table className="min-w-[800px] w-full">
                 <TableHeader className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-20 border-b border-gray-200 dark:border-slate-800">
                   <TableRow className="hover:bg-transparent">
@@ -317,6 +318,77 @@ export default function FAQCategoriesPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50/50 dark:bg-slate-900/10">
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  className="p-4 space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-xs text-gray-400 block">Name</span>
+                      <span className="font-bold text-gray-900 dark:text-white text-sm">{category.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-400 block">Slug</span>
+                      <span className="font-mono text-xs font-semibold text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">{category.slug}</span>
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 border-t border-b border-gray-100 dark:border-slate-800 flex justify-between items-center gap-4">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 block">Description</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
+                        {category.description || <span className="text-gray-300 dark:text-slate-700 italic">No description</span>}
+                      </span>
+                    </div>
+                    <div className="shrink-0">
+                      <Badge
+                        className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold border-transparent ${
+                          category.status === "Active"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-400"
+                        }`}
+                      >
+                        {category.status}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setViewingCategory(category)}
+                      className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 cursor-pointer"
+                      title="Quick View"
+                    >
+                      <Eye className="h-4.5 w-4.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => router.push(`/admin/faq-categories/edit/${category.id}`)}
+                      className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 cursor-pointer"
+                      title="Edit Category"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeletingCategory(category)}
+                      className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 cursor-pointer"
+                      title="Delete Category"
+                    >
+                      <Trash2 className="h-4.5 w-4.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination */}

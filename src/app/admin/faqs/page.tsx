@@ -140,7 +140,7 @@ export default function FaqsPage() {
   }
 
   return (
-    <div className="space-y-6 min-h-screen p-6 bg-gray-55 dark:bg-gray-950 transition-colors duration-300">
+    <div className="space-y-6 min-h-screen p-0 sm:p-2 lg:p-4 bg-gray-55 dark:bg-gray-950 transition-colors duration-300">
       {/* Breadcrumb & Header */}
       <div className="space-y-1">
         <Breadcrumbs
@@ -164,97 +164,99 @@ export default function FaqsPage() {
       </div>
 
       {/* Top Toolbar */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-205 dark:border-gray-800 p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 transition-all duration-300">
-        {/* LEFT: Search */}
-        <div className="relative flex-1 max-w-md w-full">
-          <Search className="absolute top-3 left-4 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search FAQ..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="pl-10 h-10 border-gray-250 dark:border-gray-800 dark:bg-gray-950/50 rounded-xl focus-visible:ring-[#16A34A]"
-          />
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-205 dark:border-gray-800 p-4 flex flex-col gap-4 transition-all duration-300">
+        {/* Top Row: Search & Add button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md w-full">
+            <Search className="absolute top-3 left-4 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search FAQ..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10 h-10 border-gray-250 dark:border-gray-800 dark:bg-gray-950/50 rounded-xl focus-visible:ring-[#16A34A]"
+            />
+          </div>
+          <Button
+            onClick={() => router.push("/admin/faqs/add")}
+            className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-medium shadow-sm transition-all duration-200 cursor-pointer border-transparent self-start sm:self-auto shrink-0 animate-in fade-in"
+          >
+            <Plus className="h-4.5 w-4.5" />
+            Add FAQ
+          </Button>
         </div>
 
-        {/* CENTER: Status, Category, Sort & Reset */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status:</span>
+        {/* Bottom Row: Status, Category, Sort & Reset */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3.5 border-t border-gray-100 dark:border-gray-800/60 items-end">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Status</span>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-750 dark:text-gray-300 cursor-pointer"
+              className="h-10 border border-gray-300 dark:border-gray-800 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] cursor-pointer w-full transition-colors duration-200"
             >
-              <option value="All">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="All" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">All Statuses</option>
+              <option value="active" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Active</option>
+              <option value="inactive" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Inactive</option>
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category:</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Category</span>
             <select
               value={categoryFilter}
               onChange={(e) => {
                 setCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-750 dark:text-gray-300 cursor-pointer"
+              className="h-10 border border-gray-300 dark:border-gray-800 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] cursor-pointer w-full transition-colors duration-200"
             >
-              <option value="All">All Categories</option>
-              <option value="Orders">Orders</option>
-              <option value="Shipping">Shipping</option>
-              <option value="Returns & Refunds">Returns & Refunds</option>
-              <option value="Payments">Payments</option>
-              <option value="Accounts">Accounts</option>
-              <option value="Products">Products</option>
-              <option value="General Questions">General Questions</option>
+              <option value="All" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">All Categories</option>
+              <option value="Orders" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Orders</option>
+              <option value="Shipping" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Shipping</option>
+              <option value="Returns & Refunds" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Returns & Refunds</option>
+              <option value="Payments" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Payments</option>
+              <option value="Accounts" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Accounts</option>
+              <option value="Products" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Products</option>
+              <option value="General Questions" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">General Questions</option>
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sort by:</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Sort by</span>
             <select
               value={sortFilter}
               onChange={(e) => {
                 setSortFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-955 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-750 dark:text-gray-300 cursor-pointer"
+              className="h-10 border border-gray-300 dark:border-gray-800 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] cursor-pointer w-full transition-colors duration-200"
             >
-              <option value="display_asc">Display Order (Asc)</option>
-              <option value="display_desc">Display Order (Desc)</option>
-              <option value="question_asc">Question A-Z</option>
-              <option value="newest">Newest First</option>
+              <option value="display_asc" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Display Order (Asc)</option>
+              <option value="display_desc" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Display Order (Desc)</option>
+              <option value="question_asc" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Question A-Z</option>
+              <option value="newest" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Newest First</option>
             </select>
           </div>
 
           {(searchTerm || statusFilter !== "All" || categoryFilter !== "All" || sortFilter !== "display_asc") && (
-            <Button
-              variant="ghost"
-              onClick={handleResetFilters}
-              className="h-10 rounded-xl px-3 flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors border border-dashed border-gray-300 dark:border-gray-800 cursor-pointer"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset
-            </Button>
+            <div className="sm:col-span-3 flex justify-start pt-1">
+              <Button
+                variant="ghost"
+                onClick={handleResetFilters}
+                className="h-9 rounded-xl px-3 flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors border border-dashed border-gray-300 dark:border-gray-800 cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset Filters
+              </Button>
+            </div>
           )}
         </div>
-
-        {/* RIGHT: Add FAQ button */}
-        <Button
-          onClick={() => router.push("/admin/faqs/add")}
-          className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-medium shadow-sm transition-all duration-200 xl:self-auto self-start cursor-pointer border-transparent"
-        >
-          <Plus className="h-4.5 w-4.5" />
-          Add FAQ
-        </Button>
       </div>
 
       {/* FAQ Data Display Card */}
@@ -284,9 +286,9 @@ export default function FaqsPage() {
         ) : (
           <>
             {/* Desktop View (Table layout) */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-850">
+            <div className="hidden lg:block overflow-x-auto">
+              <Table className="w-full min-w-[800px]">
+                <TableHeader className="bg-gray-105 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-850">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="font-semibold text-gray-900 dark:text-white pl-6 py-4">Question</TableHead>
                     <TableHead className="font-semibold text-gray-900 dark:text-white py-4 w-[160px]">Category</TableHead>
@@ -308,8 +310,10 @@ export default function FaqsPage() {
                         className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-all duration-200"
                       >
                         {/* Question */}
-                        <TableCell className="pl-6 py-4 font-bold text-gray-900 dark:text-white text-sm max-w-xs truncate">
-                          {faq.question}
+                        <TableCell className="pl-6 py-4 font-bold text-gray-900 dark:text-white text-sm">
+                          <div className="max-w-[220px] truncate" title={faq.question}>
+                            {faq.question}
+                          </div>
                         </TableCell>
 
                         {/* Category */}
@@ -320,8 +324,10 @@ export default function FaqsPage() {
                         </TableCell>
 
                         {/* Answer Preview */}
-                        <TableCell className="py-4 text-gray-500 dark:text-gray-400 text-xs max-w-xs truncate">
-                          {answerPreview}
+                        <TableCell className="py-4 text-gray-500 dark:text-gray-400 text-xs">
+                          <div className="max-w-[280px] truncate" title={faq.answer}>
+                            {answerPreview}
+                          </div>
                         </TableCell>
 
                         {/* Display Order */}
@@ -342,7 +348,7 @@ export default function FaqsPage() {
                         </TableCell>
 
                         {/* Created Date */}
-                        <TableCell className="text-gray-500 dark:text-gray-400 text-xs py-4">
+                        <TableCell className="text-gray-505 dark:text-gray-400 text-xs py-4">
                           {faq.createdAt ? (
                             <div className="flex items-center gap-1.5 font-mono">
                               <Calendar className="h-3.5 w-3.5 text-gray-400" />
@@ -392,15 +398,15 @@ export default function FaqsPage() {
               </Table>
             </div>
 
-            {/* Mobile View (Card layout) */}
-            <div className="block md:hidden divide-y divide-gray-200 dark:divide-gray-850">
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
               {faqs.map((faq) => {
                 const status = faq.status || "active";
                 const isActive = status.toLowerCase() === "active";
                 return (
                   <div
                     key={faq.id}
-                    className="p-4 space-y-4 hover:bg-gray-55/30 dark:hover:bg-gray-800/30 transition-all duration-200"
+                    className="p-4 space-y-4 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>

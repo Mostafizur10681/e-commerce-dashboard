@@ -401,8 +401,9 @@ export default function PaymentStatusPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <Table>
+            {/* Desktop View (Table layout) */}
+            <div className="hidden lg:block overflow-x-auto">
+              <Table className="w-full min-w-[800px]">
                 <TableHeader className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-20 border-b border-gray-200 dark:border-slate-800">
                   <TableRow>
                     <TableHead className="py-4 pl-6 font-semibold w-1/4">Name</TableHead>
@@ -441,7 +442,7 @@ export default function PaymentStatusPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleOpenView(item)}
-                          className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                          className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-750 dark:text-slate-400 dark:hover:text-slate-200"
                           title="View Details"
                         >
                           <Eye className="h-4 w-4" />
@@ -459,7 +460,7 @@ export default function PaymentStatusPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleOpenDelete(item)}
-                          className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400"
+                          className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-955/20 text-red-600 hover:text-red-750 dark:text-red-500 dark:hover:text-red-400"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -469,6 +470,73 @@ export default function PaymentStatusPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
+              {paymentStatuses.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-xs text-gray-400 block">Name</span>
+                      <span className="font-bold text-gray-900 dark:text-white text-sm">{item.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-400 block">Slug</span>
+                      <span className="font-mono text-xs font-semibold text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">{item.slug}</span>
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 border-t border-b border-gray-100 dark:border-slate-850 flex justify-between items-center gap-4">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs text-gray-450 dark:text-gray-500 block">Description</span>
+                      <span className="text-xs text-gray-650 dark:text-gray-300 line-clamp-2">
+                        {item.description || <span className="text-gray-400 italic">No description</span>}
+                      </span>
+                    </div>
+                    <div
+                      onClick={() => toggleStatus(item)}
+                      className="cursor-pointer select-none shrink-0"
+                      title="Click to toggle status"
+                    >
+                      {getStatusBadge(item.status)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenView(item)}
+                      className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-750 dark:text-slate-400 dark:hover:text-slate-200"
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenEdit(item)}
+                      className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-green-600 hover:text-green-700 dark:text-green-550 dark:hover:text-green-400"
+                      title="Edit"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenDelete(item)}
+                      className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 hover:text-red-750 dark:text-red-550 dark:hover:text-red-400"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination */}

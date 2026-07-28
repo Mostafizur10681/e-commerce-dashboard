@@ -60,6 +60,7 @@ export async function GET(request: Request) {
         email: u.email,
         role: u.role === "admin" ? "Admin" : "Customer",
         status: u.status,
+        created_at: u.created_at || "",
       }));
     }
 
@@ -77,6 +78,15 @@ export async function GET(request: Request) {
     if (role !== "All") {
       all = all.filter((u) => u.role.toLowerCase() === role.toLowerCase());
     }
+
+    // Sort by registration date (created_at) descending
+    all.sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (dateA !== dateB) return dateB - dateA;
+      // Fallback to id descending
+      return Number(b.id) - Number(a.id);
+    });
 
     return NextResponse.json(all, { headers: CORS_HEADERS });
   } catch (error) {

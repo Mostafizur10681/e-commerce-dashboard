@@ -286,7 +286,7 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="space-y-6 min-h-screen p-6 bg-gray-55 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="space-y-6 min-h-screen p-0 sm:p-2 lg:p-4 bg-gray-55 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
       {/* Header section with Breadcrumbs */}
       <div className="space-y-1">
         <Breadcrumbs
@@ -409,8 +409,8 @@ export default function CustomersPage() {
         ) : (
           <>
             {/* Desktop View Table Layout */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
+            <div className="hidden lg:block w-full overflow-x-auto">
+              <Table className="min-w-[900px] w-full">
                 <TableHeader className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-20 border-b border-gray-200 dark:border-slate-800">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-[50px] pl-6 py-4">
@@ -447,7 +447,7 @@ export default function CustomersPage() {
                             className="h-4 w-4 rounded border-gray-300 dark:border-slate-700 text-green-600 dark:text-green-500 focus:ring-green-500 cursor-pointer"
                           />
                         </TableCell>
-                        <TableCell className="font-bold text-gray-500 dark:text-slate-500 text-xs py-4">
+                        <TableCell className="font-bold text-gray-505 dark:text-slate-500 text-xs py-4">
                           {customer.id.toUpperCase()}
                         </TableCell>
                         <TableCell className="py-4 font-semibold text-gray-900 dark:text-slate-100 text-sm">
@@ -462,7 +462,7 @@ export default function CustomersPage() {
                             <span>{customer.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="py-4 text-gray-600 dark:text-slate-300 text-sm">
+                        <TableCell className="py-4 text-gray-650 dark:text-slate-300 text-sm">
                           {customer.email}
                         </TableCell>
                         <TableCell className="py-4 text-gray-600 dark:text-slate-300 text-sm font-medium">
@@ -493,7 +493,7 @@ export default function CustomersPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => setQuickViewCustomer(customer)}
-                              className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors duration-200 cursor-pointer"
+                              className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-505 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors duration-200 cursor-pointer"
                               title="Quick View Details"
                             >
                               <Eye className="h-4.5 w-4.5" />
@@ -502,7 +502,7 @@ export default function CustomersPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors duration-200 cursor-pointer"
+                                className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-955/20 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors duration-200 cursor-pointer"
                                 title="Edit Customer"
                               >
                                 <Edit2 className="h-4 w-4" />
@@ -512,7 +512,7 @@ export default function CustomersPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => setDeletingCustomer(customer)}
-                              className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 transition-colors duration-200 cursor-pointer"
+                              className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-955/20 text-red-505 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 transition-colors duration-200 cursor-pointer"
                               title="Delete Customer"
                             >
                               <Trash2 className="h-4.5 w-4.5" />
@@ -526,16 +526,19 @@ export default function CustomersPage() {
               </Table>
             </div>
 
-            {/* Mobile View Card Grid Layout */}
-            <div className="block md:hidden divide-y divide-gray-250 dark:divide-slate-800 bg-white dark:bg-slate-900">
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
               {customers.map((customer) => {
                 const isActive = customer.status !== "Inactive";
                 return (
-                  <div key={customer.id} className="p-4 space-y-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-all duration-200">
+                  <div
+                    key={customer.id}
+                    className="p-4 space-y-4 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl hover:shadow-md transition-all duration-200"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {customer.profilePic ? (
-                          <img src={customer.profilePic} alt={customer.name} className="h-8 w-8 rounded-full object-cover border border-gray-200 dark:border-slate-700" />
+                          <img src={customer.profilePic} alt={customer.name} className="h-8 w-8 rounded-full object-cover border border-gray-205 dark:border-slate-700" />
                         ) : (
                           <div className="h-8 w-8 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50">
                             {customer.name.charAt(0).toUpperCase()}
@@ -556,10 +559,10 @@ export default function CustomersPage() {
                       </Badge>
                     </div>
 
-                    <div className="p-3 bg-gray-50/50 dark:bg-slate-950/30 rounded-xl border border-gray-100 dark:border-slate-800 space-y-2 text-xs text-gray-500 dark:text-slate-400 leading-relaxed">
-                      <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-gray-405 dark:text-slate-500" /> {customer.email}</p>
-                      <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-gray-405 dark:text-slate-500" /> {customer.phone}</p>
-                      <div className="flex justify-between pt-1 font-semibold text-gray-900 dark:text-slate-200 border-t border-gray-100 dark:border-slate-800 mt-1">
+                    <div className="p-3 bg-gray-55/50 dark:bg-slate-955/30 rounded-xl border border-gray-100 dark:border-slate-800 space-y-2 text-xs text-gray-500 dark:text-slate-400 leading-relaxed">
+                      <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-gray-400 dark:text-slate-500" /> {customer.email}</p>
+                      <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-gray-400 dark:text-slate-500" /> {customer.phone}</p>
+                      <div className="flex justify-between pt-1 font-semibold text-gray-905 dark:text-slate-200 border-t border-gray-100 dark:border-slate-800 mt-1">
                         <span>Orders Count: {customer.ordersCount}</span>
                         <span>Joined: {customer.joinedDate}</span>
                       </div>
@@ -570,7 +573,7 @@ export default function CustomersPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setQuickViewCustomer(customer)}
-                        className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-405 dark:hover:text-slate-200 cursor-pointer transition-colors duration-200"
+                        className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 cursor-pointer transition-colors duration-200"
                       >
                         <Eye className="h-4.5 w-4.5" />
                       </Button>
@@ -578,7 +581,7 @@ export default function CustomersPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-405 dark:hover:text-green-300 cursor-pointer transition-colors duration-200"
+                          className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-605 hover:text-green-700 dark:text-slate-400 dark:hover:text-green-400 cursor-pointer transition-colors duration-200"
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -587,7 +590,7 @@ export default function CustomersPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeletingCustomer(customer)}
-                        className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 hover:text-red-750 dark:text-red-405 dark:hover:text-red-500 cursor-pointer transition-colors duration-200"
+                        className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-505 hover:text-red-700 dark:text-slate-400 dark:hover:text-red-400 cursor-pointer transition-colors duration-200"
                       >
                         <Trash2 className="h-4.5 w-4.5" />
                       </Button>

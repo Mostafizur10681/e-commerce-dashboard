@@ -101,7 +101,7 @@ export default function OrdersPage() {
       });
       if (!res.ok) throw new Error("Failed to fetch orders");
       const data = await res.json();
-      
+
       // The Laravel success wrapper makes the actual array nested at data.data.data
       let fetchedOrders = data.data?.data || data.data || [];
       if (!Array.isArray(fetchedOrders)) {
@@ -113,7 +113,7 @@ export default function OrdersPage() {
         fetchedOrders = fetchedOrders.filter((o: Order) => o.status.toLowerCase() === statusFilter.toLowerCase());
       }
       if (searchTerm) {
-        fetchedOrders = fetchedOrders.filter((o: Order) => 
+        fetchedOrders = fetchedOrders.filter((o: Order) =>
           o.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
           o.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           o.customer_phone.includes(searchTerm)
@@ -139,7 +139,7 @@ export default function OrdersPage() {
 
   // Handle re-fetch on filter change without relying on API search if it's client side
   useEffect(() => {
-      if (mounted) fetchOrders();
+    if (mounted) fetchOrders();
   }, [searchTerm, statusFilter]);
 
 
@@ -150,17 +150,17 @@ export default function OrdersPage() {
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "PUT",
         headers: {
-            "Content-Type": "application/json",
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
         body: JSON.stringify({ status: newStatus })
       });
       if (!res.ok) throw new Error("Failed to update status");
-      
+
       toast(`Order status updated to ${newStatus}`, "success");
       setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
       fetchOrders();
-    } catch(err) {
+    } catch (err) {
       toast("Failed to update order status", "error");
     } finally {
       setUpdatingStatus(false);
@@ -177,7 +177,7 @@ export default function OrdersPage() {
   }
 
   const getStatusBadge = (status: string) => {
-    switch(status.toLowerCase()) {
+    switch (status.toLowerCase()) {
       case 'completed':
       case 'delivered':
         return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-transparent font-bold capitalize">{status}</Badge>;
@@ -196,7 +196,7 @@ export default function OrdersPage() {
   };
 
   const getPaymentStatusBadge = (status: string) => {
-    switch(status?.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'paid':
         return <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-transparent font-bold"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
       case 'failed':
@@ -256,9 +256,9 @@ export default function OrdersPage() {
       <div className="bg-white dark:bg-slate-905 rounded-2xl border border-gray-200 dark:border-slate-800 overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-8 space-y-4">
-             <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />
-             <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />
-             <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />
           </div>
         ) : orders.length === 0 ? (
           <div className="p-16 text-center max-w-sm mx-auto">
@@ -270,9 +270,10 @@ export default function OrdersPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-20 border-b border-gray-200 dark:border-slate-800">
+            {/* Desktop View (Table layout) */}
+            <div className="hidden lg:block overflow-x-auto">
+              <Table className="w-full min-w-[900px]">
+                <TableHeader className="bg-gray-55 dark:bg-slate-800 sticky top-0 z-20 border-b border-gray-200 dark:border-slate-800">
                   <TableRow>
                     <TableHead className="py-4 pl-6 font-semibold">Order ID</TableHead>
                     <TableHead className="py-4 font-semibold">Customer</TableHead>
@@ -338,6 +339,69 @@ export default function OrdersPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="p-4 space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-xs text-gray-400 block">Order ID</span>
+                      <span className="font-bold text-gray-900 dark:text-white text-sm">{order.order_number}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-400 block">{new Date(order.created_at).toLocaleDateString()}</span>
+                      <span className="font-bold text-green-600 dark:text-green-400 text-sm">৳{Number(order.total).toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 border-t border-b border-gray-100 dark:border-slate-850 flex justify-between gap-4">
+                    <div>
+                      <span className="text-xs text-gray-450 dark:text-gray-500 block">Customer</span>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{order.customer_name}</span>
+                      <span className="text-xs text-gray-500 block">{order.customer_phone}</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5 items-end justify-center">
+                      {getStatusBadge(order.status)}
+                      {getPaymentStatusBadge(order.payment_status)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => router.push(`/admin/orders/${order.id}`)}
+                      className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-750 dark:text-slate-400 dark:hover:text-slate-200"
+                      title="View Details"
+                    >
+                      <Eye className="h-4.5 w-4.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => router.push(`/admin/orders/invoice/${order.id}`)}
+                      className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400"
+                      title="View Invoice"
+                    >
+                      <FileText className="h-4.5 w-4.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => router.push(`/admin/orders/${order.id}/edit`)}
+                      className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400"
+                      title="Edit Order"
+                    >
+                      <Edit className="h-4.5 w-4.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </>
         )}

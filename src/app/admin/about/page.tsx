@@ -219,7 +219,7 @@ export default function AboutSettingsPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-5xl p-0 sm:p-2 lg:p-4">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -248,16 +248,16 @@ export default function AboutSettingsPage() {
       </div>
 
       {/* Tabs Layout */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Tab Selection Navigation */}
-        <div className="w-full md:w-64 shrink-0 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800">
+        <div className="w-full lg:w-64 shrink-0 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-3 lg:pb-0 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap md:w-full ${activeTab === tab.id
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap lg:w-full ${activeTab === tab.id
                   ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
@@ -283,7 +283,7 @@ export default function AboutSettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Hero Section Badge</label>
                       <Input
@@ -324,7 +324,7 @@ export default function AboutSettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Story Section Badge</label>
                       <Input
@@ -333,7 +333,7 @@ export default function AboutSettingsPage() {
                         placeholder="e.g. Our Story"
                       />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="space-y-2 sm:col-span-2">
                       <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Story Title / Headline</label>
                       <Input
                         value={formData.story_title || ""}
@@ -343,7 +343,7 @@ export default function AboutSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Description Paragraph 1</label>
                       <Textarea
@@ -525,7 +525,7 @@ export default function AboutSettingsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Section Badge</label>
                         <Input
@@ -661,7 +661,7 @@ export default function AboutSettingsPage() {
                     <CardDescription>Header texts and tags for the operational staff page segment.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Section Badge</label>
                         <Input
@@ -691,7 +691,7 @@ export default function AboutSettingsPage() {
                 </Card>
 
                 {/* Team members grid list */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {(formData.team || []).map((member: any, idx: number) => (
                     <Card key={idx} className="border-slate-200 dark:border-slate-850 shadow-sm flex flex-col justify-between">
                       <CardHeader className="pb-3 text-center">

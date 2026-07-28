@@ -149,7 +149,7 @@ export default function AdminWishlistPage() {
   }
 
   return (
-    <div className="space-y-6 min-h-screen p-6 bg-gray-55 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="space-y-6 min-h-screen p-0 sm:p-2 lg:p-4 bg-gray-55 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
       {/* Breadcrumb Header */}
       <div className="space-y-1">
         <Breadcrumbs items={[{ label: "Dashboard", href: "/admin/dashboard" }, { label: "Wishlists" }]} />
@@ -203,8 +203,9 @@ export default function AdminWishlistPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <Table>
+            {/* Desktop View (Table layout) */}
+            <div className="hidden lg:block w-full overflow-x-auto">
+              <Table className="min-w-[800px] w-full">
                 <TableHeader className="bg-gray-50 dark:bg-slate-800/80 border-b border-gray-200 dark:border-slate-800">
                   <TableRow>
                     <TableHead className="py-4 pl-6 font-semibold w-[350px]">Product</TableHead>
@@ -215,7 +216,7 @@ export default function AdminWishlistPage() {
                 </TableHeader>
                 <TableBody>
                   {items.map((item) => (
-                    <TableRow key={item.id} className="border-b border-gray-200 dark:border-slate-800 hover:bg-gray-50/50 dark:hover:bg-slate-800/30">
+                    <TableRow key={item.id} className="border-b border-gray-200 dark:border-slate-800 hover:bg-gray-55 dark:hover:bg-slate-800/30">
                       <TableCell className="py-4 pl-6">
                         <div className="flex items-center gap-3">
                           {item.productImage ? (
@@ -225,7 +226,7 @@ export default function AdminWishlistPage() {
                               className="h-10 w-10 object-cover rounded-lg border border-gray-150 dark:border-slate-800"
                             />
                           ) : (
-                            <div className="h-10 w-10 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-gray-400">
+                            <div className="h-10 w-10 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-gray-405">
                               <Package className="h-5 w-5" />
                             </div>
                           )}
@@ -272,6 +273,72 @@ export default function AdminWishlistPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 space-y-4 bg-white dark:bg-slate-900 border border-gray-205 dark:border-slate-800 rounded-2xl hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    {item.productImage ? (
+                      <img
+                        src={formatImage(item.productImage)}
+                        alt={item.productName}
+                        className="h-12 w-12 object-cover rounded-lg border border-gray-150 dark:border-slate-800 shrink-0"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 shrink-0">
+                        <Package className="h-5 w-5" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-gray-900 dark:text-white truncate text-sm">{item.productName}</h4>
+                      <span className="text-xs text-green-600 dark:text-green-400 font-bold block mt-0.5">
+                        ৳{item.productPrice.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 border-t border-b border-gray-100 dark:border-slate-850 flex flex-col gap-1 text-xs">
+                    <div>
+                      <span className="text-gray-400 block text-[10px] uppercase font-semibold">Customer</span>
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">
+                        {item.customerName}
+                      </span>
+                      <span className="text-gray-500 block text-[11px] font-mono mt-0.5">{item.customerEmail}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-gray-450 dark:text-slate-500">
+                      Added: {item.createdAt}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setViewingItem(item)}
+                        className="h-8.5 w-8.5 rounded-xl text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20 cursor-pointer"
+                        title="View Details"
+                      >
+                        <Eye className="h-4.5 w-4.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenDelete(item)}
+                        className="h-8.5 w-8.5 rounded-xl text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-955/20 cursor-pointer"
+                        title="Remove item"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pagination Controls */}

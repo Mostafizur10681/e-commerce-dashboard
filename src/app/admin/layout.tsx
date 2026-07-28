@@ -187,17 +187,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Customers", href: "/admin/customers", icon: Users },
     { name: "Messages", href: "/admin/messages", icon: MessageSquare },
     { name: "Reviews", href: "/admin/reviews", icon: Star },
-    { name: "Wishlist",         href: "/admin/wishlist",         icon: Heart },
+    { name: "Wishlist", href: "/admin/wishlist", icon: Heart },
     { name: "Partners", href: "/admin/partners", icon: Handshake },
     { name: "FAQs", href: "/admin/faqs", icon: HelpCircle },
     { name: "FAQ Categories", href: "/admin/faq-categories", icon: Layers },
     { name: "Subscriptions", href: "/admin/subscriptions", icon: Package },
     { name: "Banners", href: "/admin/banners", icon: ImageIcon },
-    { name: "About Page",       href: "/admin/about",           icon: Info },
-    { name: "Contact Page",     href: "/admin/contact-settings",icon: PhoneCall },
-    { name: "Footer Settings",  href: "/admin/footer-settings", icon: LayoutTemplate },
-    { name: "Users",            href: "/admin/users",            icon: UserCog },
-    { name: "Settings",         href: "/admin/settings",         icon: SettingsIcon },
+    { name: "About Page", href: "/admin/about", icon: Info },
+    { name: "Contact Page", href: "/admin/contact-settings", icon: PhoneCall },
+    { name: "Footer Settings", href: "/admin/footer-settings", icon: LayoutTemplate },
+    { name: "Users", href: "/admin/users", icon: UserCog },
+    { name: "Settings", href: "/admin/settings", icon: SettingsIcon },
   ];
 
   const handleLogout = () => {
@@ -208,9 +208,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleMessageClick = async (msg: any) => {
     if (msg.status === "Unread") {
       try {
+        const token = localStorage.getItem("df_access_token");
         await fetch(`/api/messages/${msg.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          },
           body: JSON.stringify({ status: "Read" }),
         });
         useStore.getState().updateMessageStatus(msg.id, "Read");
@@ -224,9 +228,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleMarkAllAsRead = async () => {
     try {
+      const token = localStorage.getItem("df_access_token");
       const res = await fetch("/api/messages", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ action: "markAllAsRead" }),
       });
       if (res.ok) {
@@ -236,6 +244,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch (err) {
       console.error("Failed to mark all messages as read:", err);
     }
+  };
+
+  const handleOrderClick = async (order: any) => {
+    if (order.status.toLowerCase() === "pending") {
+      try {
+        const token = localStorage.getItem("df_access_token");
+        const res = await fetch(`/api/orders/${order.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ status: "processing" }),
+        });
+        if (res.ok) {
+          mutate("/api/orders?page=1&per_page=20");
+        }
+      } catch (err) {
+        console.error("Failed to update order status on click:", err);
+      }
+    }
+    router.push(`/admin/orders/${order.id}`);
   };
 
   useEffect(() => {
@@ -1030,8 +1060,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           onClick={() => handleMessageClick(msg)}
                           className={cn(
                             "p-3.5 cursor-pointer flex flex-col transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0",
-                            isUnread 
-                              ? "bg-blue-50/20 dark:bg-blue-950/10 border-l-[4px] border-l-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/15 pl-2.5" 
+                            isUnread
+                              ? "bg-blue-50/20 dark:bg-blue-950/10 border-l-[4px] border-l-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/15 pl-2.5"
                               : "hover:bg-gray-55 dark:hover:bg-gray-800/40 border-l-[4px] border-l-transparent pl-2.5"
                           )}
                         >
@@ -1043,7 +1073,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                               {getRelativeTime(msg.createdAt)}
                             </span>
                           </div>
-                          
+
                           <p className={cn("text-xs truncate mt-1 text-gray-905 dark:text-white", isUnread ? "font-bold text-gray-900 dark:text-white" : "font-medium text-gray-700 dark:text-gray-300")}>
                             {msg.subject}
                           </p>
@@ -1053,9 +1083,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           </p>
 
                           <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-gray-100/50 dark:border-gray-800/30">
-                            <span className={cn("text-[9px] px-2 py-0.5 rounded-full font-bold", 
-                              isUnread 
-                                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400" 
+                            <span className={cn("text-[9px] px-2 py-0.5 rounded-full font-bold",
+                              isUnread
+                                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
                                 : "bg-gray-150 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
                             )}>
                               {isUnread ? "Unread" : "Read"}
@@ -1129,7 +1159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         className="p-3.5 flex flex-col transition-colors border-b border-gray-100 dark:border-gray-800 hover:bg-gray-55 dark:hover:bg-gray-800/40 border-l-[4px] border-l-amber-500 pl-2.5"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span 
+                          <span
                             onClick={() => router.push(`/admin/users`)}
                             className="text-xs font-bold truncate text-gray-900 dark:text-white hover:underline cursor-pointer"
                           >
@@ -1208,9 +1238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     pendingOrders.map((order: any) => (
                       <div
                         key={`order-${order.id}`}
-                        onClick={() => {
-                          router.push(`/admin/orders/${order.id}`);
-                        }}
+                        onClick={() => handleOrderClick(order)}
                         className="p-3.5 cursor-pointer flex flex-col transition-colors border-b border-gray-100 dark:border-gray-800 hover:bg-gray-55 dark:hover:bg-gray-800/40 border-l-[4px] border-l-transparent pl-2.5"
                       >
                         <div className="flex items-center justify-between gap-2">

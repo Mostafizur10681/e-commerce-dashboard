@@ -326,7 +326,7 @@ export default function ReviewsPage() {
   };
 
   return (
-    <div className="space-y-6 min-h-screen p-6 overflow-x-hidden bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="space-y-6 min-h-screen p-0 sm:p-2 lg:p-4 overflow-x-hidden bg-white dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
       {/* Header section with Breadcrumbs */}
       <div className="space-y-1">
         <Breadcrumbs
@@ -407,9 +407,9 @@ export default function ReviewsPage() {
 
       {/* Advanced Filter Toolbar */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-4 transition-all duration-200 space-y-4 shadow-sm dark:shadow-none">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
           {/* Search bar */}
-          <div className="relative md:col-span-6">
+          <div className="relative sm:col-span-2 lg:col-span-6">
             <Search className="absolute top-3 left-4 h-4 w-4 text-gray-405 dark:text-slate-500" />
             <Input
               placeholder="Search by reviewer, product, or keywords..."
@@ -423,7 +423,7 @@ export default function ReviewsPage() {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-650 dark:text-slate-500 dark:hover:text-slate-350"
+                className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-655 dark:text-slate-500 dark:hover:text-slate-350"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -437,7 +437,7 @@ export default function ReviewsPage() {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 md:col-span-3 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer transition-colors duration-200"
+            className="h-10 col-span-1 lg:col-span-3 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer transition-colors duration-200"
           >
             <option value="All">All Moderation Statuses</option>
             <option value="Approved">Approved</option>
@@ -452,7 +452,7 @@ export default function ReviewsPage() {
               setRatingFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 md:col-span-3 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer transition-colors duration-200"
+            className="h-10 col-span-1 lg:col-span-3 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer transition-colors duration-200"
           >
             <option value="All">All Star Ratings</option>
             <option value="5">5 Stars ⭐⭐⭐⭐⭐</option>
@@ -636,8 +636,8 @@ export default function ReviewsPage() {
               </Table>
             </div>
 
-            {/* Mobile View Card Layout */}
-            <div className="block lg:hidden divide-y divide-gray-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
               {reviews.map((review) => {
                 const statusClass =
                   review.status === "Approved"
@@ -647,7 +647,7 @@ export default function ReviewsPage() {
                       : "bg-amber-100 text-amber-705 dark:bg-amber-900/30 dark:text-amber-400";
 
                 return (
-                  <div key={review.id} className="p-4 space-y-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-all duration-200">
+                  <div key={review.id} className="p-4 space-y-4 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl hover:shadow-md transition-all duration-200">
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="font-bold text-gray-900 dark:text-slate-100 text-sm">{review.customerName}</h4>

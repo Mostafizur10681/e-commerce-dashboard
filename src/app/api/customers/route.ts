@@ -38,6 +38,7 @@ export async function GET(request: Request) {
       joinedDate: (item.created_at || "").split("T")[0],
       status: item.status === "active" ? "Active" : "Inactive",
       profilePic: item.profile_pic ? (item.profile_pic.startsWith("http") || item.profile_pic.startsWith("data:image/") ? item.profile_pic : `http://127.0.0.1:8000/storage/${item.profile_pic}`) : null,
+      created_at: item.created_at || "",
     }));
 
     if (q) {
@@ -53,6 +54,14 @@ export async function GET(request: Request) {
     if (status !== "All") {
       all = all.filter((c: any) => c.status === status);
     }
+
+    // Sort by registration date descending
+    all.sort((a: any, b: any) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (dateA !== dateB) return dateB - dateA;
+      return Number(b.id) - Number(a.id);
+    });
 
     return NextResponse.json({
       customers: all,

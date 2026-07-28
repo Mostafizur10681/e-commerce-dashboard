@@ -215,16 +215,16 @@ export default function AttributesPage() {
         </div>
 
         {/* CENTER: Status & Sort */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status:</span>
+        <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 cursor-pointer"
+              className="h-10 w-full sm:w-36 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 cursor-pointer"
             >
               <option value="All">All</option>
               <option value="Active">Active</option>
@@ -232,14 +232,14 @@ export default function AttributesPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sort by:</span>
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) => {
                 setSortBy(e.target.value);
               }}
-              className="h-10 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 cursor-pointer"
+              className="h-10 w-full sm:w-36 border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-200 cursor-pointer"
             >
               <option value="Newest">Newest</option>
               <option value="Oldest">Oldest</option>
@@ -252,7 +252,7 @@ export default function AttributesPage() {
         {/* RIGHT: Add Button */}
         <Button
           onClick={() => router.push("/admin/attributes/add")}
-          className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-medium shadow-sm transition-all duration-200 lg:self-auto self-start cursor-pointer"
+          className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-5 flex items-center gap-2 font-medium shadow-sm transition-all duration-200 lg:self-auto self-stretch sm:self-start justify-center cursor-pointer"
         >
           <Plus className="h-4.5 w-4.5" />
           Add Attribute
@@ -306,8 +306,8 @@ export default function AttributesPage() {
         ) : (
           <>
             {/* Desktop View (Table layout) */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
+            <div className="hidden lg:block overflow-x-auto">
+              <Table className="w-full min-w-[800px]">
                 <TableHeader className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-850">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-[80px] font-semibold text-gray-900 dark:text-white pl-6 py-4">Image</TableHead>
@@ -324,7 +324,7 @@ export default function AttributesPage() {
                     return (
                       <TableRow
                         key={attribute.id}
-                        className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+                        className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-55 dark:hover:bg-gray-800 transition-all duration-200"
                       >
                         {/* Image */}
                         <TableCell className="pl-6 py-4">
@@ -367,8 +367,8 @@ export default function AttributesPage() {
                         <TableCell className="py-4">
                           <Badge
                             className={`rounded-full px-2.5 py-0.5 text-xs font-semibold select-none border border-transparent ${isActive
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
                               }`}
                           >
                             {attribute.status || "Active"}
@@ -426,31 +426,31 @@ export default function AttributesPage() {
               </Table>
             </div>
 
-            {/* Mobile View (Card layout) */}
-            <div className="block md:hidden divide-y divide-gray-200 dark:divide-gray-850">
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50/50 dark:bg-gray-950/20">
               {sortedAttributes.map((attribute) => {
                 const isActive = attribute.status !== "Inactive";
                 return (
                   <div
                     key={attribute.id}
-                    className="p-4 space-y-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+                    className="p-4 space-y-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all duration-200"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 text-lg border border-green-100/50 dark:border-green-900/30">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 text-lg border border-green-100/50 dark:border-green-900/30">
                           {getAttributeIcon(attribute.name)}
                         </div>
-                        <div>
-                          <h4 className="font-bold text-gray-900 dark:text-white text-sm">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-gray-900 dark:text-white text-sm truncate">
                             {attribute.name}
                           </h4>
-                          <span className="text-xs text-gray-450 dark:text-gray-500 block">ID: {attribute.id}</span>
+                          <span className="text-xs text-gray-450 dark:text-gray-500 block truncate">ID: {attribute.id}</span>
                         </div>
                       </div>
                       <Badge
                         className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border border-transparent ${isActive
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                          : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
                           }`}
                       >
                         {attribute.status || "Active"}
@@ -539,8 +539,8 @@ export default function AttributesPage() {
                         variant={currentPage === pageNo ? "default" : "outline"}
                         size="sm"
                         className={`h-9 w-9 rounded-xl cursor-pointer font-semibold transition-all ${currentPage === pageNo
-                            ? "bg-[#16A34A] hover:bg-green-700 text-white border-transparent"
-                            : "border-gray-200 dark:border-gray-850 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                          ? "bg-[#16A34A] hover:bg-green-700 text-white border-transparent"
+                          : "border-gray-200 dark:border-gray-850 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                           }`}
                         onClick={() => handlePageChange(pageNo)}
                       >
@@ -592,8 +592,8 @@ export default function AttributesPage() {
                 <span className="text-xs font-semibold text-gray-500 uppercase">Status</span>
                 <Badge
                   className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border border-transparent ${viewingAttribute.status !== "Inactive"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
                     }`}
                 >
                   {viewingAttribute.status || "Active"}

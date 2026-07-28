@@ -331,11 +331,11 @@ export default function ProductsPage() {
 
         </div>
       </div>
-
       {/* PRODUCT TABLE CONTAINER */}
       <div className="rounded-2xl border border-gray-150 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden transition-all duration-300">
-        <div className="overflow-x-auto">
-          <Table className="w-full">
+        {/* Desktop View (Table layout) */}
+        <div className="hidden lg:block overflow-x-auto">
+          <Table className="w-full min-w-[900px]">
             <TableHeader className="bg-gray-50/70 dark:bg-gray-850/40 sticky top-0 border-b border-gray-150 dark:border-gray-800">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-6 text-gray-700 dark:text-gray-300 font-bold text-xs h-12">Product</TableHead>
@@ -361,7 +361,6 @@ export default function ProductsPage() {
               ) : (
                 sortedProducts.map((product) => {
                   const isOutOfStock = product.stock <= 0;
-                  // Generate stable mocks for display matching UI rules
                   const productCode = product.id.toUpperCase();
                   const salesMock = `${(product.price > 100 ? 124 : 290) + product.name.length} sold`;
                   const dateMock = "2026-04-18";
@@ -376,7 +375,6 @@ export default function ProductsPage() {
                         <div className="flex items-center gap-3">
                           <div className="h-11 w-11 rounded-xl overflow-hidden shrink-0 bg-gray-50 dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700">
                             {product.images?.[0] ? (
-                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={formatImage(product.images[0])}
                                 alt={product.name}
@@ -392,7 +390,7 @@ export default function ProductsPage() {
                             <span className="font-semibold text-sm text-gray-900 dark:text-white leading-tight">
                               {product.name}
                             </span>
-                            <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+                            <span className="text-[10px] text-gray-450 mt-0.5">
                               {product.category}
                             </span>
                           </div>
@@ -400,7 +398,7 @@ export default function ProductsPage() {
                       </TableCell>
 
                       {/* Product ID */}
-                      <TableCell className="font-mono text-[11px] text-gray-500 dark:text-gray-400 font-semibold">
+                      <TableCell className="font-mono text-[11px] text-gray-505 dark:text-gray-400 font-semibold">
                         {productCode}
                       </TableCell>
 
@@ -414,7 +412,7 @@ export default function ProductsPage() {
                         {product.stock}
                       </TableCell>
 
-                      {/* Sale (mock sales metric) */}
+                      {/* Sale */}
                       <TableCell className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                         {salesMock}
                       </TableCell>
@@ -432,32 +430,32 @@ export default function ProductsPage() {
                         )}
                       </TableCell>
 
-                      {/* Start Date (mock) */}
+                      {/* Start Date */}
                       <TableCell className="text-xs text-gray-500 dark:text-gray-400">
                         {dateMock}
                       </TableCell>
 
-                      {/* Action buttons (rounded-full, hover animations) */}
+                      {/* Action buttons */}
                       <TableCell className="text-right pr-6">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => router.push(`/admin/products/view/${product.id}`)}
                             title="View Details"
-                            className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-[#16A34A] bg-gray-50 hover:bg-[#16A34A]/10 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-[#16A34A] dark:hover:bg-[#16A34A]/10 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-[#16A34A]/20"
+                            className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-[#16A34A] bg-gray-55 hover:bg-[#16A34A]/10 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-[#16A34A] dark:hover:bg-[#16A34A]/10 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-[#16A34A]/20"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => router.push(`/admin/products/edit/${product.id}`)}
                             title="Edit Product"
-                            className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/20 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-blue-500/20"
+                            className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-blue-600 bg-gray-55 hover:bg-blue-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-955/20 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-blue-500/20"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => setDeletingProduct(product)}
                             title="Delete Product"
-                            className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-red-600 bg-gray-50 hover:bg-red-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-950/20 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-red-500/20"
+                            className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-red-650 bg-gray-55 hover:bg-red-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-955/20 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer border border-transparent hover:border-red-500/20"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -469,6 +467,104 @@ export default function ProductsPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile/Tablet View (Card grid layout) */}
+        <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50/50 dark:bg-slate-900/10">
+          {sortedProducts.length === 0 ? (
+            <div className="col-span-full py-10 text-center text-gray-400">
+              <Package className="h-10 w-10 stroke-1 text-gray-300 mx-auto mb-2" />
+              <span className="text-xs">No products found matching filters</span>
+            </div>
+          ) : (
+            sortedProducts.map((product) => {
+              const isOutOfStock = product.stock <= 0;
+              const productCode = product.id.toUpperCase();
+              const salesMock = `${(product.price > 100 ? 124 : 290) + product.name.length} sold`;
+
+              return (
+                <div
+                  key={product.id}
+                  className="p-4 space-y-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-205 dark:border-gray-800 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-xl overflow-hidden shrink-0 bg-gray-50 dark:bg-gray-800 border border-gray-200/50 dark:border-gray-700">
+                      {product.images?.[0] ? (
+                        <img
+                          src={formatImage(product.images[0])}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-[9px] text-gray-400 font-mono">
+                          IMG
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-gray-900 dark:text-white text-sm truncate">
+                        {product.name}
+                      </h4>
+                      <span className="text-xs text-gray-450 dark:text-gray-505 block truncate">{product.category}</span>
+                    </div>
+                  </div>
+
+                  <div className="py-2.5 border-t border-b border-gray-100 dark:border-slate-850 flex justify-between gap-4 text-xs">
+                    <div>
+                      <span className="text-gray-400 block">Product ID</span>
+                      <span className="font-mono font-semibold text-gray-900 dark:text-white">{productCode}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-gray-400 block">Price</span>
+                      <span className="font-bold text-gray-900 dark:text-white">${product.price.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs">
+                    <div>
+                      <span className="text-gray-400 block">Stock / Sales</span>
+                      <span className="font-semibold text-gray-850 dark:text-gray-300">{product.stock} left / {salesMock}</span>
+                    </div>
+                    <div>
+                      {isOutOfStock ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/40 text-red-750 dark:text-red-400 border border-red-200 dark:border-red-900/50">
+                          Out Of Stock
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-950/40 text-green-750 dark:text-green-400 border border-green-200 dark:border-green-900/50">
+                          In Stock
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-850">
+                    <button
+                      onClick={() => router.push(`/admin/products/view/${product.id}`)}
+                      title="View Details"
+                      className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-[#16A34A] bg-gray-50 hover:bg-[#16A34A]/10 dark:bg-gray-850 dark:text-gray-400 dark:hover:text-[#16A34A] dark:hover:bg-[#16A34A]/10 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => router.push(`/admin/products/edit/${product.id}`)}
+                      title="Edit Product"
+                      className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 dark:bg-gray-850 dark:text-gray-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/20 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingProduct(product)}
+                      title="Delete Product"
+                      className="h-8 w-8 flex items-center justify-center text-gray-550 hover:text-red-650 bg-gray-50 hover:bg-red-50 dark:bg-gray-850 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-950/20 rounded-full transition-all duration-300 hover:scale-[1.05] cursor-pointer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* PAGINATION SECTION */}

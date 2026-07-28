@@ -157,7 +157,7 @@ export default function CategoriesPage() {
         </div>
         <Button
           onClick={() => router.push("/admin/categories/add")}
-          className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-4 flex items-center gap-1.5 font-medium shadow-sm shadow-[#16A34A]/10 transition-colors cursor-pointer self-start sm:self-auto"
+          className="bg-[#16A34A] hover:bg-green-700 text-white rounded-xl h-10 px-4 flex items-center justify-center gap-1.5 font-medium shadow-sm shadow-[#16A34A]/10 transition-colors cursor-pointer self-stretch sm:self-auto"
         >
           <Plus className="h-4.5 w-4.5" />
           Add Category
@@ -167,7 +167,7 @@ export default function CategoriesPage() {
       {/* Filter and Control Bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs">
         {/* Search */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-md w-full">
           <Search className="absolute top-2.5 left-3.5 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search categories by name, ID or description..."
@@ -181,15 +181,15 @@ export default function CategoriesPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</label>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</label>
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-10 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300"
+            className="h-10 w-full sm:w-44 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300 cursor-pointer"
           >
             <option value="All">All Statuses</option>
             <option value="Active">Active</option>
@@ -251,127 +251,209 @@ export default function CategoriesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-gray-200 dark:border-gray-800 hover:bg-transparent">
-                  <TableHead className="w-[120px] font-semibold text-gray-650 dark:text-gray-400 pl-6 py-4">ID</TableHead>
-                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Category Name</TableHead>
-                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Description</TableHead>
-                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Status</TableHead>
-                  <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Created Date</TableHead>
-                  <TableHead className="w-[140px] text-right font-semibold text-gray-650 dark:text-gray-400 pr-6 py-4">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {categories.map((category) => {
-                  const isActive = category.status !== "Inactive";
-                  return (
-                    <TableRow
-                      key={category.id}
-                      className="border-b border-gray-250 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors"
-                    >
-                      {/* ID */}
-                      <TableCell className="font-medium text-gray-500 dark:text-gray-450 text-xs pl-6 py-3.5">
-                        {category.id}
-                      </TableCell>
+          <>
+            {/* Desktop View (Table layout) */}
+            <div className="hidden lg:block overflow-x-auto">
+              <Table className="w-full min-w-[800px]">
+                <TableHeader>
+                  <TableRow className="border-b border-gray-200 dark:border-gray-800 hover:bg-transparent">
+                    <TableHead className="w-[120px] font-semibold text-gray-650 dark:text-gray-400 pl-6 py-4">ID</TableHead>
+                    <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Category Name</TableHead>
+                    <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Description</TableHead>
+                    <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Created Date</TableHead>
+                    <TableHead className="w-[140px] text-right font-semibold text-gray-650 dark:text-gray-400 pr-6 py-4">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories.map((category) => {
+                    const isActive = category.status !== "Inactive";
+                    return (
+                      <TableRow
+                        key={category.id}
+                        className="border-b border-gray-250 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors"
+                      >
+                        {/* ID */}
+                        <TableCell className="font-medium text-gray-500 dark:text-gray-450 text-xs pl-6 py-3.5">
+                          {category.id}
+                        </TableCell>
 
-                      {/* Image + Name */}
-                      <TableCell className="py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="relative h-11 w-11 shrink-0 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200/60 dark:border-gray-850 flex items-center justify-center">
-                            {category.imageUrl ? (
-                              <img
-                                src={category.imageUrl}
-                                alt={category.name}
-                                className="h-full w-full object-cover"
-                                onError={(e) => {
-                                  // fallback image
-                                  (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e2e8f0'/><text x='50' y='55' font-family='sans-serif' font-size='30' fill='%2364748b' text-anchor='middle'>📂</text></svg>";
-                                }}
-                              />
-                            ) : (
-                              <ImageIcon className="h-5 w-5 text-gray-400" />
-                            )}
+                        {/* Image + Name */}
+                        <TableCell className="py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="relative h-11 w-11 shrink-0 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200/60 dark:border-gray-850 flex items-center justify-center">
+                              {category.imageUrl ? (
+                                <img
+                                  src={category.imageUrl}
+                                  alt={category.name}
+                                  className="h-full w-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e2e8f0'/><text x='50' y='55' font-family='sans-serif' font-size='30' fill='%2364748b' text-anchor='middle'>📂</text></svg>";
+                                  }}
+                                />
+                              ) : (
+                                <ImageIcon className="h-5 w-5 text-gray-400" />
+                              )}
+                            </div>
+                            <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                              {category.name}
+                            </span>
                           </div>
-                          <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                        </TableCell>
+
+                        {/* Description */}
+                        <TableCell className="max-w-[240px] truncate text-gray-550 dark:text-gray-400 text-sm py-3.5">
+                          {category.description || <span className="text-gray-400 italic">No description</span>}
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell className="py-3.5">
+                          <Badge
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold select-none border border-transparent ${
+                              isActive
+                                ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400"
+                                : "bg-gray-100 text-gray-650 dark:bg-gray-800 dark:text-gray-400"
+                            }`}
+                          >
+                            {category.status || "Active"}
+                          </Badge>
+                        </TableCell>
+
+                        {/* Created Date */}
+                        <TableCell className="text-gray-550 dark:text-gray-400 text-sm py-3.5">
+                          {category.createdDate ? (
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                              <span>{category.createdDate}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+
+                        {/* Actions */}
+                        <TableCell className="text-right pr-6 py-3.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[#16A34A] dark:hover:text-[#16A34A] hover:bg-gray-55 dark:hover:bg-gray-800 cursor-pointer"
+                              onClick={() => setViewingCategory(category)}
+                              title="View Details"
+                            >
+                              <Eye className="h-4.5 w-4.5" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-55 dark:hover:bg-gray-800 cursor-pointer"
+                              onClick={() => router.push(`/admin/categories/edit/${category.id}`)}
+                              title="Edit Category"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-red-650 dark:hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                              onClick={() => setDeletingCategory(category)}
+                              title="Delete Category"
+                            >
+                              <Trash2 className="h-4.5 w-4.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50/50 dark:bg-gray-950/20">
+              {categories.map((category) => {
+                const isActive = category.status !== "Inactive";
+                return (
+                  <div
+                    key={category.id}
+                    className="p-4 space-y-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="relative h-11 w-11 shrink-0 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-800 border border-gray-200/60 dark:border-gray-850 flex items-center justify-center">
+                          {category.imageUrl ? (
+                            <img
+                              src={category.imageUrl}
+                              alt={category.name}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23e2e8f0'/><text x='50' y='55' font-family='sans-serif' font-size='30' fill='%2364748b' text-anchor='middle'>📂</text></svg>";
+                              }}
+                            />
+                          ) : (
+                            <ImageIcon className="h-5 w-5 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-gray-900 dark:text-white text-sm truncate">
                             {category.name}
-                          </span>
+                          </h4>
+                          <span className="text-xs text-gray-450 dark:text-gray-500 block truncate">ID: {category.id}</span>
                         </div>
-                      </TableCell>
+                      </div>
+                      <Badge
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border border-transparent ${
+                          isActive
+                            ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400"
+                            : "bg-gray-100 text-gray-650 dark:bg-gray-800 dark:text-gray-400"
+                        }`}
+                      >
+                        {category.status || "Active"}
+                      </Badge>
+                    </div>
 
-                      {/* Description */}
-                      <TableCell className="max-w-[240px] truncate text-gray-550 dark:text-gray-400 text-sm py-3.5">
-                        {category.description || <span className="text-gray-400 italic">No description</span>}
-                      </TableCell>
+                    <div className="text-xs text-gray-550 dark:text-gray-400 line-clamp-2 min-h-[32px] leading-relaxed">
+                      {category.description || <span className="text-gray-450 italic">No description</span>}
+                    </div>
 
-                      {/* Status */}
-                      <TableCell className="py-3.5">
-                        <Badge
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold select-none border border-transparent ${
-                            isActive
-                              ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400"
-                              : "bg-gray-100 text-gray-650 dark:bg-gray-800 dark:text-gray-400"
-                          }`}
-                        >
-                          {category.status || "Active"}
-                        </Badge>
-                      </TableCell>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 pt-1">
+                      <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                      <span>{category.createdDate || "No Date"}</span>
+                    </div>
 
-                      {/* Created Date */}
-                      <TableCell className="text-gray-550 dark:text-gray-400 text-sm py-3.5">
-                        {category.createdDate ? (
-                          <div className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                            <span>{category.createdDate}</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-
-                      {/* Actions */}
-                      <TableCell className="text-right pr-6 py-3.5">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* View details */}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[#16A34A] dark:hover:text-[#16A34A] hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                            onClick={() => setViewingCategory(category)}
-                            title="View Details"
-                          >
-                            <Eye className="h-4.5 w-4.5" />
-                          </Button>
-
-                          {/* Edit */}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                            onClick={() => router.push(`/admin/categories/edit/${category.id}`)}
-                            title="Edit Category"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-
-                          {/* Delete */}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-red-650 dark:hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
-                            onClick={() => setDeletingCategory(category)}
-                            title="Delete Category"
-                          >
-                            <Trash2 className="h-4.5 w-4.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-850">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[#16A34A] dark:hover:text-[#16A34A] hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                        onClick={() => setViewingCategory(category)}
+                      >
+                        <Eye className="h-4.5 w-4.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                        onClick={() => router.push(`/admin/categories/edit/${category.id}`)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-red-650 dark:hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                        onClick={() => setDeletingCategory(category)}
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Pagination Panel */}
             {totalPages > 1 && (
@@ -421,13 +503,13 @@ export default function CategoriesPage() {
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
       {/* Category Details Modal */}
       <Dialog open={!!viewingCategory} onOpenChange={(open) => !open && setViewingCategory(null)}>
-        <DialogContent className="max-w-md rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
+        <DialogContent className="max-w-md w-[calc(100vw-32px)] sm:w-full rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
           <DialogHeader className="mb-4">
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Layers className="h-5 w-5 text-[#16A34A]" />
@@ -532,7 +614,7 @@ export default function CategoriesPage() {
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={!!deletingCategory} onOpenChange={(open) => !open && setDeletingCategory(null)}>
-        <AlertDialogContent className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
+        <AlertDialogContent className="max-w-md w-[calc(100vw-32px)] sm:w-full rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-6">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-lg font-bold">Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-gray-500 dark:text-gray-400">

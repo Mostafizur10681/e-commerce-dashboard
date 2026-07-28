@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import {
   Search,
   X,
@@ -26,6 +26,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useSearchParams } from "next/navigation";
 import { mutate } from "swr";
 
 import { ContactMessage } from "@/types";
@@ -77,8 +78,10 @@ const editMessageSchema = z.object({
 
 type EditMessageFormValues = z.infer<typeof editMessageSchema>;
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const messageIdParam = searchParams ? searchParams.get("id") : null;
   const [mounted, setMounted] = useState(false);
 
   // Data Fetching & Filters States
@@ -110,6 +113,28 @@ export default function MessagesPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted && messageIdParam) {
+      const fetchSingleMessage = async () => {
+        try {
+          const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+          const headers: any = {};
+          if (token) headers["Authorization"] = `Bearer ${token}`;
+          const res = await fetch(`/api/messages/${messageIdParam}`, { headers });
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              setQuickViewMessage(json.data);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch single message for redirect", err);
+        }
+      };
+      fetchSingleMessage();
+    }
+  }, [mounted, messageIdParam]);
 
   // Fetch messages from API
   const fetchMessages = async () => {
@@ -343,15 +368,15 @@ export default function MessagesPage() {
 
   if (!mounted) {
     return (
-      <div className="h-96 flex flex-col items-center justify-center gap-3 bg-gray-50 dark:bg-slate-955 transition-colors duration-200">
-        <Loader2 className="h-8 w-8 animate-spin text-green-500" />
-        <span className="text-sm font-semibold text-gray-500 dark:text-slate-400">Loading Messages...</span>
+      <div className="h-96 flex flex-col items-center justify-center gap-3 bg-background transition-colors duration-200">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-sm font-semibold text-muted-foreground">Loading Messages...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 min-h-screen p-6 bg-gray-55 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="space-y-6 min-h-screen p-0 sm:p-2 lg:p-4 bg-background text-foreground transition-colors duration-200">
       {/* Header section with Breadcrumbs */}
       <div className="space-y-1">
         <Breadcrumbs
@@ -362,11 +387,11 @@ export default function MessagesPage() {
         />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-2">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100 flex items-center gap-2">
-              <MessageSquare className="h-6 w-6 text-green-600 dark:text-green-500" />
+            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <MessageSquare className="h-6 w-6 text-primary" />
               Messages
             </h1>
-            <p className="text-sm text-gray-505 dark:text-slate-400">
+            <p className="text-sm text-muted-foreground">
               Manage customer inquiries and contact requests
             </p>
           </div>
@@ -374,7 +399,7 @@ export default function MessagesPage() {
             <Button
               variant="outline"
               onClick={handleExportCSV}
-              className="h-10 rounded-xl px-4 flex items-center gap-2 font-medium cursor-pointer border-gray-250 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors duration-200 shadow-sm"
+              className="h-10 rounded-xl px-4 flex items-center gap-2 font-medium cursor-pointer border-border bg-card text-card-foreground hover:bg-muted/50 transition-colors duration-200 shadow-sm"
             >
               <Download className="h-4.5 w-4.5" />
               Export
@@ -386,41 +411,41 @@ export default function MessagesPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Messages */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border-l-4 border-l-green-600 border-y border-r border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 transition-all duration-200">
+        <div className="bg-card rounded-2xl border-l-4 border-l-green-600 border-t border-r border-b border-border shadow-sm p-5 transition-all duration-200">
           <div className="flex justify-between items-start">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Total Messages
             </p>
-            <div className="h-8 w-8 rounded-lg bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 flex items-center justify-center">
               <MessageSquare className="h-4.5 w-4.5" />
             </div>
           </div>
           <div className="text-2xl font-bold tracking-tight mt-3">{stats.total}</div>
-          <p className="text-xs text-slate-500 dark:text-slate-405 mt-1.5 font-medium">
+          <p className="text-xs text-muted-foreground mt-1.5 font-medium">
             Cumulative received inquiries
           </p>
         </div>
 
         {/* Unread Messages */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border-l-4 border-l-blue-500 border-y border-r border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 transition-all duration-200">
+        <div className="bg-card rounded-2xl border-l-4 border-l-blue-500 border-t border-r border-b border-border shadow-sm p-5 transition-all duration-200">
           <div className="flex justify-between items-start">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Unread Messages
             </p>
-            <div className="h-8 w-8 rounded-lg bg-blue-550/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-405 flex items-center justify-center">
               <Mail className="h-4.5 w-4.5" />
             </div>
           </div>
           <div className="text-2xl font-bold tracking-tight mt-3">{stats.unread}</div>
-          <p className="text-xs text-slate-500 dark:text-slate-405 mt-1.5 font-medium">
+          <p className="text-xs text-muted-foreground mt-1.5 font-medium">
             Pending response
           </p>
         </div>
 
         {/* Read Messages */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border-l-4 border-l-green-500 border-y border-r border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 transition-all duration-200">
+        <div className="bg-card rounded-2xl border-l-4 border-l-green-500 border-t border-r border-b border-border shadow-sm p-5 transition-all duration-200">
           <div className="flex justify-between items-start">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Read Messages
             </p>
             <div className="h-8 w-8 rounded-lg bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 flex items-center justify-center">
@@ -428,15 +453,15 @@ export default function MessagesPage() {
             </div>
           </div>
           <div className="text-2xl font-bold tracking-tight mt-3">{stats.read}</div>
-          <p className="text-xs text-slate-500 dark:text-slate-405 mt-1.5 font-medium">
+          <p className="text-xs text-muted-foreground mt-1.5 font-medium">
             Inquiries already reviewed
           </p>
         </div>
 
         {/* Today's Messages */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border-l-4 border-l-amber-500 border-y border-r border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none p-5 transition-all duration-200">
+        <div className="bg-card rounded-2xl border-l-4 border-l-amber-500 border-t border-r border-b border-border shadow-sm p-5 transition-all duration-200">
           <div className="flex justify-between items-start">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Today's Messages
             </p>
             <div className="h-8 w-8 rounded-lg bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -444,18 +469,18 @@ export default function MessagesPage() {
             </div>
           </div>
           <div className="text-2xl font-bold tracking-tight mt-3">{stats.today}</div>
-          <p className="text-xs text-slate-500 dark:text-slate-405 mt-1.5 font-medium">
+          <p className="text-xs text-muted-foreground mt-1.5 font-medium">
             Received today
           </p>
         </div>
       </div>
 
       {/* Filter Toolbar Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-none border border-gray-200 dark:border-slate-800 p-4 transition-all duration-200 space-y-4">
+      <div className="bg-card rounded-2xl shadow-sm border border-border p-4 transition-all duration-200 space-y-4">
         <div className="flex flex-col xl:flex-row xl:items-center gap-3">
           {/* Search bar */}
           <div className="relative flex-1">
-            <Search className="absolute top-3 left-4 h-4 w-4 text-gray-400 dark:text-slate-500" />
+            <Search className="absolute top-3 left-4 h-4 w-4 text-muted-foreground/70" />
             <Input
               placeholder="Search by customer name, email, or subject..."
               value={searchTerm}
@@ -463,12 +488,12 @@ export default function MessagesPage() {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-10 h-10 border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500"
+              className="pl-10 h-10 border-border bg-background text-foreground rounded-xl focus-visible:ring-primary"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3.5 top-3 text-gray-400 hover:text-gray-650 dark:text-slate-500 dark:hover:text-slate-300"
+                className="absolute right-3.5 top-3 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -483,7 +508,7 @@ export default function MessagesPage() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 w-full sm:w-44 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer transition-colors duration-200"
+              className="h-10 w-full sm:w-44 border border-border bg-background text-foreground rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-primary cursor-pointer transition-colors duration-200"
             >
               <option value="All">All Statuses</option>
               <option value="Unread">Unread</option>
@@ -498,7 +523,7 @@ export default function MessagesPage() {
                 setDateFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 w-full sm:w-44 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer transition-colors duration-200"
+              className="h-10 w-full sm:w-44 border border-border bg-background text-foreground rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-primary cursor-pointer transition-colors duration-200"
             >
               <option value="All Time">All Time</option>
               <option value="Today">Today</option>
@@ -514,7 +539,7 @@ export default function MessagesPage() {
                 setSortFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 w-full sm:w-44 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer transition-colors duration-200"
+              className="h-10 w-full sm:w-44 border border-border bg-background text-foreground rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-primary cursor-pointer transition-colors duration-200"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -527,7 +552,7 @@ export default function MessagesPage() {
               <Button
                 variant="ghost"
                 onClick={handleResetFilters}
-                className="h-10 rounded-xl px-3 flex items-center gap-1.5 text-xs text-gray-505 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors border border-dashed border-gray-300 dark:border-slate-800"
+                className="h-10 rounded-xl px-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Reset
@@ -538,50 +563,50 @@ export default function MessagesPage() {
       </div>
 
       {/* Messages Data Table Wrapper Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm dark:shadow-none overflow-hidden transition-all duration-200">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden transition-all duration-200">
         {loading ? (
           /* Loading Skeleton State */
-          <div className="p-8 space-y-4">
+          <div className="p-8 space-y-4 bg-card">
             <div className="flex items-center gap-3">
-              <div className="h-6 w-6 rounded bg-gray-200 dark:bg-slate-800 animate-pulse" />
-              <div className="h-6 w-32 bg-gray-200 dark:bg-slate-800 animate-pulse rounded" />
+              <div className="h-6 w-6 rounded bg-muted animate-pulse" />
+              <div className="h-6 w-32 bg-muted animate-pulse rounded" />
             </div>
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="grid grid-cols-7 gap-4 py-3 border-b border-gray-100 dark:border-slate-800">
-                <div className="h-10 bg-gray-100 dark:bg-slate-800/60 rounded-xl animate-pulse col-span-2" />
-                <div className="h-10 bg-gray-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-                <div className="h-10 bg-gray-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-                <div className="h-10 bg-gray-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-                <div className="h-10 bg-gray-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />
-                <div className="h-10 bg-gray-100 dark:bg-slate-805/60 rounded-xl animate-pulse" />
+              <div key={i} className="grid grid-cols-7 gap-4 py-3 border-b border-border">
+                <div className="h-10 bg-muted/60 rounded-xl animate-pulse col-span-2" />
+                <div className="h-10 bg-muted/60 rounded-xl animate-pulse" />
+                <div className="h-10 bg-muted/60 rounded-xl animate-pulse" />
+                <div className="h-10 bg-muted/60 rounded-xl animate-pulse" />
+                <div className="h-10 bg-muted/60 rounded-xl animate-pulse" />
+                <div className="h-10 bg-muted/60 rounded-xl animate-pulse" />
               </div>
             ))}
           </div>
         ) : messages.length === 0 ? (
           /* Empty State */
-          <div className="p-16 text-center max-w-sm mx-auto">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 dark:bg-slate-805 text-green-550 mb-4 border border-transparent dark:border-slate-700">
-              <Mail className="h-8 w-8 text-green-555" />
+          <div className="p-16 text-center max-w-sm mx-auto bg-card">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted text-primary mb-4 border border-border">
+              <Mail className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-101 mb-1">No Messages Found</h3>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
+            <h3 className="text-lg font-bold text-foreground mb-1">No Messages Found</h3>
+            <p className="text-sm text-muted-foreground mb-6">
               When users submit contact inquiries, they will appear here in chronological order.
             </p>
           </div>
         ) : (
           <>
             {/* Desktop View Table Layout */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-20 border-b border-gray-200 dark:border-slate-800">
+            <div className="hidden lg:block w-full overflow-x-auto bg-card">
+              <Table className="min-w-[900px] w-full">
+                <TableHeader className="bg-muted/40 sticky top-0 z-20 border-b border-border">
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="py-4 pl-6 font-semibold text-gray-900 dark:text-slate-100">Customer Name</TableHead>
-                    <TableHead className="py-4 font-semibold text-gray-900 dark:text-slate-105">Email Address</TableHead>
-                    <TableHead className="py-4 font-semibold text-gray-900 dark:text-slate-105">Subject</TableHead>
-                    <TableHead className="py-4 font-semibold text-gray-900 dark:text-slate-105">Message Preview</TableHead>
-                    <TableHead className="w-[120px] py-4 font-semibold text-gray-900 dark:text-slate-105">Status</TableHead>
-                    <TableHead className="py-4 font-semibold text-gray-900 dark:text-slate-105">Date</TableHead>
-                    <TableHead className="w-[150px] text-right pr-6 py-4 font-semibold text-gray-900 dark:text-slate-105">Actions</TableHead>
+                    <TableHead className="py-4 pl-6 font-semibold text-foreground">Customer Name</TableHead>
+                    <TableHead className="py-4 font-semibold text-foreground">Email Address</TableHead>
+                    <TableHead className="py-4 font-semibold text-foreground">Subject</TableHead>
+                    <TableHead className="py-4 font-semibold text-foreground">Message Preview</TableHead>
+                    <TableHead className="w-[120px] py-4 font-semibold text-foreground">Status</TableHead>
+                    <TableHead className="py-4 font-semibold text-foreground">Date</TableHead>
+                    <TableHead className="w-[150px] text-right pr-6 py-4 font-semibold text-foreground">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -590,26 +615,26 @@ export default function MessagesPage() {
                     return (
                       <TableRow
                         key={msg.id}
-                        className={`border-b border-gray-200 dark:border-slate-800 hover:bg-gray-55 dark:hover:bg-slate-800/60 transition-all duration-200 ${isUnread ? "bg-blue-50/10 dark:bg-blue-950/5" : ""}`}
+                        className={`border-b border-border hover:bg-muted/30 transition-all duration-200 ${isUnread ? "bg-blue-500/5 dark:bg-blue-500/10 border-l-[3px] border-l-blue-500 pl-5.5" : ""}`}
                       >
-                        <TableCell className="py-4 pl-6 font-semibold text-gray-900 dark:text-slate-100 text-sm">
+                        <TableCell className="py-4 pl-6 font-semibold text-foreground text-sm">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50 dark:border-green-900/30 shadow-xs">
                               {msg.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex flex-col">
-                              <span className={isUnread ? "font-extrabold" : "font-semibold"}>{msg.name}</span>
-                              <span className="text-xs text-gray-400 dark:text-slate-500 block md:hidden xl:block">{msg.email}</span>
+                              <span className={isUnread ? "font-extrabold text-foreground" : "font-semibold text-foreground"}>{msg.name}</span>
+                              <span className="text-xs text-muted-foreground block md:hidden xl:block">{msg.email}</span>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="py-4 text-gray-600 dark:text-slate-300 text-sm font-medium">
+                        <TableCell className="py-4 text-muted-foreground text-sm font-medium">
                           {msg.email}
                         </TableCell>
-                        <TableCell className={`py-4 text-sm ${isUnread ? "font-bold text-gray-900 dark:text-white" : "text-gray-700 dark:text-slate-350"}`}>
+                        <TableCell className={`py-4 text-sm ${isUnread ? "font-bold text-foreground" : "text-muted-foreground/80"}`}>
                           {msg.subject}
                         </TableCell>
-                        <TableCell className="py-4 text-gray-500 dark:text-slate-400 text-xs max-w-xs truncate">
+                        <TableCell className="py-4 text-muted-foreground/60 text-xs max-w-xs truncate">
                           {msg.message.length > 60 ? `${msg.message.substring(0, 60)}...` : msg.message}
                         </TableCell>
                         <TableCell className="py-4">
@@ -617,9 +642,9 @@ export default function MessagesPage() {
                             {msg.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-4 text-gray-505 dark:text-slate-400 text-xs font-mono">
+                        <TableCell className="py-4 text-muted-foreground text-xs font-mono">
                           <div className="flex items-center gap-1.5" title={msg.createdAt}>
-                            <Calendar className="h-3.5 w-3.5 text-gray-400 dark:text-slate-550" />
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground/60" />
                             {getRelativeTime(msg.createdAt)}
                           </div>
                         </TableCell>
@@ -629,7 +654,7 @@ export default function MessagesPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleOpenQuickView(msg)}
-                              className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors duration-200 cursor-pointer"
+                              className="w-9 h-9 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
                               title="Quick View Details"
                             >
                               <Eye className="h-4.5 w-4.5" />
@@ -638,10 +663,10 @@ export default function MessagesPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => {
-                                setEditingMessage(msg);
-                                setIsEditOpen(true);
-                              }}
-                              className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors duration-200 cursor-pointer"
+                                  setEditingMessage(msg);
+                                  setIsEditOpen(true);
+                                }}
+                              className="w-9 h-9 rounded-xl hover:bg-primary/10 text-primary hover:text-primary-700 transition-colors duration-200 cursor-pointer"
                               title="Edit/Annotate Message"
                             >
                               <Edit2 className="h-4 w-4" />
@@ -650,7 +675,7 @@ export default function MessagesPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => setDeletingMessage(msg)}
-                              className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500 transition-colors duration-200 cursor-pointer"
+                              className="w-9 h-9 rounded-xl hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors duration-200 cursor-pointer"
                               title="Delete Message"
                             >
                               <Trash2 className="h-4.5 w-4.5" />
@@ -664,20 +689,23 @@ export default function MessagesPage() {
               </Table>
             </div>
 
-            {/* Mobile View Card Grid Layout */}
-            <div className="block md:hidden divide-y divide-gray-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
               {messages.map((msg) => {
                 const isUnread = msg.status === "Unread";
                 return (
-                  <div key={msg.id} className={`p-4 space-y-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-all duration-200 ${isUnread ? "bg-blue-50/5 dark:bg-blue-950/5" : ""}`}>
+                  <div
+                    key={msg.id}
+                    className={`p-4 space-y-4 bg-card border border-border rounded-2xl hover:shadow-md transition-all duration-200 ${isUnread ? "bg-blue-500/5 dark:bg-blue-500/10 border-l-[3px] border-l-blue-500" : ""}`}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50">
                           {msg.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <h4 className={`text-sm text-gray-900 dark:text-slate-100 ${isUnread ? "font-extrabold" : "font-semibold"}`}>{msg.name}</h4>
-                          <span className="text-[10px] text-gray-400 dark:text-slate-500 block font-mono mt-0.5">{msg.id.toUpperCase()}</span>
+                          <h4 className={`text-sm text-foreground ${isUnread ? "font-extrabold" : "font-semibold"}`}>{msg.name}</h4>
+                          <span className="text-[10px] text-muted-foreground block font-mono mt-0.5">{msg.id.toUpperCase()}</span>
                         </div>
                       </div>
                       <Badge className={`rounded-full px-2 py-0.5 text-[9px] font-bold border-transparent ${getStatusBadgeColor(msg.status)}`}>
@@ -685,24 +713,24 @@ export default function MessagesPage() {
                       </Badge>
                     </div>
 
-                    <div className="p-3 bg-gray-50/50 dark:bg-slate-950/30 rounded-xl border border-gray-100 dark:border-slate-800 space-y-2 text-xs text-gray-500 dark:text-slate-400 leading-relaxed">
-                      <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-gray-400 dark:text-slate-500" /> {msg.email}</p>
-                      {msg.phone && <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-gray-400 dark:text-slate-500" /> {msg.phone}</p>}
-                      <p className={`font-semibold ${isUnread ? "text-gray-900 dark:text-white" : "text-gray-700 dark:text-slate-300"}`}>Subject: {msg.subject}</p>
-                      <p className="italic bg-white dark:bg-slate-900 p-2 rounded-lg border border-gray-100 dark:border-slate-800 mt-1 max-h-16 overflow-y-auto">
+                    <div className="p-3 bg-muted/40 rounded-xl border border-border space-y-2 text-xs text-muted-foreground leading-relaxed">
+                      <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-muted-foreground/60" /> {msg.email}</p>
+                      {msg.phone && <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-muted-foreground/60" /> {msg.phone}</p>}
+                      <p className={`font-semibold ${isUnread ? "text-foreground" : "text-muted-foreground"}`}>Subject: {msg.subject}</p>
+                      <p className="italic bg-card p-2 rounded-lg border border-border mt-1 max-h-16 overflow-y-auto">
                         {msg.message}
                       </p>
-                      <div className="flex justify-between pt-1 font-mono text-[10px] border-t border-gray-100 dark:border-slate-800 mt-1">
+                      <div className="flex justify-between pt-1 font-mono text-[10px] border-t border-border mt-1">
                         <span>Date: {getRelativeTime(msg.createdAt)}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-slate-800">
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleOpenQuickView(msg)}
-                        className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-205 transition-colors duration-200"
+                        className="w-9 h-9 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors duration-200 cursor-pointer"
                       >
                         <Eye className="h-4.5 w-4.5" />
                       </Button>
@@ -713,7 +741,7 @@ export default function MessagesPage() {
                           setEditingMessage(msg);
                           setIsEditOpen(true);
                         }}
-                        className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-405 dark:hover:text-green-300 transition-colors duration-200"
+                        className="w-9 h-9 rounded-xl hover:bg-primary/10 text-primary hover:text-primary-700 transition-colors duration-200 cursor-pointer"
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -721,7 +749,7 @@ export default function MessagesPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeletingMessage(msg)}
-                        className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 hover:text-red-750 dark:text-red-405 dark:hover:text-red-550 transition-colors duration-200"
+                        className="w-9 h-9 rounded-xl hover:bg-destructive/15 text-destructive hover:text-destructive transition-colors duration-200 cursor-pointer"
                       >
                         <Trash2 className="h-4.5 w-4.5" />
                       </Button>
@@ -733,17 +761,17 @@ export default function MessagesPage() {
 
             {/* Pagination Controls at Bottom */}
             {totalPages > 1 && (
-              <div className="p-4 border-t border-gray-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
-                <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">
-                  Showing Page <span className="font-bold text-gray-900 dark:text-slate-100">{currentPage}</span> of{" "}
-                  <span className="font-bold text-gray-900 dark:text-slate-105">{totalPages}</span> ({totalMessages} total)
+              <div className="p-4 border-t border-border flex items-center justify-between bg-card">
+                <span className="text-xs text-muted-foreground font-medium">
+                  Showing Page <span className="font-bold text-foreground">{currentPage}</span> of{" "}
+                  <span className="font-bold text-foreground">{totalPages}</span> ({totalMessages} total)
                 </span>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((prev) => prev - 1)}
-                    className="h-8.5 rounded-lg px-3 flex items-center gap-1 text-xs font-semibold border-gray-205 dark:border-slate-800 hover:bg-gray-55 dark:hover:bg-slate-800"
+                    className="h-8.5 rounded-lg px-3 flex items-center gap-1 text-xs font-semibold border-border hover:bg-muted text-foreground"
                   >
                     <ChevronLeft className="h-4 w-4" /> Previous
                   </Button>
@@ -751,7 +779,7 @@ export default function MessagesPage() {
                     variant="outline"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((prev) => prev + 1)}
-                    className="h-8.5 rounded-lg px-3 flex items-center gap-1 text-xs font-semibold border-gray-205 dark:border-slate-800 hover:bg-gray-55 dark:hover:bg-slate-800"
+                    className="h-8.5 rounded-lg px-3 flex items-center gap-1 text-xs font-semibold border-border hover:bg-muted text-foreground"
                   >
                     Next <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -764,19 +792,19 @@ export default function MessagesPage() {
 
       {/* Message Quick View Modal */}
       <Dialog open={!!quickViewMessage} onOpenChange={(open) => !open && setQuickViewMessage(null)}>
-        <DialogContent className="max-w-lg bg-white dark:bg-slate-900 border border-gray-250 dark:border-slate-800 rounded-2xl p-6 shadow-xl dark:shadow-none transition-all duration-200 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg bg-card border border-border rounded-2xl p-6 shadow-xl dark:shadow-none transition-all duration-200 max-h-[90vh] overflow-y-auto">
           {quickViewMessage && (
             <div className="space-y-5 text-sm">
-              <DialogHeader className="border-b pb-4 border-gray-100 dark:border-slate-800">
+              <DialogHeader className="border-b pb-4 border-border">
                 <div className="flex items-center gap-3.5">
                   <div className="h-12 w-12 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-base flex items-center justify-center border border-green-100/50">
                     {quickViewMessage.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <DialogTitle className="text-lg font-bold text-gray-900 dark:text-slate-105">
+                    <DialogTitle className="text-lg font-bold text-foreground">
                       {quickViewMessage.name}
                     </DialogTitle>
-                    <DialogDescription className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+                    <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                       Customer Inquiry details
                     </DialogDescription>
                   </div>
@@ -784,61 +812,61 @@ export default function MessagesPage() {
               </DialogHeader>
 
               <div className="space-y-3.5 pt-1">
-                <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-2">
-                  <span className="text-gray-505 dark:text-slate-400">Message ID:</span>
-                  <span className="font-mono font-bold text-gray-905 dark:text-slate-100 text-xs">{quickViewMessage.id.toUpperCase()}</span>
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                  <span className="text-muted-foreground">Message ID:</span>
+                  <span className="font-mono font-bold text-foreground text-xs">{quickViewMessage.id.toUpperCase()}</span>
                 </div>
-                <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-2">
-                  <span className="text-gray-505 dark:text-slate-400 flex items-center gap-1"><Mail className="h-4 w-4 text-gray-400" /> Email:</span>
-                  <span className="font-semibold text-gray-905 dark:text-slate-100">{quickViewMessage.email}</span>
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                  <span className="text-muted-foreground flex items-center gap-1"><Mail className="h-4 w-4 text-muted-foreground/60" /> Email:</span>
+                  <span className="font-semibold text-foreground">{quickViewMessage.email}</span>
                 </div>
                 {quickViewMessage.phone && (
-                  <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-2">
-                    <span className="text-gray-505 dark:text-slate-400 flex items-center gap-1"><Phone className="h-4 w-4 text-gray-400" /> Phone:</span>
-                    <span className="font-semibold text-gray-905 dark:text-slate-100 font-mono text-xs">{quickViewMessage.phone}</span>
+                  <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                    <span className="text-muted-foreground flex items-center gap-1"><Phone className="h-4 w-4 text-muted-foreground/60" /> Phone:</span>
+                    <span className="font-semibold text-foreground font-mono text-xs">{quickViewMessage.phone}</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-2">
-                  <span className="text-gray-550 dark:text-slate-400 flex items-center gap-1"><Calendar className="h-4 w-4 text-gray-400" /> Received Date:</span>
-                  <span className="font-semibold text-gray-900 dark:text-slate-100" title={quickViewMessage.createdAt}>
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                  <span className="text-muted-foreground flex items-center gap-1"><Calendar className="h-4 w-4 text-muted-foreground/60" /> Received Date:</span>
+                  <span className="font-semibold text-foreground" title={quickViewMessage.createdAt}>
                     {new Date(quickViewMessage.createdAt).toLocaleString()}
                   </span>
                 </div>
-                <div className="flex items-center justify-between border-b border-gray-50 dark:border-slate-800/50 pb-2">
-                  <span className="text-gray-550 dark:text-slate-400">Status:</span>
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                  <span className="text-muted-foreground">Status:</span>
                   <Badge className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border-transparent ${getStatusBadgeColor(quickViewMessage.status)}`}>
                     {quickViewMessage.status}
                   </Badge>
                 </div>
                 
                 <div className="pb-1 pt-2 space-y-1">
-                  <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">Subject:</span>
-                  <p className="font-bold text-gray-900 dark:text-slate-100 text-sm leading-snug">
+                  <span className="text-muted-foreground flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">Subject:</span>
+                  <p className="font-bold text-foreground text-sm leading-snug">
                     {quickViewMessage.subject}
                   </p>
                 </div>
 
                 <div className="pb-1 pt-1 space-y-1">
-                  <span className="text-gray-500 dark:text-slate-400 flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">Message Details:</span>
-                  <div className="bg-gray-50 dark:bg-slate-950 p-4 rounded-xl text-xs text-gray-800 dark:text-slate-300 border border-gray-150 dark:border-slate-800 leading-relaxed whitespace-pre-wrap">
+                  <span className="text-muted-foreground flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider">Message Details:</span>
+                  <div className="bg-muted/40 p-4 rounded-xl text-xs text-foreground border border-border leading-relaxed whitespace-pre-wrap">
                     {quickViewMessage.message}
                   </div>
                 </div>
 
                 {quickViewMessage.adminNote && (
                   <div className="pb-1 pt-2 space-y-1">
-                    <span className="text-gray-500 dark:text-slate-455 flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider"><FileText className="h-3.5 w-3.5 text-gray-400" /> Admin Notes:</span>
-                    <p className="bg-amber-50/30 dark:bg-amber-950/10 p-3 rounded-xl text-xs text-amber-800 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/20 italic leading-relaxed">
+                    <span className="text-muted-foreground flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider"><FileText className="h-3.5 w-3.5 text-muted-foreground/60" /> Admin Notes:</span>
+                    <p className="bg-amber-50/30 dark:bg-amber-955/15 p-3.5 rounded-xl text-xs text-amber-800 dark:text-amber-300 border border-amber-200/50 dark:border-amber-900/30 italic leading-relaxed">
                       {quickViewMessage.adminNote}
                     </p>
                   </div>
                 )}
               </div>
 
-              <DialogFooter className="pt-4 border-t border-gray-100 dark:border-slate-800">
+              <DialogFooter className="pt-4 border-t border-border">
                 <Button
                   onClick={() => setQuickViewMessage(null)}
-                  className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded-xl px-5 h-9.5 text-xs font-semibold cursor-pointer"
+                  className="bg-primary hover:bg-primary/95 text-white rounded-xl px-5 h-9.5 text-xs font-semibold cursor-pointer"
                 >
                   Close
                 </Button>
@@ -850,12 +878,12 @@ export default function MessagesPage() {
 
       {/* Message Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-md bg-white dark:bg-slate-900 border border-gray-250 dark:border-slate-800 rounded-2xl p-6 shadow-xl dark:shadow-none transition-all duration-200">
-          <DialogHeader className="border-b pb-4 border-gray-100 dark:border-slate-800">
-            <DialogTitle className="text-lg font-bold text-gray-900 dark:text-slate-105">
+        <DialogContent className="max-w-md bg-card border border-border rounded-2xl p-6 shadow-xl dark:shadow-none transition-all duration-200">
+          <DialogHeader className="border-b pb-4 border-border">
+            <DialogTitle className="text-lg font-bold text-foreground">
               Edit Message Annotations
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-550 dark:text-slate-400 mt-1">
+            <DialogDescription className="text-xs text-muted-foreground mt-1">
               Update the inquiry status or add internal admin notes below.
             </DialogDescription>
           </DialogHeader>
@@ -868,12 +896,12 @@ export default function MessagesPage() {
                 name="status"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-semibold text-gray-700 dark:text-slate-300">Message Status</FormLabel>
+                    <FormLabel className="text-xs font-semibold text-muted-foreground">Message Status</FormLabel>
                     <FormControl>
                       <select
                         value={field.value}
                         onChange={field.onChange}
-                        className="w-full h-10 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-green-500 cursor-pointer"
+                        className="w-full h-10 border border-border bg-background text-foreground rounded-xl px-3 text-sm outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                       >
                         <option value="Unread">Unread</option>
                         <option value="Read">Read</option>
@@ -891,12 +919,12 @@ export default function MessagesPage() {
                 name="adminNote"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-semibold text-gray-700 dark:text-slate-300">Admin Notes</FormLabel>
+                    <FormLabel className="text-xs font-semibold text-muted-foreground">Admin Notes</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Add annotations, follow-up remarks, or reply details..."
                         {...field}
-                        className="border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl focus-visible:ring-green-500 min-h-[100px] text-sm"
+                        className="border-border bg-background text-foreground rounded-xl focus-visible:ring-primary min-h-[100px] text-sm"
                       />
                     </FormControl>
                     <FormMessage />
@@ -909,13 +937,13 @@ export default function MessagesPage() {
                   variant="outline"
                   type="button"
                   onClick={() => setIsEditOpen(false)}
-                  className="rounded-xl h-10 px-5 cursor-pointer border-gray-300 dark:border-slate-700"
+                  className="rounded-xl h-10 px-5 cursor-pointer border-border hover:bg-muted text-foreground"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white rounded-xl h-10 px-6 font-semibold cursor-pointer shadow-sm dark:border-none"
+                  className="bg-primary hover:bg-primary/95 text-white rounded-xl h-10 px-6 font-semibold cursor-pointer shadow-sm border-none"
                 >
                   Save Changes
                 </Button>
@@ -927,24 +955,24 @@ export default function MessagesPage() {
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={!!deletingMessage} onOpenChange={(open) => !open && setDeletingMessage(null)}>
-        <AlertDialogContent className="bg-white dark:bg-slate-900 border border-gray-250 dark:border-slate-800 rounded-2xl p-6 shadow-xl dark:shadow-none transition-all duration-200">
+        <AlertDialogContent className="bg-card border border-border rounded-2xl p-6 shadow-xl dark:shadow-none transition-all duration-200">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-bold text-gray-900 dark:text-slate-105 flex items-center gap-2">
-              <AlertCircle className="h-5.5 w-5.5 text-red-500" />
+            <AlertDialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+              <AlertCircle className="h-5.5 w-5.5 text-destructive" />
               Delete Message
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-gray-500 dark:text-slate-400 mt-2">
+            <AlertDialogDescription className="text-sm text-muted-foreground mt-2">
               Are you sure you want to delete this message? This action cannot be undone. This will permanently delete the inquiry from{" "}
-              <strong className="text-gray-900 dark:text-slate-100 font-bold">&quot;{deletingMessage?.name}&quot;</strong>.
+              <strong className="text-foreground font-bold">&quot;{deletingMessage?.name}&quot;</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6 gap-2">
-            <AlertDialogCancel className="rounded-xl h-10 px-5 border-gray-350 dark:border-slate-700 cursor-pointer">
+            <AlertDialogCancel className="rounded-xl h-10 px-5 border-border hover:bg-muted text-foreground cursor-pointer">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-red-500 hover:bg-red-750 text-white rounded-xl h-10 px-6 font-semibold cursor-pointer border-transparent shadow-sm"
+              className="bg-destructive hover:bg-destructive/90 text-white rounded-xl h-10 px-6 font-semibold cursor-pointer border-transparent shadow-sm"
             >
               Delete
             </AlertDialogAction>
@@ -952,5 +980,18 @@ export default function MessagesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-96 flex flex-col items-center justify-center gap-3 bg-background transition-colors duration-200">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="text-sm font-semibold text-muted-foreground">Loading Messages...</span>
+      </div>
+    }>
+      <MessagesPageContent />
+    </Suspense>
   );
 }

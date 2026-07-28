@@ -190,7 +190,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-0 sm:p-2 lg:p-4">
       {/* Title */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">System Users & Roles</h1>
@@ -199,116 +199,221 @@ export default function UsersPage() {
         </p>
       </div>
 
-      {/* Users Table */}
+      {/* Users Data Layout Wrapper */}
       <div className="rounded-lg border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-955 overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-6">User Profile</TableHead>
-              <TableHead>Email Address</TableHead>
-              <TableHead>Security Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[280px] text-right pr-6">Access Control</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center">
-                  <div className="flex items-center justify-center gap-2 text-slate-400">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Loading users...</span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center text-slate-400">
-                  No registered users found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                  <TableCell className="pl-6">
+        {loading ? (
+          <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+            <span className="text-sm text-slate-500">Loading users...</span>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-12 text-center text-slate-400">
+            No registered users found.
+          </div>
+        ) : (
+          <>
+            {/* Desktop View (Table layout) */}
+            <div className="hidden lg:block w-full overflow-x-auto">
+              <Table className="min-w-[800px] w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-6">User Profile</TableHead>
+                    <TableHead>Email Address</TableHead>
+                    <TableHead>Security Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[280px] text-right pr-6">Access Control</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <TableCell className="pl-6">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                              {user.name}
+                              {user.id === currentUser?.id && (
+                                <Badge className="bg-indigo-100 dark:bg-indigo-955/60 text-indigo-750 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-[9px] font-bold py-0 h-4">
+                                  You
+                                </Badge>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium text-slate-600 dark:text-slate-400">{user.email}</TableCell>
+                      <TableCell>
+                        {user.role === "Admin" ? (
+                          <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-455 dark:border-indigo-800 gap-1" variant="outline">
+                            <ShieldCheck className="h-3 w-3" /> Admin
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800 gap-1" variant="outline">
+                            <UsersIcon className="h-3 w-3" /> Customer
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {user.status === "active" || !user.status ? (
+                          <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900/30" variant="outline">
+                            Active
+                          </Badge>
+                        ) : user.status === "pending" ? (
+                          <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-400 dark:border-amber-900/30" variant="outline">
+                            Pending Approval
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/30" variant="outline">
+                            Blocked
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex items-center justify-end gap-2">
+                          {user.status === "pending" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-8 bg-green-50 text-green-705 border-green-200 hover:bg-green-100 hover:text-green-800 font-bold gap-1 cursor-pointer"
+                              onClick={() => handleApprove(user)}
+                            >
+                              Approve
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs h-8 gap-1.5"
+                            disabled={user.id === currentUser?.id}
+                            onClick={() => handleToggleRole(user)}
+                          >
+                            {user.role === "Admin" ? (
+                              <>
+                                <UserCheck className="h-3.5 w-3.5 text-slate-450" />
+                                Make Customer
+                              </>
+                            ) : (
+                              <>
+                                <ShieldAlert className="h-3.5 w-3.5 text-indigo-505" />
+                                Make Admin
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-455 hover:bg-indigo-50 dark:hover:bg-indigo-955/20 rounded-md"
+                            disabled={user.id === currentUser?.id}
+                            onClick={() => handleStartEdit(user)}
+                            title="Edit User"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-red-650 dark:hover:text-red-455 hover:bg-red-50 dark:hover:bg-red-955/20 rounded-md"
+                            disabled={user.id === currentUser?.id}
+                            onClick={() => setDeletingUser(user)}
+                            title="Delete User"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
+              {users.map((user) => (
+                <div
+                  key={user.id}
+                  className="p-4 space-y-4 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <h4 className="font-bold text-gray-900 dark:text-slate-100 text-sm flex items-center gap-1.5">
                           {user.name}
                           {user.id === currentUser?.id && (
-                            <Badge className="bg-indigo-100 dark:bg-indigo-955/60 text-indigo-750 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-[9px] font-bold py-0 h-4">
+                            <Badge className="bg-indigo-100 dark:bg-indigo-955/60 text-indigo-750 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-[8px] font-bold py-0 h-3.5">
                               You
                             </Badge>
                           )}
-                        </p>
+                        </h4>
+                        <span className="text-[10px] text-gray-400 block mt-0.5">{user.email}</span>
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="font-medium text-slate-600 dark:text-slate-400">{user.email}</TableCell>
-                  <TableCell>
-                    {user.role === "Admin" ? (
-                      <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-450 dark:border-indigo-800 gap-1" variant="outline">
-                        <ShieldCheck className="h-3 w-3" /> Admin
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800 gap-1" variant="outline">
-                        <UsersIcon className="h-3 w-3" /> Customer
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.status === "active" || !user.status ? (
-                      <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900/30" variant="outline">
-                        Active
-                      </Badge>
-                    ) : user.status === "pending" ? (
-                      <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-400 dark:border-amber-900/30" variant="outline">
-                        Pending Approval
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/30" variant="outline">
-                        Blocked
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right pr-6">
-                    <div className="flex items-center justify-end gap-2">
+                  </div>
+
+                  <div className="py-2.5 border-t border-b border-gray-100 dark:border-slate-850 flex justify-between items-center gap-4">
+                    <div>
+                      <span className="text-xs text-gray-400 block">Security Role</span>
+                      {user.role === "Admin" ? (
+                        <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-455 dark:border-indigo-800 gap-1 mt-0.5" variant="outline">
+                          <ShieldCheck className="h-3 w-3" /> Admin
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800 gap-1 mt-0.5" variant="outline">
+                          <UsersIcon className="h-3 w-3" /> Customer
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-405 block">Status</span>
+                      {user.status === "active" || !user.status ? (
+                        <Badge className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900/30 mt-0.5" variant="outline">
+                          Active
+                        </Badge>
+                      ) : user.status === "pending" ? (
+                        <Badge className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-400 dark:border-amber-900/30 mt-0.5" variant="outline">
+                          Pending
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/30 mt-0.5" variant="outline">
+                          Blocked
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <div>
                       {user.status === "pending" && (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-xs h-8 bg-green-50 text-green-705 border-green-200 hover:bg-green-100 hover:text-green-800 font-bold gap-1 cursor-pointer"
+                          className="text-[10px] h-8 bg-green-50 text-green-705 border-green-200 hover:bg-green-100 hover:text-green-800 font-bold gap-1 cursor-pointer"
                           onClick={() => handleApprove(user)}
                         >
-                          Approve
+                          Approve User
                         </Button>
                       )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-xs h-8 gap-1.5"
+                        className="text-[10px] h-8 gap-1.5"
                         disabled={user.id === currentUser?.id}
                         onClick={() => handleToggleRole(user)}
                       >
-                        {user.role === "Admin" ? (
-                          <>
-                            <UserCheck className="h-3.5 w-3.5 text-slate-450" />
-                            Make Customer
-                          </>
-                        ) : (
-                          <>
-                            <ShieldAlert className="h-3.5 w-3.5 text-indigo-505" />
-                            Make Admin
-                          </>
-                        )}
+                        {user.role === "Admin" ? "Make Customer" : "Make Admin"}
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-455 hover:bg-indigo-50 dark:hover:bg-indigo-955/20 rounded-md"
+                        className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 rounded-md cursor-pointer"
                         disabled={user.id === currentUser?.id}
                         onClick={() => handleStartEdit(user)}
                         title="Edit User"
@@ -318,7 +423,7 @@ export default function UsersPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:text-red-650 dark:hover:text-red-455 hover:bg-red-50 dark:hover:bg-red-955/20 rounded-md"
+                        className="h-8 w-8 text-slate-500 dark:text-slate-405 hover:text-red-600 dark:hover:text-red-405 hover:bg-red-55 dark:hover:bg-red-955/20 rounded-md cursor-pointer"
                         disabled={user.id === currentUser?.id}
                         onClick={() => setDeletingUser(user)}
                         title="Delete User"
@@ -326,12 +431,12 @@ export default function UsersPage() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Delete Confirmation Alert */}

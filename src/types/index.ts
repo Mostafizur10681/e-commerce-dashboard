@@ -73,6 +73,7 @@ export interface Customer {
   joinedDate: string;
   status?: "Active" | "Inactive";
   profilePic?: string;
+  created_at?: string;
 }
 
 export interface Review {
@@ -113,6 +114,7 @@ export interface User {
   email: string;
   role: "Admin" | "Customer";
   status?: "active" | "blocked" | "pending";
+  created_at?: string;
 }
 
 export interface Settings {

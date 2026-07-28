@@ -119,7 +119,7 @@ export default function DivisionsPage() {
   };
 
   return (
-    <div className="space-y-6 min-h-screen p-6 bg-gray-55 dark:bg-gray-950 transition-colors duration-300">
+    <div className="space-y-6 min-h-screen p-0 sm:p-2 lg:p-4 bg-gray-55 dark:bg-gray-950 transition-colors duration-300">
       {/* Breadcrumb & Header Panel */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1.5">
@@ -173,11 +173,11 @@ export default function DivisionsPage() {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="h-10 border border-gray-200 dark:border-slate-800 dark:bg-slate-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300 transition-colors"
+              className="h-10 border border-gray-305 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] cursor-pointer transition-colors duration-200"
             >
-              <option value="All">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
+              <option value="All" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">All Statuses</option>
+              <option value="Active" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Active</option>
+              <option value="Inactive" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100">Inactive</option>
             </select>
           </div>
 
@@ -245,107 +245,177 @@ export default function DivisionsPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gray-50/50 dark:bg-slate-950/20 sticky top-0 z-10">
-                <TableRow className="border-b border-gray-100 dark:border-slate-800 hover:bg-transparent">
-                  <TableHead className="w-[80px] font-semibold text-gray-700 dark:text-gray-300 pl-6 py-4">SL</TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4 cursor-pointer select-none" onClick={() => toggleSort("division_name")}>
-                    <div className="flex items-center gap-1">
-                      Division Name (English)
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4">Division Name (Bangla)</TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4 cursor-pointer select-none" onClick={() => toggleSort("division_code")}>
-                    <div className="flex items-center gap-1">
-                      Division Code
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4">Status</TableHead>
-                  <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4">Created Date</TableHead>
-                  <TableHead className="w-[140px] text-right font-semibold text-gray-700 dark:text-gray-300 pr-6 py-4">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {divisions.map((item, index) => {
-                  const sl = (currentPage - 1) * pageSize + index + 1;
-                  const isActive = item.status === true || item.status === 1;
-                  const createdDate = item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "-";
-                  
-                  return (
-                    <TableRow
-                      key={item.id}
-                      className="border-b border-gray-100 dark:border-slate-800/80 hover:bg-gray-50/50 dark:hover:bg-slate-800/20 transition-colors"
-                    >
-                      {/* SL */}
-                      <TableCell className="font-medium text-gray-505 dark:text-gray-400 text-xs pl-6 py-3.5">
-                        {sl}
-                      </TableCell>
+          <>
+            {/* Desktop View (Table layout) */}
+            <div className="hidden lg:block w-full overflow-x-auto">
+              <Table className="min-w-[700px] w-full">
+                <TableHeader className="bg-gray-50/50 dark:bg-slate-950/20 sticky top-0 z-10">
+                  <TableRow className="border-b border-gray-100 dark:border-slate-800 hover:bg-transparent">
+                    <TableHead className="w-[80px] font-semibold text-gray-700 dark:text-gray-300 pl-6 py-4">SL</TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4 cursor-pointer select-none" onClick={() => toggleSort("division_name")}>
+                      <div className="flex items-center gap-1">
+                        Division Name (English)
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4">Division Name (Bangla)</TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4 cursor-pointer select-none" onClick={() => toggleSort("division_code")}>
+                      <div className="flex items-center gap-1">
+                        Division Code
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300 py-4">Created Date</TableHead>
+                    <TableHead className="w-[140px] text-right font-semibold text-gray-700 dark:text-gray-300 pr-6 py-4">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {divisions.map((item, index) => {
+                    const sl = (currentPage - 1) * pageSize + index + 1;
+                    const isActive = item.status === true || item.status === 1;
+                    const createdDate = item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "-";
+                    
+                    return (
+                      <TableRow
+                        key={item.id}
+                        className="border-b border-gray-100 dark:border-slate-800/80 hover:bg-gray-50/50 dark:hover:bg-slate-800/20 transition-colors"
+                      >
+                        {/* SL */}
+                        <TableCell className="font-medium text-gray-505 dark:text-gray-400 text-xs pl-6 py-3.5">
+                          {sl}
+                        </TableCell>
 
-                      {/* Division Name (EN) */}
-                      <TableCell className="font-semibold text-gray-900 dark:text-white text-sm py-3.5">
-                        {item.division_name}
-                      </TableCell>
+                        {/* Division Name (EN) */}
+                        <TableCell className="font-semibold text-gray-900 dark:text-white text-sm py-3.5">
+                          {item.division_name}
+                        </TableCell>
 
-                      {/* Division Name (BN) */}
-                      <TableCell className="text-gray-700 dark:text-gray-300 text-sm py-3.5">
-                        {item.division_name_bn || <span className="text-gray-400 italic">N/A</span>}
-                      </TableCell>
+                        {/* Division Name (BN) */}
+                        <TableCell className="text-gray-700 dark:text-gray-300 text-sm py-3.5">
+                          {item.division_name_bn || <span className="text-gray-400 italic">N/A</span>}
+                        </TableCell>
 
-                      {/* Code */}
-                      <TableCell className="font-mono text-xs text-gray-600 dark:text-gray-400 py-3.5">
-                        <span className="bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                        {/* Code */}
+                        <TableCell className="font-mono text-xs text-gray-600 dark:text-gray-400 py-3.5">
+                          <span className="bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+                            {item.division_code}
+                          </span>
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell className="py-3.5">
+                          <StatusBadge status={isActive ? 'active' : 'inactive'} />
+                        </TableCell>
+
+                        {/* Created Date */}
+                        <TableCell className="text-gray-505 dark:text-gray-400 text-sm py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                            <span>{createdDate}</span>
+                          </div>
+                        </TableCell>
+
+                        {/* Actions */}
+                        <TableCell className="text-right pr-6 py-3.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[#16A34A] dark:hover:text-[#16A34A] hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer"
+                              onClick={() => router.push(`/admin/locations/divisions/${item.id}`)}
+                              title="View Details"
+                            >
+                              <Eye className="h-4.5 w-4.5" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-gray-55 dark:hover:bg-slate-800 cursor-pointer"
+                              onClick={() => router.push(`/admin/locations/divisions/edit/${item.id}`)}
+                              title="Edit Division"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
+              {divisions.map((item, index) => {
+                const sl = (currentPage - 1) * pageSize + index + 1;
+                const isActive = item.status === true || item.status === 1;
+                const createdDate = item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "-";
+                
+                return (
+                  <div
+                    key={item.id}
+                    className="p-4 space-y-4 bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <span className="text-[10px] text-gray-400 block font-semibold">SL No. #{sl}</span>
+                        <span className="font-bold text-gray-900 dark:text-white text-sm">{item.division_name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-gray-400 block">Code</span>
+                        <span className="font-mono text-xs font-semibold text-gray-700 dark:text-slate-350 bg-gray-105 dark:bg-slate-800 px-2 py-0.5 rounded-lg">
                           {item.division_code}
                         </span>
-                      </TableCell>
+                      </div>
+                    </div>
 
-                      {/* Status */}
-                      <TableCell className="py-3.5">
+                    <div className="py-2.5 border-t border-b border-gray-100 dark:border-slate-850 flex justify-between items-center gap-4">
+                      <div>
+                        <span className="text-xs text-gray-400 block">Bangla Name</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                          {item.division_name_bn || <span className="text-gray-400 italic">N/A</span>}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-gray-405 block">Status</span>
                         <StatusBadge status={isActive ? 'active' : 'inactive'} />
-                      </TableCell>
+                      </div>
+                    </div>
 
-                      {/* Created Date */}
-                      <TableCell className="text-gray-505 dark:text-gray-400 text-sm py-3.5">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                          <span>{createdDate}</span>
-                        </div>
-                      </TableCell>
-
-                      {/* Actions */}
-                      <TableCell className="text-right pr-6 py-3.5">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* View details */}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-[#16A34A] dark:hover:text-[#16A34A] hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer"
-                            onClick={() => router.push(`/admin/locations/divisions/${item.id}`)}
-                            title="View Details"
-                          >
-                            <Eye className="h-4.5 w-4.5" />
-                          </Button>
-
-                          {/* Edit */}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8.5 w-8.5 rounded-xl text-gray-600 dark:text-gray-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-gray-55 dark:hover:bg-slate-800 cursor-pointer"
-                            onClick={() => router.push(`/admin/locations/divisions/edit/${item.id}`)}
-                            title="Edit Division"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-450 dark:text-slate-500 font-mono">
+                        <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                        <span>{createdDate}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8.5 w-8.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-[#16A34A] dark:hover:text-[#16A34A] hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer"
+                          onClick={() => router.push(`/admin/locations/divisions/${item.id}`)}
+                          title="View Details"
+                        >
+                          <Eye className="h-4.5 w-4.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8.5 w-8.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-gray-55 dark:hover:bg-slate-800 cursor-pointer"
+                          onClick={() => router.push(`/admin/locations/divisions/edit/${item.id}`)}
+                          title="Edit Division"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Pagination Section */}

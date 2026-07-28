@@ -75,7 +75,25 @@ export default function OrderDetailsPage() {
       });
       if (!res.ok) throw new Error("Failed to fetch order details");
       const json = await res.json();
-      setOrder(json.data || json);
+      const orderData = json.data || json;
+      setOrder(orderData);
+
+      if (orderData && orderData.status && orderData.status.toLowerCase() === "pending") {
+        fetch(`/api/orders/${orderData.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ status: "processing" }),
+        }).then((response) => {
+          if (response.ok) {
+            setOrder((prev) => prev ? { ...prev, status: "processing" } : null);
+          }
+        }).catch((err) => {
+          console.error("Failed to auto-update order status:", err);
+        });
+      }
     } catch (err) {
       console.error(err);
       toast("Error loading order details", "error");

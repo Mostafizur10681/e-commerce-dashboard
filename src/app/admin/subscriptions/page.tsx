@@ -340,7 +340,7 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="space-y-6 min-h-screen p-6 bg-gray-50 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="space-y-6 min-h-screen p-0 sm:p-2 lg:p-4 bg-gray-55 dark:bg-slate-950 text-gray-900 dark:text-slate-100 transition-colors duration-200">
       {/* Header section with Breadcrumbs */}
       <div className="space-y-1">
         <Breadcrumbs
@@ -582,8 +582,8 @@ export default function SubscriptionsPage() {
         ) : (
           <>
             {/* Desktop View Table Layout */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
+            <div className="hidden lg:block w-full overflow-x-auto">
+              <Table className="min-w-[900px] w-full">
                 <TableHeader className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-20 border-b border-gray-200 dark:border-slate-800">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-[50px] pl-6 py-4">
@@ -694,18 +694,21 @@ export default function SubscriptionsPage() {
               </Table>
             </div>
 
-            {/* Mobile View Card Grid Layout */}
-            <div className="block md:hidden divide-y divide-gray-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50/50 dark:bg-slate-950/20">
               {subscribers.map((sub) => (
-                <div key={sub.id} className="p-4 space-y-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 transition-all duration-200">
+                <div
+                  key={sub.id}
+                  className="p-4 space-y-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:shadow-md transition-all duration-205"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-green-50 dark:bg-green-950/20 text-[#16A34A] dark:text-green-400 font-bold text-xs flex items-center justify-center border border-green-100/50">
                         {sub.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 dark:text-slate-100 text-sm">{sub.name}</h4>
-                        <span className="text-[10px] text-gray-400 dark:text-slate-500 block font-mono mt-0.5">{sub.id.toUpperCase()}</span>
+                        <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm">{sub.name}</h4>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block font-mono mt-0.5">{sub.id.toUpperCase()}</span>
                       </div>
                     </div>
                     <Badge className={`rounded-full px-2 py-0.5 text-[9px] font-bold border-transparent ${getStatusBadgeColor(sub.status)}`}>
@@ -713,16 +716,16 @@ export default function SubscriptionsPage() {
                     </Badge>
                   </div>
 
-                  <div className="p-3 bg-gray-50/50 dark:bg-slate-955/30 rounded-xl border border-gray-100 dark:border-slate-800 space-y-2 text-xs text-gray-500 dark:text-slate-400 leading-relaxed font-medium">
-                    <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-gray-400 dark:text-slate-500" /> {sub.email}</p>
-                    <p className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-gray-400 dark:text-slate-500" /> Source: {sub.source}</p>
-                    <div className="flex justify-between pt-1 font-semibold text-gray-900 dark:text-slate-200 border-t border-gray-100 dark:border-slate-800 mt-1 font-mono text-[10px]">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-950/30 rounded-xl border border-slate-100 dark:border-slate-800/80 space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                    <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" /> {sub.email}</p>
+                    <p className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" /> Source: {sub.source}</p>
+                    <div className="flex justify-between pt-1 font-semibold text-slate-800 dark:text-slate-200 border-t border-slate-100 dark:border-slate-800/80 mt-1 font-mono text-[10px]">
                       <span>Subbed: {sub.subscriptionDate}</span>
                       <span>Active: {sub.lastActivity}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-slate-800 font-medium">
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 font-medium">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -738,7 +741,7 @@ export default function SubscriptionsPage() {
                         setEditingSubscriber(sub);
                         setIsFormOpen(true);
                       }}
-                      className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-450 dark:hover:text-green-300 cursor-pointer transition-colors duration-200"
+                      className="w-9 h-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-950/20 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-400 cursor-pointer transition-colors duration-200"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -746,7 +749,7 @@ export default function SubscriptionsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setDeletingSubscriber(sub)}
-                      className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 hover:text-red-750 dark:text-red-450 dark:hover:text-red-500 cursor-pointer transition-colors duration-200"
+                      className="w-9 h-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-400 cursor-pointer transition-colors duration-200"
                     >
                       <Trash2 className="h-4.5 w-4.5" />
                     </Button>

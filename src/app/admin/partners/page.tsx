@@ -212,9 +212,9 @@ export default function PartnersPage() {
         ) : (
           <>
             {/* Desktop View (Table layout) */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-850">
+            <div className="hidden lg:block overflow-x-auto">
+              <Table className="w-full min-w-[800px]">
+                <TableHeader className="bg-gray-105 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-850">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-[120px] font-semibold text-gray-900 dark:text-white pl-6 py-4">Partner Logo</TableHead>
                     <TableHead className="font-semibold text-gray-900 dark:text-white py-4">Partner Name</TableHead>
@@ -235,7 +235,7 @@ export default function PartnersPage() {
                       >
                         {/* Logo */}
                         <TableCell className="pl-6 py-3.5">
-                          <div className="h-[60px] w-[60px] rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-1.5 shadow-xs">
+                          <div className="h-[60px] w-[60px] rounded-xl overflow-hidden border border-gray-205 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-1.5 shadow-xs">
                             {partner.logo ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
@@ -280,7 +280,7 @@ export default function PartnersPage() {
                         </TableCell>
 
                         {/* Created Date */}
-                        <TableCell className="text-gray-500 dark:text-gray-400 text-sm py-3.5">
+                        <TableCell className="text-gray-555 dark:text-gray-405 text-sm py-3.5">
                           {partner.createdAt ? (
                             <div className="flex items-center gap-1.5">
                               <Calendar className="h-3.5 w-3.5 text-gray-400" />
@@ -330,15 +330,15 @@ export default function PartnersPage() {
               </Table>
             </div>
 
-            {/* Mobile View (Card layout) */}
-            <div className="block md:hidden divide-y divide-gray-200 dark:divide-gray-850">
+            {/* Mobile/Tablet View (Card grid layout) */}
+            <div className="block lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-55/50 dark:bg-slate-900/10">
               {sortedPartners.map((partner) => {
                 const status = partner.status || "Active";
                 const isActive = status.toLowerCase() === "active";
                 return (
                   <div
                     key={partner.id}
-                    className="p-4 space-y-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
+                    className="p-4 space-y-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
