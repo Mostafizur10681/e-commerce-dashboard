@@ -31,6 +31,7 @@ export async function GET(
       id: String(item.id),
       name: item.name,
       description: item.description || "",
+      parentId: item.parent_id ? String(item.parent_id) : null,
       imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
       status: item.status === true || item.status === 1 ? "Active" : "Inactive",
       createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
@@ -69,6 +70,7 @@ export async function PUT(
     const formData = await request.formData();
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
+    const parentId = formData.get("parent_id") || formData.get("parentId");
     const status = formData.get("status") as "Active" | "Inactive";
     const imageFile = formData.get("image") as File | null;
 
@@ -76,28 +78,24 @@ export async function PUT(
       return NextResponse.json({ error: "Category name is required" }, { status: 400 });
     }
 
-    let imageUrl = existing.image || "";
+    const backendFormData = new FormData();
+    backendFormData.append("_method", "PUT");
+    backendFormData.append("name", name);
+    backendFormData.append("description", description || "");
+    if (parentId) {
+      backendFormData.append("parent_id", String(parentId));
+    }
+    backendFormData.append("status", status === "Active" ? "1" : "0");
     if (imageFile && imageFile.size > 0) {
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
-      const base64String = buffer.toString("base64");
-      const mimeType = imageFile.type || "image/jpeg";
-      imageUrl = `data:${mimeType};base64,${base64String}`;
+      backendFormData.append("image_file", imageFile);
     }
 
-    const payload = {
-      name,
-      description: description || "",
-      status: status === "Active",
-      image: imageUrl,
-    };
-
     const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
-      method: "PUT",
+      method: "POST",
       headers: {
-        "Content-Type": "application/json",
         ...(token ? { "Authorization": token } : {}),
       },
-      body: JSON.stringify(payload),
+      body: backendFormData,
     });
 
     const data = await res.json();
@@ -106,12 +104,14 @@ export async function PUT(
       return NextResponse.json({ error: data.message || "Failed to update category on backend" }, { status: res.status });
     }
 
+    const fallbackImageUrl = existing.image ? (existing.image.startsWith("data:image/") || existing.image.startsWith("http") ? existing.image : `http://127.0.0.1:8000/storage/${existing.image}`) : "";
+
     const updated = data.data;
     const responseData: Category = {
       id: String(updated.id),
       name: updated.name,
       description: updated.description || "",
-      imageUrl: updated.image ? (updated.image.startsWith("data:image/") || updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`) : imageUrl,
+      imageUrl: updated.image ? (updated.image.startsWith("data:image/") || updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`) : fallbackImageUrl,
       status: updated.status === true || updated.status === 1 ? "Active" : "Inactive",
       createdDate: updated.created_at ? new Date(updated.created_at).toISOString().split("T")[0] : "",
       seoTitle: updated.name,

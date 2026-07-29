@@ -52,7 +52,7 @@ export async function GET(request: Request) {
         imagesArray = item.images.map((img: any) => {
           if (typeof img === "string") return img;
           if (img && img.image_path) {
-            return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+            return (img.image_path.startsWith("http") || img.image_path.startsWith("data:image/")) ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
           }
           return "";
         }).filter(Boolean);
@@ -153,6 +153,7 @@ export async function POST(request: Request) {
       status,
       images,
       subCategory,
+      subCategoryId,
       brand,
       tax,
       discount,
@@ -186,6 +187,7 @@ export async function POST(request: Request) {
       status: status === "active" || status === true,
       image: images?.[0] || "",
       gallery: images || [],
+      sub_category_id: subCategoryId || null,
       sub_category: subCategory || "",
       brand: brand || "",
       tax: Number(tax) || 0,
@@ -223,7 +225,7 @@ export async function POST(request: Request) {
       createdImagesArray = created.images.map((img: any) => {
         if (typeof img === "string") return img;
         if (img && img.image_path) {
-          return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+          return (img.image_path.startsWith("http") || img.image_path.startsWith("data:image/")) ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
         }
         return "";
       }).filter(Boolean);

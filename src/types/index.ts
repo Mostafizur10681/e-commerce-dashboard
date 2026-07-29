@@ -20,6 +20,17 @@ export interface Category {
   seoDescription?: string;
 }
 
+export interface SubCategory {
+  id: string;
+  categoryId: string;
+  categoryName?: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  status?: "Active" | "Inactive";
+  createdDate?: string;
+}
+
 export interface FAQCategory {
   id: string;
   name: string;

@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       customerName: item.user?.name || "Anonymous",
       customerEmail: item.user?.email || "N/A",
       productName: item.product?.name || "Unknown Product",
-      productImage: item.product?.image || (item.product?.images?.[0]?.image_path) || "",
+      productImage: item.product?.image || (Array.isArray(item.product?.images) ? (typeof item.product.images[0] === 'string' ? item.product.images[0] : item.product.images[0]?.image_path) : "") || "",
       productPrice: Number(item.product?.sale_price || item.product?.price || 0),
       createdAt: item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A",
     }));

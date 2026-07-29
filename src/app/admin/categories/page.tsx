@@ -63,9 +63,23 @@ export default function CategoriesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Read URL query params for type (e.g. ?type=subcategory)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeParam = urlParams.get("type");
+      if (typeParam === "subcategory" || typeParam === "sub") {
+        setTypeFilter("sub");
+      } else if (typeParam === "main") {
+        setTypeFilter("main");
+      }
+    }
+  }, []);
 
   // Action Dialog/Modal States
   const [viewingCategory, setViewingCategory] = useState<Category | null>(null);
@@ -78,7 +92,7 @@ export default function CategoriesPage() {
       setLoading(true);
       setError(null);
       const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
-      const url = `/api/categories?q=${encodeURIComponent(searchTerm)}&status=${statusFilter}&page=${currentPage}&limit=${pageSize}`;
+      const url = `/api/categories?q=${encodeURIComponent(searchTerm)}&status=${statusFilter}&type=${typeFilter}&page=${currentPage}&limit=${pageSize}`;
       const res = await fetch(url, {
         headers: token ? { "Authorization": `Bearer ${token}` } : {},
       });
@@ -100,7 +114,7 @@ export default function CategoriesPage() {
       fetchCategories();
     }, 300);
     return () => clearTimeout(handler);
-  }, [searchTerm, statusFilter, currentPage]);
+  }, [searchTerm, statusFilter, typeFilter, currentPage]);
 
   const handleDeleteConfirm = async () => {
     if (!deletingCategory) return;
@@ -181,20 +195,38 @@ export default function CategoriesPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</label>
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="h-10 w-full sm:w-44 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300 cursor-pointer"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => {
+                setTypeFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 w-full sm:w-40 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300 cursor-pointer"
+            >
+              <option value="All">All Types</option>
+              <option value="main">Main Categories</option>
+              <option value="sub">Sub Categories</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 w-full sm:w-40 border border-gray-200 dark:border-gray-800 dark:bg-gray-950 rounded-xl px-3 py-1 text-sm outline-none focus:ring-1 focus:ring-[#16A34A] text-gray-700 dark:text-gray-300 cursor-pointer"
+            >
+              <option value="All">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -257,8 +289,10 @@ export default function CategoriesPage() {
               <Table className="w-full min-w-[800px]">
                 <TableHeader>
                   <TableRow className="border-b border-gray-200 dark:border-gray-800 hover:bg-transparent">
-                    <TableHead className="w-[120px] font-semibold text-gray-650 dark:text-gray-400 pl-6 py-4">ID</TableHead>
+                    <TableHead className="w-[100px] font-semibold text-gray-650 dark:text-gray-400 pl-6 py-4">ID</TableHead>
                     <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Category Name</TableHead>
+                    <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Type</TableHead>
+                    <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Parent Category</TableHead>
                     <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Description</TableHead>
                     <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Status</TableHead>
                     <TableHead className="font-semibold text-gray-650 dark:text-gray-400 py-4">Created Date</TableHead>
@@ -268,6 +302,9 @@ export default function CategoriesPage() {
                 <TableBody>
                   {categories.map((category) => {
                     const isActive = category.status !== "Inactive";
+                    const parentCat = categories.find((c) => String(c.id) === String(category.parentId));
+                    const isSubCategory = !!category.parentId;
+
                     return (
                       <TableRow
                         key={category.id}
@@ -299,6 +336,18 @@ export default function CategoriesPage() {
                               {category.name}
                             </span>
                           </div>
+                        </TableCell>
+
+                        {/* Type */}
+                        <TableCell className="py-3.5">
+                          <Badge className={isSubCategory ? "bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400" : "bg-purple-50 text-purple-700 dark:bg-purple-950/20 dark:text-purple-400"}>
+                            {isSubCategory ? "Sub Category" : "Main Category"}
+                          </Badge>
+                        </TableCell>
+
+                        {/* Parent Category */}
+                        <TableCell className="py-3.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {parentCat ? parentCat.name : <span className="text-gray-400">—</span>}
                         </TableCell>
 
                         {/* Description */}

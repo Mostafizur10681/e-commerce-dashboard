@@ -4,32 +4,56 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Category } from "@/types";
+import { Category, SubCategory } from "@/types";
 
 export default function ProductInfoFields() {
-  const { register, setValue } = useFormContext();
+  const { register, setValue, watch } = useFormContext();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [subCategoriesList, setSubCategoriesList] = useState<SubCategory[]>([]);
+  const [loadingCats, setLoadingCats] = useState(true);
+  const [loadingSubCats, setLoadingSubCats] = useState(true);
+
+  const selectedCategoryName = watch("category");
 
   useEffect(() => {
-    const fetchCats = async () => {
+    const fetchData = async () => {
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
-        const res = await fetch("/api/categories?limit=1000", {
+        
+        // Fetch Main Categories
+        const catRes = await fetch("/api/categories?limit=1000", {
           headers: token ? { "Authorization": `Bearer ${token}` } : {},
         });
-        if (res.ok) {
-          const data = await res.json();
+        if (catRes.ok) {
+          const data = await catRes.json();
           setCategories(data.categories || []);
+        }
+
+        // Fetch Sub Categories from sub_categories table
+        const subRes = await fetch("/api/sub-categories?limit=1000", {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (subRes.ok) {
+          const subData = await subRes.json();
+          setSubCategoriesList(subData.subCategories || []);
         }
       } catch (e) {
         console.error("Failed to load categories in ProductInfoFields", e);
       } finally {
-        setLoading(false);
+        setLoadingCats(false);
+        setLoadingSubCats(false);
       }
     };
-    fetchCats();
+    fetchData();
   }, []);
+
+  const mainCategories = categories.filter((c) => !c.parentId);
+  const selectedParent = categories.find((c) => c.name === selectedCategoryName);
+  
+  // Filter subcategories matching selected parent category, or show all subcategories if none selected
+  const availableSubCategories = selectedParent
+    ? subCategoriesList.filter((sc) => String(sc.categoryId) === String(selectedParent.id))
+    : subCategoriesList;
 
   return (
     <div className="rounded-2xl shadow-sm p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
@@ -39,28 +63,55 @@ export default function ProductInfoFields() {
           <Label htmlFor="name">Product Name</Label>
           <Input id="name" {...register("name")} />
         </div>
+
+        {/* Category (Main Category) */}
         <div>
-          <Label htmlFor="category">Category</Label>
-          <Select onValueChange={(v) => setValue("category", v)}>
-            <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+          <Label htmlFor="category">Category (Main Category)</Label>
+          <Select onValueChange={(v) => { setValue("category", v); setValue("subCategory", ""); }}>
+            <SelectTrigger><SelectValue placeholder="Select main category" /></SelectTrigger>
             <SelectContent>
-              {loading ? (
+              {loadingCats ? (
                 <SelectItem value="loading" disabled>Loading categories...</SelectItem>
-              ) : categories.length > 0 ? (
-                categories.map((c) => (
+              ) : mainCategories.length > 0 ? (
+                mainCategories.map((c) => (
                   <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                 ))
               ) : (
-                ["Electronics", "Clothing", "Food", "Sports"].map((c) => (
+                ["Men", "Women", "Children"].map((c) => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
                 ))
               )}
             </SelectContent>
           </Select>
         </div>
+
+        {/* Sub Category Dropdown from sub_categories table */}
         <div>
           <Label htmlFor="subCategory">Sub Category</Label>
-          <Input id="subCategory" {...register("subCategory")} />
+          <Select onValueChange={(v) => {
+            const matched = subCategoriesList.find((sc) => String(sc.id) === String(v) || sc.name === v);
+            if (matched) {
+              setValue("subCategoryId", matched.id);
+              setValue("subCategory", matched.name);
+            } else {
+              setValue("subCategory", v);
+            }
+          }}>
+            <SelectTrigger><SelectValue placeholder="Select sub category" /></SelectTrigger>
+            <SelectContent>
+              {loadingSubCats ? (
+                <SelectItem value="loading" disabled>Loading sub categories...</SelectItem>
+              ) : availableSubCategories.length > 0 ? (
+                availableSubCategories.map((sc) => (
+                  <SelectItem key={sc.id} value={String(sc.id)}>
+                    {sc.name} {sc.categoryName ? `(${sc.categoryName})` : ""}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="none" disabled>No sub categories available</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label htmlFor="brand">Brand</Label>

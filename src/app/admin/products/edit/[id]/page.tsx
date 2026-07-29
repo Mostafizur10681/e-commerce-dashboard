@@ -37,11 +37,14 @@ export default function EditProductPage() {
   const [featuredIdx, setFeaturedIdx] = useState(0);
   const [imageError, setImageError] = useState("");
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
+  const [subCategoriesList, setSubCategoriesList] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchCats = async () => {
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+
+        // Fetch Categories
         const res = await fetch("/api/categories?limit=1000", {
           headers: token ? { "Authorization": `Bearer ${token}` } : {},
         });
@@ -52,6 +55,15 @@ export default function EditProductPage() {
           useStore.getState().logout();
           router.push("/login");
           toast("Session expired. Please log in again.", "error");
+        }
+
+        // Fetch Sub Categories from sub_categories table
+        const subRes = await fetch("/api/sub-categories?limit=1000", {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (subRes.ok) {
+          const subData = await subRes.json();
+          setSubCategoriesList(subData.subCategories || []);
         }
       } catch (e) {
         console.error("Failed to load categories in edit page", e);
@@ -152,7 +164,7 @@ export default function EditProductPage() {
         });
         // Use the reusable formatImage helper for any image source (old path or base64)
         // The API may return images under either "images" or "product_images"
-        const imgArray = data.images?.length ? data.images : (data.product_images?.map((p:any)=>p.image) ?? []);
+        const imgArray = data.images?.length ? data.images : (data.product_images?.map((p: any) => p.image) ?? []);
         if (data.image) {
           setImages([{ file: null, preview: formatImage(data.image) }]);
         } else if (imgArray?.length) {
@@ -311,22 +323,37 @@ export default function EditProductPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select onValueChange={(v) => setValue("category", v)} defaultValue={product.category}>
+                    <Label htmlFor="category">Category (Main Category)</Label>
+                    <Select onValueChange={(v) => { setValue("category", v); setValue("subCategory", ""); }} value={watch("category")}>
                       <SelectTrigger id="category" className="mt-1">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categoriesList.length > 0
-                          ? categoriesList.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
-                          : ["Electronics", "Clothing", "Food", "Sports"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)
+                        {categoriesList.filter((c) => !c.parentId).length > 0
+                          ? categoriesList.filter((c) => !c.parentId).map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                          : categoriesList.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
                         }
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
                     <Label htmlFor="subCategory">Sub Category</Label>
-                    <Input id="subCategory" {...register("subCategory")} className="mt-1" />
+                    <Select onValueChange={(v) => setValue("subCategory", v)} value={watch("subCategory")}>
+                      <SelectTrigger id="subCategory" className="mt-1">
+                        <SelectValue placeholder="Select sub category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subCategoriesList.length > 0 ? (
+                          subCategoriesList.map((sc) => (
+                            <SelectItem key={sc.id} value={sc.name}>
+                              {sc.name} {sc.categoryName ? `(${sc.categoryName})` : ""}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="none" disabled>No sub categories available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

@@ -422,11 +422,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
                     pathname === "/admin/categories"
                       ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
-                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
                   )}
                 >
                   <span className="mr-1.5 font-bold">○</span>
-                  Category List
+                  Main Categories
                 </Link>
                 <Link
                   href="/admin/categories/add"
@@ -435,11 +435,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
                     pathname === "/admin/categories/add"
                       ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
-                      : "text-gray-505 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
                   )}
                 >
                   <span className="mr-1.5 font-bold">○</span>
                   Add Category
+                </Link>
+                <Link
+                  href="/admin/sub-categories"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/sub-categories"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Sub Category
+                </Link>
+                <Link
+                  href="/admin/sub-categories/add"
+                  onClick={() => setIsMobileOpen(false)}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 border-l-4",
+                    pathname === "/admin/sub-categories/add"
+                      ? "bg-green-50 dark:bg-green-950/20 text-[#16A34A] font-semibold border-[#16A34A]"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/30 hover:text-primary border-transparent pl-4"
+                  )}
+                >
+                  <span className="mr-1.5 font-bold">○</span>
+                  Add Sub Category
                 </Link>
               </div>
             )}

@@ -23,9 +23,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Category } from "@/types";
+
 interface AddCategoryFormValues {
   name: string;
   description: string;
+  parentId: string;
   status: "Active" | "Inactive";
   seoTitle: string;
   seoDescription: string;
@@ -36,20 +40,46 @@ export default function AddCategoryPage() {
   const { toast } = useToast();
   const { addCategory: storeAddCategory } = useStore();
 
+  const [parentCategories, setParentCategories] = useState<Category[]>([]);
+  const [loadingParents, setLoadingParents] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
 
+  React.useEffect(() => {
+    const fetchParents = async () => {
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("df_access_token") : null;
+        const res = await fetch("/api/categories?limit=1000", {
+          headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Filter top-level categories without parentId
+          const parents = (data.categories || []).filter((c: Category) => !c.parentId);
+          setParentCategories(parents);
+        }
+      } catch (e) {
+        console.error("Failed to load parent categories", e);
+      } finally {
+        setLoadingParents(false);
+      }
+    };
+    fetchParents();
+  }, []);
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<AddCategoryFormValues>({
     defaultValues: {
       name: "",
       description: "",
+      parentId: "",
       status: "Active",
       seoTitle: "",
       seoDescription: "",
@@ -115,6 +145,9 @@ export default function AddCategoryPage() {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("description", values.description);
+      if (values.parentId) {
+        formData.append("parent_id", values.parentId);
+      }
       formData.append("status", values.status);
       formData.append("seoTitle", values.seoTitle);
       formData.append("seoDescription", values.seoDescription);
@@ -189,6 +222,26 @@ export default function AddCategoryPage() {
               General Information
             </h3>
 
+            {/* Parent Category (Optional - For Sub-Categories) */}
+            <div className="space-y-1.5">
+              <Label htmlFor="parentId" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Parent Main Category (Leave empty if creating a Main Category)
+              </Label>
+              <Select onValueChange={(val) => setValue("parentId", val === "none" ? "" : val)}>
+                <SelectTrigger className="h-10 border-gray-200 dark:border-gray-800 dark:bg-gray-950/50 rounded-xl">
+                  <SelectValue placeholder="None (Top Level Main Category)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (Top Level Main Category)</SelectItem>
+                  {parentCategories.map((parent) => (
+                    <SelectItem key={parent.id} value={parent.id}>
+                      {parent.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Category Name */}
             <div className="space-y-1.5">
               <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -196,7 +249,7 @@ export default function AddCategoryPage() {
               </Label>
               <Input
                 id="name"
-                placeholder="e.g. Smart Electronics, Running Shoes"
+                placeholder="e.g. Men, Women, Sneakers, Shoes"
                 {...register("name", { required: "Category name is required" })}
                 className="h-10 border-gray-200 dark:border-gray-800 dark:bg-gray-950/50 rounded-xl focus-visible:ring-[#16A34A]"
               />
