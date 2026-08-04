@@ -8,7 +8,7 @@ export async function DELETE(
     const { id } = await (params as any);
     const token = request.headers.get("Authorization") || "";
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/wishlists/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/wishlists/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,

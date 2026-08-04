@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     }
 
     // Proxy request to Laravel backend
-    const backendUrl = `http://127.0.0.1:8000/api/admin/wishlists?page=${page}&per_page=1000`;
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/wishlists?page=${page}&per_page=1000`;
     const res = await fetch(backendUrl, {
       headers: {
         "Authorization": token,

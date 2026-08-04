@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const token = request.headers.get("Authorization");
 
     // Fetch from backend (retrieve all to perform client-side filtering/sorting)
-    const res = await fetch("http://127.0.0.1:8000/api/faqs?all=1", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/faqs?all=1", {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       status: status === "active" || status === true,
     };
 
-    const res = await fetch("http://127.0.0.1:8000/api/v1/auth/faqs", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/v1/auth/faqs", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

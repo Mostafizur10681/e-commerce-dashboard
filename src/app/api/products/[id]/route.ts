@@ -5,7 +5,7 @@ import { Product } from "@/types";
 async function resolveCategoryId(categoryName: string, token: string | null): Promise<number | null> {
   if (!categoryName) return null;
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/categories`, {
       headers: token ? { "Authorization": token } : {},
     });
     if (res.ok) {
@@ -29,7 +29,7 @@ export async function GET(
     const id = resolvedParams.id;
     const token = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/products/${id}`, {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -52,16 +52,16 @@ export async function GET(
       imagesArray = item.images.map((img: any) => {
         if (typeof img === "string") return img;
         if (img && img.image_path) {
-          return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+          return img.image_path.startsWith("http") ? img.image_path : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img.image_path}`;
         }
         return "";
       }).filter(Boolean);
     }
     if (imagesArray.length === 0) {
       if (item.gallery && Array.isArray(item.gallery)) {
-        imagesArray = item.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+        imagesArray = item.gallery.map((img: string) => img.startsWith("http") ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img}`);
       } else if (item.image) {
-        imagesArray = [item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`];
+        imagesArray = [item.image.startsWith("http") ? item.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${item.image}`];
       }
     }
 
@@ -175,7 +175,7 @@ export async function PUT(
       attributes: attributes || [],
     };
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/products/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -196,16 +196,16 @@ export async function PUT(
       updatedImagesArray = updated.images.map((img: any) => {
         if (typeof img === "string") return img;
         if (img && img.image_path) {
-          return img.image_path.startsWith("http") ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+          return img.image_path.startsWith("http") ? img.image_path : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img.image_path}`;
         }
         return "";
       }).filter(Boolean);
     }
     if (updatedImagesArray.length === 0) {
       if (updated.gallery && Array.isArray(updated.gallery)) {
-        updatedImagesArray = updated.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+        updatedImagesArray = updated.gallery.map((img: string) => img.startsWith("http") ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img}`);
       } else if (updated.image) {
-        updatedImagesArray = [updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`];
+        updatedImagesArray = [updated.image.startsWith("http") ? updated.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${updated.image}`];
       }
     }
 
@@ -259,7 +259,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/products/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,

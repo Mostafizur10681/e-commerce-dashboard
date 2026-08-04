@@ -10,7 +10,7 @@ export async function GET(
     const resolvedParams = await params;
     const { id } = resolvedParams;
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/admin/chats/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/admin/chats/${id}`, {
       headers: {
         "Authorization": token,
         "Accept": "application/json"

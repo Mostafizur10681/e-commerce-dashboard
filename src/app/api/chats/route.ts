@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   try {
     const token = request.headers.get("Authorization") || "";
-    const res = await fetch("http://127.0.0.1:8000/api/v1/auth/admin/chats", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/v1/auth/admin/chats", {
       headers: {
         "Authorization": token,
         "Accept": "application/json"
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const token = request.headers.get("Authorization") || "";
     const body = await request.json();
     
-    const res = await fetch("http://127.0.0.1:8000/api/v1/auth/admin/chats/reply", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/v1/auth/admin/chats/reply", {
       method: "POST",
       headers: {
         "Authorization": token,

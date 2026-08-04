@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const token = request.headers.get("Authorization");
 
     // Fetch all categories from Laravel backend
-    const res = await fetch("http://127.0.0.1:8000/api/admin/categories", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/categories", {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         name: item.name,
         description: item.description || "",
         parentId: item.parent_id ? String(item.parent_id) : null,
-        imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+        imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
         status: item.status === true || item.status === 1 ? "Active" : "Inactive",
         createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
         seoTitle: item.name,
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     backendFormData.append("status", status === "Active" ? "1" : "0");
     backendFormData.append("image_file", imageFile);
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/categories", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/categories", {
       method: "POST",
       headers: {
         ...(token ? { "Authorization": token } : {}),
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
       id: String(created.id),
       name: created.name,
       description: created.description || "",
-      imageUrl: created.image ? (created.image.startsWith("data:image/") || created.image.startsWith("http") ? created.image : `http://127.0.0.1:8000/storage/${created.image}`) : "",
+      imageUrl: created.image ? (created.image.startsWith("data:image/") || created.image.startsWith("http") ? created.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${created.image}`) : "",
       status: created.status === true || created.status === 1 ? "Active" : "Inactive",
       createdDate: created.created_at ? new Date(created.created_at).toISOString().split("T")[0] : "",
       seoTitle: created.name,

@@ -56,7 +56,7 @@ export async function PUT(
       backendData.role = body.role.toLowerCase();
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/users/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/users/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -103,7 +103,7 @@ export async function DELETE(
     const { id } = await (params as any);
     const authHeader = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/users/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/users/${id}`, {
       method: "DELETE",
       headers: {
         "Accept": "application/json",

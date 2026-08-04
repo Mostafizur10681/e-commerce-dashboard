@@ -166,7 +166,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
   login: async (email: string, password?: string) => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/admin/login", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/v1/auth/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -211,7 +211,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
   register: async (name: string, email: string, password?: string, password_confirmation?: string, phone?: string) => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/auth/admin/register", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/v1/auth/admin/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

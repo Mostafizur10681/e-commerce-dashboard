@@ -8,7 +8,7 @@ export async function GET(
     const { id } = await (params as any);
     const token = request.headers.get("Authorization") || "";
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/banners/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/banners/${id}`, {
       headers: {
         "Authorization": token,
         "Accept": "application/json",
@@ -40,7 +40,7 @@ export async function PUT(
     const formData = await request.formData();
     formData.append("_method", "PUT");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/banners/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/banners/${id}`, {
       method: "POST", // Send as POST for multipart/form-data support in PHP
       headers: {
         "Authorization": token,
@@ -69,7 +69,7 @@ export async function DELETE(
     const { id } = await (params as any);
     const token = request.headers.get("Authorization") || "";
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/banners/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/banners/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,

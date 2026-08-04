@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
     const token = request.headers.get("Authorization") || "";
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/subscriptions?all=1`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/subscriptions?all=1`, {
       headers: {
         "Authorization": token,
         "Accept": "application/json"
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     // Forward the POST request to Laravel
     const token = request.headers.get("Authorization") || "";
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/subscriptions`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/subscriptions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

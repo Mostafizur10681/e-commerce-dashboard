@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     const q = searchParams.get("q") || "";
     const role = searchParams.get("role") || "All";
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/users?per_page=100", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/users?per_page=100", {
       headers: authHeader ? { "Authorization": authHeader, "Accept": "application/json" } : { "Accept": "application/json" },
     });
 

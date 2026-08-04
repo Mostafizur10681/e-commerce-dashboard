@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
     const token = request.headers.get("Authorization");
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/sub-categories", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/sub-categories", {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         categoryName: item.category ? item.category.name : "",
         name: item.name,
         description: item.description || "",
-        imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+        imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
         status: item.status === true || item.status === 1 ? "Active" : "Inactive",
         createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
       }));
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       backendFormData.append("image_file", imageFile);
     }
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/sub-categories", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/sub-categories", {
       method: "POST",
       headers: {
         ...(token ? { "Authorization": token } : {}),
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
       categoryName: created.category ? created.category.name : "",
       name: created.name,
       description: created.description || "",
-      imageUrl: created.image ? (created.image.startsWith("data:image/") || created.image.startsWith("http") ? created.image : `http://127.0.0.1:8000/storage/${created.image}`) : "",
+      imageUrl: created.image ? (created.image.startsWith("data:image/") || created.image.startsWith("http") ? created.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${created.image}`) : "",
       status: created.status === true || created.status === 1 ? "Active" : "Inactive",
       createdDate: created.created_at ? new Date(created.created_at).toISOString().split("T")[0] : "",
     };

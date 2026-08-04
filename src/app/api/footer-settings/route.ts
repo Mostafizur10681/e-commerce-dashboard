@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/footer-settings`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/footer-settings`, {
       next: { revalidate: 0 }
     });
 
@@ -23,7 +23,7 @@ export async function PUT(request: Request) {
     const token = request.headers.get("Authorization") || "";
     const body = await request.json();
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/footer-settings`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/footer-settings`, {
       method: "PUT",
       headers: {
         "Authorization": token,

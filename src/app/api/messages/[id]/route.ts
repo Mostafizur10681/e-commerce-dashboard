@@ -8,7 +8,7 @@ export async function GET(
     const { id } = await (params as any);
     const token = request.headers.get("Authorization") || "";
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/messages/${id}`, {
       headers: {
         "Authorization": token,
         "Accept": "application/json",
@@ -37,7 +37,7 @@ export async function PUT(
     const token = request.headers.get("Authorization") || "";
     const body = await request.json();
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/messages/${id}`, {
       method: "PUT",
       headers: {
         "Authorization": token,
@@ -67,7 +67,7 @@ export async function DELETE(
     const { id } = await (params as any);
     const token = request.headers.get("Authorization") || "";
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/messages/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,

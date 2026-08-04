@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const qs = searchParams.toString();
     
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages?${qs}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/messages?${qs}`, {
       headers: {
         "Authorization": token,
         "Accept": "application/json"
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/messages`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID is required" }, { status: 400 });
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/messages/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,
@@ -86,7 +86,7 @@ export async function PUT(request: Request) {
     const token = request.headers.get("Authorization") || "";
     const body = await request.json();
     
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/auth/messages/bulk`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/auth/messages/bulk`, {
       method: "PUT",
       headers: {
         "Authorization": token,

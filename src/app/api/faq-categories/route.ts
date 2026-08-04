@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
     const token = request.headers.get("Authorization");
 
-    const res = await fetch("http://127.0.0.1:8000/api/faq-categories", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/faq-categories", {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       status: status === "Active" || status === true,
     };
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/faq-categories", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/faq-categories", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

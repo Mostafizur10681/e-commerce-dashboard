@@ -18,7 +18,7 @@ export async function GET(
     const { id } = await (params as any);
     const authHeader = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/v1/thanas/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/thanas/${id}`, {
       headers: {
         "Accept": "application/json",
         ...(authHeader ? { "Authorization": authHeader } : {}),
@@ -58,7 +58,7 @@ export async function PUT(
       status: (body.status === "Active" || body.status === "active" || body.status === 1 || body.status === true) ? 1 : 0,
     };
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/thanas/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/thanas/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -95,7 +95,7 @@ export async function DELETE(
     const { id } = await (params as any);
     const authHeader = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/thanas/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/thanas/${id}`, {
       method: "DELETE",
       headers: {
         "Accept": "application/json",

@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       status: status === "Active" || status === true,
     };
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/order-statuses", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/order-statuses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

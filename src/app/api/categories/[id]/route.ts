@@ -12,7 +12,7 @@ export async function GET(
     const id = resolvedParams.id;
     const token = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/categories/${id}`, {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -32,7 +32,7 @@ export async function GET(
       name: item.name,
       description: item.description || "",
       parentId: item.parent_id ? String(item.parent_id) : null,
-      imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
+      imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${item.image}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60",
       status: item.status === true || item.status === 1 ? "Active" : "Inactive",
       createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
       seoTitle: item.name,
@@ -56,7 +56,7 @@ export async function PUT(
     const token = request.headers.get("Authorization");
 
     // Fetch existing details to preserve image if not uploaded
-    const detailRes = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+    const detailRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/categories/${id}`, {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -90,7 +90,7 @@ export async function PUT(
       backendFormData.append("image_file", imageFile);
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/categories/${id}`, {
       method: "POST",
       headers: {
         ...(token ? { "Authorization": token } : {}),
@@ -104,14 +104,14 @@ export async function PUT(
       return NextResponse.json({ error: data.message || "Failed to update category on backend" }, { status: res.status });
     }
 
-    const fallbackImageUrl = existing.image ? (existing.image.startsWith("data:image/") || existing.image.startsWith("http") ? existing.image : `http://127.0.0.1:8000/storage/${existing.image}`) : "";
+    const fallbackImageUrl = existing.image ? (existing.image.startsWith("data:image/") || existing.image.startsWith("http") ? existing.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${existing.image}`) : "";
 
     const updated = data.data;
     const responseData: Category = {
       id: String(updated.id),
       name: updated.name,
       description: updated.description || "",
-      imageUrl: updated.image ? (updated.image.startsWith("data:image/") || updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`) : fallbackImageUrl,
+      imageUrl: updated.image ? (updated.image.startsWith("data:image/") || updated.image.startsWith("http") ? updated.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${updated.image}`) : fallbackImageUrl,
       status: updated.status === true || updated.status === 1 ? "Active" : "Inactive",
       createdDate: updated.created_at ? new Date(updated.created_at).toISOString().split("T")[0] : "",
       seoTitle: updated.name,
@@ -134,7 +134,7 @@ export async function DELETE(
     const id = resolvedParams.id;
     const token = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/categories/${id}`, {
       method: "DELETE",
       headers: token ? { "Authorization": token } : {},
     });

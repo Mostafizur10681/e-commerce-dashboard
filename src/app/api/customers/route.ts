@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const page = searchParams.get("page") || "1";
     const limit = searchParams.get("limit") || "10";
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/customers?page=${page}&per_page=${limit}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/customers?page=${page}&per_page=${limit}`, {
       headers: {
         "Authorization": token,
         "Accept": "application/json"
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       ordersCount: item.orders_count || 0,
       joinedDate: (item.created_at || "").split("T")[0],
       status: item.status === "active" ? "Active" : "Inactive",
-      profilePic: item.profile_pic ? (item.profile_pic.startsWith("http") || item.profile_pic.startsWith("data:image/") ? item.profile_pic : `http://127.0.0.1:8000/storage/${item.profile_pic}`) : null,
+      profilePic: item.profile_pic ? (item.profile_pic.startsWith("http") || item.profile_pic.startsWith("data:image/") ? item.profile_pic : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${item.profile_pic}`) : null,
       created_at: item.created_at || "",
     }));
 
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
       payload.status = body.status === 'Active' ? 'active' : 'blocked';
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/customers`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/customers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

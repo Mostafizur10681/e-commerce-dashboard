@@ -10,7 +10,7 @@ export async function GET(
     const id = resolvedParams.id;
     const token = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/sub-categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/sub-categories/${id}`, {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -31,7 +31,7 @@ export async function GET(
       categoryName: item.category ? item.category.name : "",
       name: item.name,
       description: item.description || "",
-      imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`) : "",
+      imageUrl: item.image ? (item.image.startsWith("data:image/") || item.image.startsWith("http") ? item.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${item.image}`) : "",
       status: item.status === true || item.status === 1 ? "Active" : "Inactive",
       createdDate: item.created_at ? new Date(item.created_at).toISOString().split("T")[0] : "",
     };
@@ -71,7 +71,7 @@ export async function PUT(
       backendFormData.append("image_file", imageFile);
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/sub-categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/sub-categories/${id}`, {
       method: "POST",
       headers: {
         ...(token ? { "Authorization": token } : {}),
@@ -92,7 +92,7 @@ export async function PUT(
       categoryName: updated.category ? updated.category.name : "",
       name: updated.name,
       description: updated.description || "",
-      imageUrl: updated.image ? (updated.image.startsWith("data:image/") || updated.image.startsWith("http") ? updated.image : `http://127.0.0.1:8000/storage/${updated.image}`) : "",
+      imageUrl: updated.image ? (updated.image.startsWith("data:image/") || updated.image.startsWith("http") ? updated.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${updated.image}`) : "",
       status: updated.status === true || updated.status === 1 ? "Active" : "Inactive",
       createdDate: updated.created_at ? new Date(updated.created_at).toISOString().split("T")[0] : "",
     };
@@ -113,7 +113,7 @@ export async function DELETE(
     const id = resolvedParams.id;
     const token = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/sub-categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/sub-categories/${id}`, {
       method: "DELETE",
       headers: token ? { "Authorization": token } : {},
     });

@@ -24,7 +24,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const interceptedFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       try {
         const response = await originalFetch(input, init);
-        
+
         if (response.status === 401) {
           let url = "";
           if (typeof input === "string") {
@@ -43,7 +43,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             window.location.href = "/login?session_expired=1";
           }
         }
-        
+
         return response;
       } catch (error) {
         throw error;
@@ -63,9 +63,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isHydrated) {
       const isLoginOrRegister = pathname === "/login" || pathname === "/register";
-      
+
       const isAccessDenied = currentUser && (currentUser.status === "pending" || currentUser.status === "blocked");
-      
+
       if (isAccessDenied) {
         useStore.getState().logout();
         router.push("/login");

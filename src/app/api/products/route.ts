@@ -5,7 +5,7 @@ import { Product } from "@/types";
 async function resolveCategoryId(categoryName: string, token: string | null): Promise<number | null> {
   if (!categoryName) return null;
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/categories`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/categories`, {
       headers: token ? { "Authorization": token } : {},
     });
     if (res.ok) {
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     const token = request.headers.get("Authorization");
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/products?per_page=100", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/products?per_page=100", {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -52,16 +52,16 @@ export async function GET(request: Request) {
         imagesArray = item.images.map((img: any) => {
           if (typeof img === "string") return img;
           if (img && img.image_path) {
-            return (img.image_path.startsWith("http") || img.image_path.startsWith("data:image/")) ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+            return (img.image_path.startsWith("http") || img.image_path.startsWith("data:image/")) ? img.image_path : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img.image_path}`;
           }
           return "";
         }).filter(Boolean);
       }
       if (imagesArray.length === 0) {
         if (item.gallery && Array.isArray(item.gallery)) {
-          imagesArray = item.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+          imagesArray = item.gallery.map((img: string) => img.startsWith("http") ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img}`);
         } else if (item.image) {
-          imagesArray = [item.image.startsWith("http") ? item.image : `http://127.0.0.1:8000/storage/${item.image}`];
+          imagesArray = [item.image.startsWith("http") ? item.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${item.image}`];
         }
       }
 
@@ -204,7 +204,7 @@ export async function POST(request: Request) {
       attributes: attributes || [],
     };
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/products", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/products", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -225,16 +225,16 @@ export async function POST(request: Request) {
       createdImagesArray = created.images.map((img: any) => {
         if (typeof img === "string") return img;
         if (img && img.image_path) {
-          return (img.image_path.startsWith("http") || img.image_path.startsWith("data:image/")) ? img.image_path : `http://127.0.0.1:8000/storage/${img.image_path}`;
+          return (img.image_path.startsWith("http") || img.image_path.startsWith("data:image/")) ? img.image_path : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img.image_path}`;
         }
         return "";
       }).filter(Boolean);
     }
     if (createdImagesArray.length === 0) {
       if (created.gallery && Array.isArray(created.gallery)) {
-        createdImagesArray = created.gallery.map((img: string) => img.startsWith("http") ? img : `http://127.0.0.1:8000/storage/${img}`);
+        createdImagesArray = created.gallery.map((img: string) => img.startsWith("http") ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${img}`);
       } else if (created.image) {
-        createdImagesArray = [created.image.startsWith("http") ? created.image : `http://127.0.0.1:8000/storage/${created.image}`];
+        createdImagesArray = [created.image.startsWith("http") ? created.image : `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/storage/${created.image}`];
       }
     }
 

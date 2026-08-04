@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const sort_by = searchParams.get("sort_by") || "";
     const sort_order = searchParams.get("sort_order") || "";
 
-    const backendUrl = new URL("http://127.0.0.1:8000/api/v1/thanas");
+    const backendUrl = new URL((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/v1/thanas");
     if (search) backendUrl.searchParams.set("search", search);
     if (status && status !== "All") {
       const statusValue = (status === "Active" || status === "active" || status === "1") ? "1" : "0";
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       status: (body.status === "Active" || body.status === "active" || body.status === 1 || body.status === true) ? 1 : 0,
     };
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/thanas", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/thanas", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

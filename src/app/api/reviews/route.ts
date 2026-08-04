@@ -4,7 +4,7 @@ import { Review } from "@/types";
 // Helper to resolve product ID from name
 async function resolveProductId(productName: string, token: string | null): Promise<number> {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products?per_page=1000`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/products?per_page=1000`, {
       headers: token ? { "Authorization": token } : {},
     });
     if (res.ok) {
@@ -18,7 +18,7 @@ async function resolveProductId(productName: string, token: string | null): Prom
   }
   // Fallback to query first available product
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/products?limit=1`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/products?limit=1`, {
       headers: token ? { "Authorization": token } : {},
     });
     if (res.ok) {
@@ -33,7 +33,7 @@ async function resolveProductId(productName: string, token: string | null): Prom
 // Helper to resolve user ID from customer name
 async function resolveUserId(customerName: string, token: string | null, fallbackId: number): Promise<number> {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/users?q=${encodeURIComponent(customerName)}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/users?q=${encodeURIComponent(customerName)}`, {
       headers: token ? { "Authorization": token } : {},
     });
     if (res.ok) {
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
 
     if (token) {
       // Admin dashboard moderation - fetch all reviews
-      const res = await fetch("http://127.0.0.1:8000/api/admin/reviews?per_page=100", {
+      const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/reviews?per_page=100", {
         headers: { "Authorization": token },
       });
       if (!res.ok) {
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
     } else {
       // Public review list for product
       const productId = searchParams.get("product_id") || "1";
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/reviews?product_id=${productId}&per_page=100`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/v1/reviews?product_id=${productId}&per_page=100`);
       if (res.ok) {
         const json = await res.json();
         const rawList = json.data?.data || json.data || [];
@@ -166,7 +166,7 @@ export async function POST(request: Request) {
     let authUserName = "Anonymous";
     let userRole = "customer";
     try {
-      const profileRes = await fetch("http://127.0.0.1:8000/api/user", {
+      const profileRes = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/user", {
         headers: { "Authorization": token },
       });
       if (profileRes.ok) {
@@ -193,8 +193,8 @@ export async function POST(request: Request) {
     };
 
     const targetUrl = userRole === "admin"
-      ? "http://127.0.0.1:8000/api/admin/reviews"
-      : "http://127.0.0.1:8000/api/customer/reviews";
+      ? (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/reviews"
+      : (process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/customer/reviews";
 
     const res = await fetch(targetUrl, {
       method: "POST",

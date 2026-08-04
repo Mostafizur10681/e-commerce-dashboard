@@ -11,7 +11,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/order-statuses/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/order-statuses/${id}`, {
       headers: {
         "Authorization": token,
         "Accept": "application/json"
@@ -62,7 +62,7 @@ export async function PUT(
       payload.status = status === "Active" || status === true;
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/order-statuses/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/order-statuses/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -106,7 +106,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/order-statuses/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/order-statuses/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,

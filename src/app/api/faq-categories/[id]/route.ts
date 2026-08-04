@@ -9,7 +9,7 @@ export async function GET(
     const { id } = await (params as any);
     const token = request.headers.get("Authorization");
 
-    const res = await fetch(`http://127.0.0.1:8000/api/faq-categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/faq-categories/${id}`, {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -57,7 +57,7 @@ export async function PUT(
       payload.status = status === "Active" || status === true;
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/faq-categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/faq-categories/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +100,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/faq-categories/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/faq-categories/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,

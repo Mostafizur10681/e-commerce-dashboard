@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const token = request.headers.get("Authorization");
 
     // Fetch all attributes from Laravel backend admin group
-    const res = await fetch("http://127.0.0.1:8000/api/admin/attributes?all=1", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/attributes?all=1", {
       headers: token ? { "Authorization": token } : {},
     });
 
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       values: values.map((v: string) => v.trim()).filter(Boolean),
     };
 
-    const res = await fetch("http://127.0.0.1:8000/api/admin/attributes", {
+    const res = await fetch((process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000") + "/api/admin/attributes", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

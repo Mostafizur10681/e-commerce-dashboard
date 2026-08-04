@@ -28,7 +28,7 @@ export async function PUT(
       payload.current_password = body.currentPassword;
     }
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/customers/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/customers/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -62,7 +62,7 @@ export async function DELETE(
 
     const { id } = await (params as any);
 
-    const res = await fetch(`http://127.0.0.1:8000/api/admin/customers/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/api/admin/customers/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": token,
